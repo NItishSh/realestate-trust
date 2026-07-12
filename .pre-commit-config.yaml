@@ -1,0 +1,39 @@
+# pre-commit configuration file
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.2.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: []
+
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-vet
+      - id: go-imports
+      - id: golangci-lint
+      - id: go-mod-tidy
+
+  - repo: local
+    hooks:
+      - id: helm-lint
+        name: helm-lint
+        entry: helm lint infra/helm/charts/microservice
+        language: system
+        files: ^infra/helm/
+        pass_filenames: false
