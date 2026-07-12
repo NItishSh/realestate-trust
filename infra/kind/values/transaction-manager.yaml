@@ -20,9 +20,17 @@ smokeTest:
     sleep 5
     echo "Verifying transaction-manager Escrow Transaction API endpoint..."
     curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions
+env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: transaction-manager-db-secret
+        key: DATABASE_URL
 db:
   migrations:
     enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/transactions_db?sslmode=disable"
     scripts:
       000001_init_escrow.up.sql: |
         CREATE TYPE transaction_status AS ENUM ('DRAFT', 'ESCROW', 'FUNDED', 'CLOSED', 'CANCELLED');

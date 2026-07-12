@@ -16,9 +16,17 @@ smokeTest:
     sleep 5
     echo "Verifying identity-service User Registration API endpoint..."
     curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service:8081/api/v1/users
+env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: identity-service-db-secret
+        key: DATABASE_URL
 db:
   migrations:
     enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/identity_db?sslmode=disable"
     scripts:
       000001_init_user.up.sql: |
         CREATE TYPE user_role AS ENUM ('BUYER', 'SELLER', 'BROKER', 'OFFICER', 'ADMIN');

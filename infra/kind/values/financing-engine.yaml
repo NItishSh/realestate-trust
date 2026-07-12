@@ -9,9 +9,17 @@ smokeTest:
     sleep 5
     echo "Verifying financing-engine Loan underwriting API endpoint..."
     curl -f -X POST -H "Content-Type: application/json" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00}' http://financing-engine:8082/api/v1/loans
+env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: financing-engine-db-secret
+        key: DATABASE_URL
 db:
   migrations:
     enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/financing_db?sslmode=disable"
     scripts:
       000001_init_financing.up.sql: |
         CREATE TYPE loan_status AS ENUM ('APPLIED', 'UNDERWRITING', 'APPROVED', 'REJECTED', 'DISBURSED');

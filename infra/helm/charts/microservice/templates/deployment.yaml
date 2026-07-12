@@ -22,6 +22,10 @@ spec:
         - containerPort: {{ .Values.service.targetPort }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
+        {{- if .Values.env }}
+        env:
+          {{- toYaml .Values.env | nindent 8 }}
+        {{- end }}
         readinessProbe:
           httpGet:
             path: {{ .Values.healthCheck.path }}
