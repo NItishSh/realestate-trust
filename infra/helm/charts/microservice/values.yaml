@@ -41,3 +41,7 @@ db:
     enabled: false
     databaseUrlEnv: "DATABASE_URL"
     scripts: {}
+
+smokeTest:
+  enabled: false
+  path: /api/v1/health

@@ -1,0 +1,30 @@
+{{- if .Values.smokeTest.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-smoke-test
+  labels:
+    app: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-smoke-test
+    spec:
+      containers:
+      - name: smoke-test
+        image: curlimages/curl:7.85.0
+        command:
+        - "sh"
+        - "-c"
+        - |
+          echo "Verifying health of {{ .Release.Name }} on port {{ .Values.service.port }}..."
+          sleep 5
+          curl -f http://{{ .Release.Name }}:{{ .Values.service.port }}{{ .Values.smokeTest.path }} || exit 1
+          echo "Smoke test passed successfully!"
+      restartPolicy: Never
+  backoffLimit: 2
+{{- end }}

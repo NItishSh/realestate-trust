@@ -22,6 +22,8 @@ spec:
           requests:
             cpu: 250m
             memory: 128Mi
+        smokeTest:
+          enabled: true
         db:
           migrations:
             enabled: true
@@ -85,6 +87,8 @@ spec:
           enabled: true
           whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"
           path: /api/v1/transactions
+        smokeTest:
+          enabled: true
         db:
           migrations:
             enabled: true
@@ -137,6 +141,8 @@ spec:
           repository: ghcr.io/realestate-trust/monorepo/financing-engine
         service:
           targetPort: 8082
+        smokeTest:
+          enabled: true
         db:
           migrations:
             enabled: true
@@ -200,6 +206,8 @@ spec:
           requests:
             cpu: 400m
             memory: 192Mi
+        smokeTest:
+          enabled: true
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: realestate-trust
@@ -225,6 +233,8 @@ spec:
           repository: ghcr.io/realestate-trust/monorepo/ledger-service
         service:
           targetPort: 8084
+        smokeTest:
+          enabled: true
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: realestate-trust
