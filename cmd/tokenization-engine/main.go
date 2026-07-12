@@ -11,6 +11,13 @@ func main() {
 	fmt.Println("Starting Fractional Tokenization Engine API on :8083...")
 
 	repo := db.NewInMemoryTokenizationRepository()
+
+	// Seed demo data in non-production environments
+	if db.ShouldSeed() {
+		fmt.Println("🌱 Seeding demo pools (APP_ENV != production)...")
+		db.SeedPools(repo)
+	}
+
 	handler := db.NewTokenizationHandler(repo)
 
 	mux := http.NewServeMux()

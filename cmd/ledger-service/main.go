@@ -11,6 +11,13 @@ func main() {
 	fmt.Println("Starting Immutable Audit Ledger API on :8084...")
 
 	repo := db.NewInMemoryLedgerRepository()
+
+	// Seed demo data in non-production environments
+	if db.ShouldSeed() {
+		fmt.Println("🌱 Seeding demo ledger (APP_ENV != production)...")
+		db.SeedLedger(repo)
+	}
+
 	handler := db.NewLedgerHandler(repo)
 
 	mux := http.NewServeMux()

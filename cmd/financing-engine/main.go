@@ -11,6 +11,13 @@ func main() {
 	fmt.Println("Starting Embedded Financing Engine API on :8082...")
 
 	repo := db.NewInMemoryFinancingRepository()
+
+	// Seed demo data in non-production environments
+	if db.ShouldSeed() {
+		fmt.Println("🌱 Seeding demo loans (APP_ENV != production)...")
+		db.SeedLoans(repo)
+	}
+
 	handler := db.NewFinancingHandler(repo)
 
 	mux := http.NewServeMux()

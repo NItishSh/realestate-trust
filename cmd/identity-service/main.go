@@ -12,6 +12,13 @@ func main() {
 
 	// Initialize In-Memory Repository (default for local validation / dev)
 	repo := db.NewInMemoryUserRepository()
+
+	// Seed demo data in non-production environments
+	if db.ShouldSeed() {
+		fmt.Println("🌱 Seeding demo users (APP_ENV != production)...")
+		db.SeedUsers(repo)
+	}
+
 	handler := db.NewUserHandler(repo)
 
 	mux := http.NewServeMux()

@@ -11,6 +11,13 @@ func main() {
 	fmt.Println("Starting Transaction & Escrow Manager API on :8080...")
 
 	repo := db.NewInMemoryTransactionRepository()
+
+	// Seed demo data in non-production environments
+	if db.ShouldSeed() {
+		fmt.Println("🌱 Seeding demo transactions (APP_ENV != production)...")
+		db.SeedTransactions(repo)
+	}
+
 	handler := db.NewTransactionHandler(repo)
 
 	mux := http.NewServeMux()
