@@ -1,0 +1,46 @@
+# Kind Cluster Configuration for RealEstate Trust
+# Creates a multi-node cluster with Ingress support
+#
+# Usage:
+#   kind create cluster --config kind-config.yaml --name realestate-trust
+#   kind delete cluster --name realestate-trust
+#
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: realestate-trust
+nodes:
+  # Control-plane node with Ingress port mappings
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # Frontend → localhost:3000
+      - containerPort: 30000
+        hostPort: 3000
+        protocol: TCP
+      # Transaction Manager → localhost:8080
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+      # Identity Service → localhost:8081
+      - containerPort: 30081
+        hostPort: 8081
+        protocol: TCP
+      # Financing Engine → localhost:8082
+      - containerPort: 30082
+        hostPort: 8082
+        protocol: TCP
+      # Tokenization Engine → localhost:8083
+      - containerPort: 30083
+        hostPort: 8083
+        protocol: TCP
+      # Ledger Service → localhost:8084
+      - containerPort: 30084
+        hostPort: 8084
+        protocol: TCP
+  # Worker node for running application workloads
+  - role: worker

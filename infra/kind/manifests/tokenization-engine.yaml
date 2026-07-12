@@ -1,0 +1,63 @@
+# Tokenization Engine — Deployment + Service + NodePort
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokenization-engine
+  namespace: realestate-trust
+  labels:
+    app: tokenization-engine
+    app.kubernetes.io/part-of: realestate-trust
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tokenization-engine
+  template:
+    metadata:
+      labels:
+        app: tokenization-engine
+    spec:
+      containers:
+        - name: tokenization-engine
+          image: realestate-trust-tokenization-engine:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8083
+          env:
+            - name: APP_ENV
+              value: development
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8083
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokenization-engine
+  namespace: realestate-trust
+  labels:
+    app: tokenization-engine
+spec:
+  type: NodePort
+  ports:
+    - port: 8083
+      targetPort: 8083
+      nodePort: 30083
+  selector:
+    app: tokenization-engine

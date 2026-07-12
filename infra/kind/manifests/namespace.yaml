@@ -1,0 +1,8 @@
+# Namespace for all RealEstate Trust services
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: realestate-trust
+  labels:
+    app.kubernetes.io/part-of: realestate-trust
+    environment: development

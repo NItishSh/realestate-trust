@@ -1,0 +1,68 @@
+# Financing Engine — Deployment + Service + NodePort
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: financing-engine
+  namespace: realestate-trust
+  labels:
+    app: financing-engine
+    app.kubernetes.io/part-of: realestate-trust
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: financing-engine
+  template:
+    metadata:
+      labels:
+        app: financing-engine
+    spec:
+      containers:
+        - name: financing-engine
+          image: realestate-trust-financing-engine:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8082
+          env:
+            - name: APP_ENV
+              value: development
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: DATABASE_URL_FINANCING
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: financing-engine
+  namespace: realestate-trust
+  labels:
+    app: financing-engine
+spec:
+  type: NodePort
+  ports:
+    - port: 8082
+      targetPort: 8082
+      nodePort: 30082
+  selector:
+    app: financing-engine
