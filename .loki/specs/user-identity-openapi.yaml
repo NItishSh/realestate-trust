@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: User & Identity Service API
+  description: Microservice for user management, identity validation, and KYC/AML compliance tracking.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/api/v1
+paths:
+  /users:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{id}:
+    get:
+      summary: Retrieve a user profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{id}/kyc:
+    post:
+      summary: Submit documents for KYC verification
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KYCSubmissionRequest'
+      responses:
+        '202':
+          description: KYC submission accepted for processing
+  /users/{id}/kyc/status:
+    get:
+      summary: Retrieve KYC verification status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: KYC status details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KYCStatusResponse'
+components:
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required:
+        - email
+        - fullName
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [BUYER, SELLER, BROKER, OFFICER, ADMIN]
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    KYCSubmissionRequest:
+      type: object
+      required:
+        - documentType
+        - documentReference
+      properties:
+        documentType:
+          type: string
+          enum: [PASSPORT, NATIONAL_ID, DRIVERS_LICENSE]
+        documentReference:
+          type: string
+    KYCStatusResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true

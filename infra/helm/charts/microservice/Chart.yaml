@@ -1,0 +1,6 @@
+apiVersion: v2
+name: microservice
+description: A reusable Helm chart for packaging and deploying Go microservices in the real estate trust monorepo.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

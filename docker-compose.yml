@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/compose/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  identity-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/identity-service/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/identity_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  transactions-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/transaction-manager/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/transactions_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  financing-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/financing-engine/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/financing_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  transaction-manager:
+    build:
+      context: .
+      target: transaction-manager
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/transactions_db?sslmode=disable
+    depends_on:
+      transactions-migrate:
+        condition: service_completed_successfully
+
+  identity-service:
+    build:
+      context: .
+      target: identity-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/identity_db?sslmode=disable
+    depends_on:
+      identity-migrate:
+        condition: service_completed_successfully
+
+  financing-engine:
+    build:
+      context: .
+      target: financing-engine
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/financing_db?sslmode=disable
+    depends_on:
+      financing-migrate:
+        condition: service_completed_successfully
+
+  tokenization-engine:
+    build:
+      context: .
+      target: tokenization-engine
+    ports:
+      - "8083:8083"
+
+  ledger-service:
+    build:
+      context: .
+      target: ledger-service
+    ports:
+      - "8084:8084"
+
+volumes:
+  pgdata:

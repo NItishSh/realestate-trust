@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: Embedded Financing Engine API
+  description: Microservice coordinating mortgage approvals, credit checks, and disbursement routines with lending partners.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3002/api/v1
+paths:
+  /loans:
+    post:
+      summary: Submit a loan application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplicationRequest'
+      responses:
+        '201':
+          description: Loan application submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+  /loans/{id}:
+    get:
+      summary: Retrieve loan details and status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed loan application status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+  /loans/{id}/disburse:
+    post:
+      summary: Trigger automatic loan disbursement into virtual escrow account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Loan disbursement completed and routed to Escrow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisbursementResult'
+  /loans/webhooks/bank:
+    post:
+      summary: Webhook for bank underwriting partner updates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                applicationId:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+                approvedAmount:
+                  type: number
+      responses:
+        '200':
+          description: Callback processed successfully
+components:
+  schemas:
+    LoanApplicationRequest:
+      type: object
+      required:
+        - transactionId
+        - userId
+        - requestedAmount
+        - propertyValue
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        requestedAmount:
+          type: number
+          format: double
+        propertyValue:
+          type: number
+          format: double
+    Loan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        requestedAmount:
+          type: number
+          format: double
+        approvedAmount:
+          type: number
+          format: double
+          nullable: true
+        status:
+          type: string
+          enum: [APPLIED, UNDERWRITING, APPROVED, REJECTED, DISBURSED]
+        createdAt:
+          type: string
+          format: date-time
+    DisbursementResult:
+      type: object
+      properties:
+        disbursementId:
+          type: string
+          format: uuid
+        loanId:
+          type: string
+          format: uuid
+        virtualAccountNumber:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [COMPLETED, FAILED]

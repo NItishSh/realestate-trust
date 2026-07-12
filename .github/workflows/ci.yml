@@ -1,0 +1,133 @@
+name: Go Monorepo CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write # Required for Cosign signature generation
+
+jobs:
+  lint-and-test:
+    name: Code Sanity Checks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26.5'
+        cache: true
+
+    - name: Go Format Check
+      run: |
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "Go code is not formatted properly. Please run 'gofmt -w .'"
+          exit 1
+        fi
+
+    - name: Go Vet Analysis
+      run: go vet ./...
+
+    - name: Run Test Suite
+      run: go test -v -race -coverprofile=coverage.out ./...
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        version: v1.54
+
+  build-and-push:
+    name: Build & Push to GHCR
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      matrix:
+        service:
+          - transaction-manager
+          - identity-service
+          - financing-engine
+          - tokenization-engine
+          - ledger-service
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3.4.0
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate Image Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=sha,format=long
+
+    - name: Build Docker Image (Trivy Scan Phase)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: ${{ matrix.service }}
+        push: false
+        load: true
+        tags: ${{ matrix.service }}:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ matrix.service }}:test
+        format: 'table'
+        exit-code: '1' # Fail pipeline on High/Critical vulnerabilities
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'HIGH,CRITICAL'
+
+    - name: Build & Push Docker Image to GHCR
+      id: push-step
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: ${{ matrix.service }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Sign the Pushed Image with Cosign
+      env:
+        TAGS: ${{ steps.meta.outputs.tags }}
+        DIGEST: ${{ steps.push-step.outputs.digest }}
+      run: |
+        images=""
+        for tag in ${TAGS}; do
+          images="${images} ${tag}@${DIGEST}"
+        done
+        cosign sign --yes ${images}

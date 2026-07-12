@@ -1,0 +1,33 @@
+# Version control
+.git
+.github
+
+# Documentation and metadata
+docs
+README.md
+LICENSE
+.loki
+.agents
+
+# IDEs and configuration templates
+.idea
+.vscode
+*.iml
+*.swp
+*.swo
+
+# Docker configurations
+docker-compose.yml
+Dockerfile
+.dockerignore
+infra/compose
+
+# Helm charts and GitOps manifests
+infra/helm
+infra/gitops
+
+# Go compiled artifacts and dependencies
+bin
+*.test
+*.out
+pgdata

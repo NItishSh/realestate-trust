@@ -1,0 +1,234 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: identity-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/identity-service
+        service:
+          targetPort: 8081
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 250m
+            memory: 128Mi
+        db:
+          migrations:
+            enabled: true
+            scripts:
+              000001_init_user.up.sql: |
+                CREATE TYPE user_role AS ENUM ('BUYER', 'SELLER', 'BROKER', 'OFFICER', 'ADMIN');
+                CREATE TYPE kyc_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+                CREATE TABLE users (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    full_name VARCHAR(150) NOT NULL,
+                    role user_role NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE kyc_verifications (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    document_type VARCHAR(50) NOT NULL,
+                    document_reference VARCHAR(100) NOT NULL,
+                    status kyc_status NOT NULL DEFAULT 'PENDING',
+                    verified_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX idx_users_email ON users(email);
+                CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: transaction-manager
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/transaction-manager
+        service:
+          targetPort: 8080
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        ingress:
+          enabled: true
+          whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"
+          path: /api/v1/transactions
+        db:
+          migrations:
+            enabled: true
+            scripts:
+              000001_init_escrow.up.sql: |
+                CREATE TYPE transaction_status AS ENUM ('DRAFT', 'ESCROW', 'FUNDED', 'CLOSED', 'CANCELLED');
+                CREATE TABLE transactions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    property_id UUID NOT NULL,
+                    buyer_id UUID NOT NULL,
+                    seller_id UUID NOT NULL,
+                    total_amount DECIMAL(15, 2) NOT NULL,
+                    status transaction_status NOT NULL DEFAULT 'DRAFT',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE escrow_accounts (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+                    virtual_account_number VARCHAR(50) UNIQUE NOT NULL,
+                    bank_partner VARCHAR(100) NOT NULL,
+                    balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX idx_transactions_status ON transactions(status);
+                CREATE INDEX idx_escrow_accounts_va ON escrow_accounts(virtual_account_number);
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: financing-engine
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/financing-engine
+        service:
+          targetPort: 8082
+        db:
+          migrations:
+            enabled: true
+            scripts:
+              000001_init_financing.up.sql: |
+                CREATE TYPE loan_status AS ENUM ('APPLIED', 'UNDERWRITING', 'APPROVED', 'REJECTED', 'DISBURSED');
+                CREATE TYPE disbursement_status AS ENUM ('PENDING', 'COMPLETED', 'FAILED');
+                CREATE TABLE loans (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    transaction_id UUID NOT NULL,
+                    user_id UUID NOT NULL,
+                    lender_id UUID,
+                    requested_amount DECIMAL(15, 2) NOT NULL,
+                    approved_amount DECIMAL(15, 2),
+                    status loan_status NOT NULL DEFAULT 'APPLIED',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE disbursements (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+                    virtual_account_number VARCHAR(50) NOT NULL,
+                    disbursed_amount DECIMAL(15, 2) NOT NULL,
+                    transaction_reference VARCHAR(100) UNIQUE NOT NULL,
+                    status disbursement_status NOT NULL DEFAULT 'PENDING',
+                    disbursed_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX idx_loans_transaction ON loans(transaction_id);
+                CREATE INDEX idx_disbursements_loan ON disbursements(loan_id);
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tokenization-engine
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/tokenization-engine
+        service:
+          targetPort: 8083
+        resources:
+          limits:
+            cpu: 800m
+            memory: 384Mi
+          requests:
+            cpu: 400m
+            memory: 192Mi
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ledger-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/ledger-service
+        service:
+          targetPort: 8084
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

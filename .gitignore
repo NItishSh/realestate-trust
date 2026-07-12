@@ -1,0 +1,38 @@
+# Go compiled binaries and test files
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs/Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local environment and database directories
+.env
+.env.local
+.env.*.local
+pgdata/
+
+# Coverage reports
+coverage.txt
+coverage.html

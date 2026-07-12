@@ -1,0 +1,13 @@
+{{- if .Values.db.migrations.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-migrations
+  labels:
+    app: {{ .Release.Name }}
+data:
+  {{- range $key, $value := .Values.db.migrations.scripts }}
+  {{ $key }}: |
+    {{- $value | nindent 4 }}
+  {{- end }}
+{{- end }}

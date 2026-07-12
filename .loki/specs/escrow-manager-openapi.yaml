@@ -1,0 +1,121 @@
+openapi: 3.0.3
+info:
+  title: Transaction & Escrow Manager API
+  description: Core financial engine for managing real estate deals, virtual accounts, and state transitions.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+paths:
+  /transactions:
+    post:
+      summary: Create a new real estate transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /transactions/{id}:
+    get:
+      summary: Get transaction details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+  /transactions/{id}/status:
+    put:
+      summary: Update transaction state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newState:
+                  type: string
+                  enum: [ESCROW, FUNDED, CLOSED, CANCELLED]
+      responses:
+        '200':
+          description: State updated successfully
+  /transactions/{id}/escrow/fund:
+    post:
+      summary: Webhook for banking partner to confirm VA funding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                currency:
+                  type: string
+                bank_reference:
+                  type: string
+      responses:
+        '200':
+          description: Funding confirmed
+components:
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      required:
+        - propertyId
+        - buyerId
+        - sellerId
+        - totalAmount
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+        buyerId:
+          type: string
+          format: uuid
+        sellerId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+          format: double
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        buyerId:
+          type: string
+          format: uuid
+        sellerId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [DRAFT, ESCROW, FUNDED, CLOSED, CANCELLED]
+        virtualAccountNumber:
+          type: string

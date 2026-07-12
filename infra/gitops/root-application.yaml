@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: realestate-trust-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    targetRevision: HEAD
+    path: infra/gitops # Path to our service declarations
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    createNamespace: true

@@ -1,0 +1,14 @@
+- [x] Create system & microservices architecture section in `architecture_design.md`
+- [x] Create database schema design section (PostgreSQL) in `architecture_design.md`
+- [x] Create escrow state machine & workflow diagrams (Mermaid) in `architecture_design.md`
+- [x] Create API endpoints specification in `architecture_design.md`
+- [x] Create security, auditing, and trust layer section in `architecture_design.md`
+- [x] Add support for multiple banking partners (Adapter design pattern, DB schema configuration, and dynamic webhook routing)
+- [x] Adapt codebase specification interfaces to Go programming language contracts
+- [x] Specify containerization patterns and Kubernetes manifests (Deployment, Service, HPA)
+- [x] Research and document banking/KYC/SRO integration patterns (`docs/research/banking_kyc_integrations.md`)
+- [x] Research and document Kubernetes network whitelists and database HA (`docs/research/infra_kubernetes.md`)
+- [x] Research and document OpenTelemetry tracing and Prometheus metrics maps (`docs/research/observability_tracing.md`)
+- [x] Catalog and define functional microservices scopes (`docs/microservices.md`)
+- [x] Spec the Monorepo structure, Infrastructure as Code layout, and Next.js UI specifications (`docs/project_structure.md`)
+- [x] Evaluate Loki logging configuration and design LogQL audit specifications (`docs/research/loki_logging_spec.md`)

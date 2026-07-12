@@ -1,0 +1,41 @@
+{{- if .Values.db.migrations.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-migrate
+  labels:
+    app: {{ .Release.Name }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: hook-succeeded
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-db-migrate
+    spec:
+      containers:
+      - name: migrate
+        image: migrate/migrate:v4.15.2
+        args:
+        - "-path=/migrations"
+        - "-database=$(DB_CONN)"
+        - "up"
+        env:
+        - name: DB_CONN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-db-secret
+              key: {{ .Values.db.migrations.databaseUrlEnv }}
+        volumeMounts:
+        - name: migrations-vol
+          mountPath: /migrations
+      volumes:
+      - name: migrations-vol
+        configMap:
+          name: {{ .Release.Name }}-migrations
+      restartPolicy: OnFailure
+{{- end }}
