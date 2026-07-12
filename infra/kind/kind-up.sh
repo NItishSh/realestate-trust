@@ -87,9 +87,9 @@ deploy_argocd_and_postgres() {
     # Deploy PostgreSQL (Dependency for ArgoCD apps)
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
 
-    # Install ArgoCD
+    # Install ArgoCD (using server-side apply to avoid CRD size limits)
     kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side --force-conflicts
 
     log "Waiting for ArgoCD Server to be ready..."
     kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=300s
