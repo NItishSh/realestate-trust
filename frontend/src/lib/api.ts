@@ -131,6 +131,11 @@ export const api = {
     body: JSON.stringify(tx)
   }, { id: "tx-" + Math.random().toString(36).substr(2, 5), status: "DRAFT", ...tx } as Transaction),
   getEscrow: (txId: string) => safeFetch<EscrowAccount>(`${API_BASE}:${ports.transactions}/api/v1/transactions/${txId}/escrow`, { method: "GET" }, mockEscrow[0]),
+  fundEscrow: (txId: string, amount: number) => safeFetch<{ status: string }>(`${API_BASE}:${ports.transactions}/api/v1/transactions/${txId}/escrow/fund`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  }, { status: "funding_received" }),
 
   // 3. Financing Engine API mappings
   getLoans: () => safeFetch<Loan[]>(`${API_BASE}:${ports.financing}/api/v1/loans`, { method: "GET" }, mockLoans),

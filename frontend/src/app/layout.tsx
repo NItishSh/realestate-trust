@@ -12,7 +12,8 @@ import {
   Database,
   User as UserIcon,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import './globals.css';
 
@@ -30,6 +31,7 @@ export default function RootLayout({
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Marketplace', path: '/marketplace', icon: Search },
     { name: 'Escrow Accounts', path: '/transactions', icon: ArrowLeftRight },
     { name: 'KYC Onboarding', path: '/kyc', icon: FileCheck },
     { name: 'Fractional Pools', path: '/portfolio', icon: PieChart },

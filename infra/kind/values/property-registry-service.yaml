@@ -1,0 +1,21 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/property-registry-service
+service:
+  type: NodePort
+  targetPort: 8085
+  nodePort: 30085
+  port: 8085
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying property-registry-service..."
+    curl -f http://property-registry-service:8085/api/v1/health

@@ -54,7 +54,7 @@ cluster_up() {
 
 build_and_load_images() {
     step "Building Docker images"
-    local targets=("transaction-manager" "identity-service" "financing-engine" "tokenization-engine" "ledger-service")
+    local targets=("transaction-manager" "identity-service" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service")
     for target in "${targets[@]}"; do
         local image_name="ghcr.io/realestate-trust/monorepo/${target}:latest"
         log "Building ${image_name}..."
@@ -69,6 +69,7 @@ build_and_load_images() {
         "ghcr.io/realestate-trust/monorepo/financing-engine:latest"
         "ghcr.io/realestate-trust/monorepo/tokenization-engine:latest"
         "ghcr.io/realestate-trust/monorepo/ledger-service:latest"
+        "ghcr.io/realestate-trust/monorepo/property-registry-service:latest"
         "ghcr.io/realestate-trust/monorepo/frontend:latest"
     )
     for img in "${images[@]}"; do
@@ -110,10 +111,11 @@ deploy_helm_local_and_postgres() {
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
 
     log "Waiting for PostgreSQL to be ready..."
+    sleep 5
     kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=120s
 
     step "Installing Microservices via Helm"
-    local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "frontend")
+    local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")
     for svc in "${services[@]}"; do
         log "Installing ${svc}..."
         helm upgrade --install "${svc}" "${PROJECT_ROOT}/infra/helm/charts/microservice" \
@@ -136,6 +138,7 @@ print_status() {
     echo "  Financing Engine:    http://localhost:8082/api/v1/health"
     echo "  Tokenization Engine: http://localhost:8083/api/v1/health"
     echo "  Ledger Service:      http://localhost:8084/api/v1/health"
+    echo "  Property Registry:   http://localhost:8085/api/v1/health"
     echo ""
     log "Useful commands:"
     echo "  kubectl get pods -n realestate-trust         # List pods"

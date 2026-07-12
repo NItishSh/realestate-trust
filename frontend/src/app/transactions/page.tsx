@@ -17,7 +17,7 @@ import {
 import { api } from '../../lib/api';
 
 export default function Transactions() {
-  const { transactions, createTransaction, ledger } = useStore();
+  const { transactions, createTransaction, fundEscrow, ledger } = useStore();
   const [selectedTxId, setSelectedTxId] = useState<string | null>(transactions[0]?.id || null);
 
   // Form states
@@ -26,6 +26,9 @@ export default function Transactions() {
   const [sellerId, setSellerId] = useState('usr-2');
   const [totalAmount, setTotalAmount] = useState('500000');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [fundAmount, setFundAmount] = useState('');
+  const [isFunding, setIsFunding] = useState(false);
 
   const selectedTx = transactions.find(t => t.id === selectedTxId) || transactions[0];
 
@@ -49,6 +52,20 @@ export default function Transactions() {
       console.error(e);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleFund = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTx) return;
+    setIsFunding(true);
+    try {
+      await fundEscrow(selectedTx.id, parseFloat(fundAmount));
+      setFundAmount('');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFunding(false);
     }
   };
 
@@ -259,13 +276,24 @@ export default function Transactions() {
                     </button>
                   )}
                   {selectedTx.status === 'ESCROW' && (
-                    <button
-                      onClick={() => handleTransition('FUNDED')}
-                      className="px-6 py-3 rounded-xl bg-accent-blue text-white text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
-                    >
-                      <Coins className="w-4 h-4" />
-                      Confirm Funding Deposit
-                    </button>
+                    <form onSubmit={handleFund} className="flex gap-2">
+                      <input
+                        type="number"
+                        value={fundAmount}
+                        onChange={(e) => setFundAmount(e.target.value)}
+                        placeholder="Amount to deposit"
+                        className="bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-blue font-mono w-40"
+                        required
+                      />
+                      <button
+                        type="submit"
+                        disabled={isFunding}
+                        className="px-6 py-3 rounded-xl bg-accent-blue text-white text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Coins className="w-4 h-4" />
+                        {isFunding ? 'Funding...' : 'Confirm Funding Deposit'}
+                      </button>
+                    </form>
                   )}
                   {selectedTx.status === 'FUNDED' && (
                     <button

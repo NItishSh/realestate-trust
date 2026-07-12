@@ -42,5 +42,9 @@ nodes:
       - containerPort: 30084
         hostPort: 8084
         protocol: TCP
+      # Property Registry Service → localhost:8085
+      - containerPort: 30085
+        hostPort: 8085
+        protocol: TCP
   # Worker node for running application workloads
   - role: worker

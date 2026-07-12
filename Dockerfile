@@ -5,12 +5,13 @@ COPY go.mod ./
 RUN go mod download
 COPY . .
 
-# Compile all 5 microservices statically
+# Compile all 6 microservices statically
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/transaction-manager cmd/transaction-manager/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/identity-service cmd/identity-service/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/financing-engine cmd/financing-engine/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/tokenization-engine cmd/tokenization-engine/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/ledger-service cmd/ledger-service/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/property-registry-service cmd/property-registry-service/main.go
 
 # --- TARGET: Transaction Manager ---
 FROM alpine:latest AS transaction-manager
@@ -46,3 +47,10 @@ WORKDIR /root/
 COPY --from=builder /bin/ledger-service .
 EXPOSE 8084
 CMD ["./ledger-service"]
+
+# --- TARGET: Property Registry Service ---
+FROM alpine:latest AS property-registry-service
+WORKDIR /root/
+COPY --from=builder /bin/property-registry-service .
+EXPOSE 8085
+CMD ["./property-registry-service"]

@@ -16,6 +16,7 @@ interface State {
   registerUser: (user: Partial<User>) => Promise<void>;
   submitKYC: (userId: string, docType: string, docRef: string) => Promise<void>;
   createTransaction: (tx: Partial<Transaction>) => Promise<void>;
+  fundEscrow: (txId: string, amount: number) => Promise<void>;
   applyLoan: (loan: Partial<Loan>) => Promise<void>;
   buyTokens: (poolId: string, count: number) => Promise<void>;
   createPool: (pool: Partial<FractionalPool>) => Promise<void>;
@@ -82,6 +83,17 @@ export const useStore = create<State>((set, get) => ({
     const newTx = await api.createTransaction(txForm);
     set((state) => ({ transactions: [...state.transactions, newTx] }));
     const log = await api.writeLedgerLog(`Transaction Created: ${newTx.id} - ${newTx.totalAmount} INR`);
+    set((state) => ({ ledger: [...state.ledger, log] }));
+  },
+
+  fundEscrow: async (txId, amount) => {
+    await api.fundEscrow(txId, amount);
+    set((state) => ({
+      transactions: state.transactions.map(t =>
+        t.id === txId ? { ...t, status: 'FUNDED' } : t
+      )
+    }));
+    const log = await api.writeLedgerLog(`Escrow Funded: ${amount} INR for Transaction ${txId}`);
     set((state) => ({ ledger: [...state.ledger, log] }));
   },
 
