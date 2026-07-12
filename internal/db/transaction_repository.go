@@ -9,14 +9,14 @@ import (
 )
 
 type Transaction struct {
-	ID                   string                 `json:"id"`
-	PropertyID           string                 `json:"propertyId"`
-	BuyerID              string                 `json:"buyerId"`
-	SellerID             string                 `json:"sellerId"`
-	TotalAmount          float64                `json:"totalAmount"`
-	Status               core.TransactionState  `json:"status"`
-	VirtualAccountNumber string                 `json:"virtualAccountNumber"`
-	CreatedAt            time.Time              `json:"createdAt"`
+	ID                   string                `json:"id"`
+	PropertyID           string                `json:"propertyId"`
+	BuyerID              string                `json:"buyerId"`
+	SellerID             string                `json:"sellerId"`
+	TotalAmount          float64               `json:"totalAmount"`
+	Status               core.TransactionState `json:"status"`
+	VirtualAccountNumber string                `json:"virtualAccountNumber"`
+	CreatedAt            time.Time             `json:"createdAt"`
 }
 
 type EscrowAccount struct {
@@ -34,6 +34,7 @@ type TransactionRepository interface {
 	GetTransaction(id string) (*Transaction, error)
 	UpdateTransactionStatus(id string, status core.TransactionState) error
 	FundEscrow(id string, amount float64) error
+	ListTransactions() ([]*Transaction, error)
 }
 
 // InMemoryTransactionRepository implements TransactionRepository.
@@ -125,11 +126,25 @@ func (r *InMemoryTransactionRepository) FundEscrow(id string, amount float64) er
 	}
 
 	acc.Balance += amount
-	
+
 	// Automatically advance status to FUNDED if balance matches or exceeds total transaction amount
 	if acc.Balance >= tx.TotalAmount && tx.Status == core.Escrow {
 		tx.Status = core.Funded
 	}
 
 	return nil
+}
+
+func (r *InMemoryTransactionRepository) ListTransactions() ([]*Transaction, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var result []*Transaction
+	for _, t := range r.transactions {
+		result = append(result, t)
+	}
+	if result == nil {
+		return []*Transaction{}, nil
+	}
+	return result, nil
 }

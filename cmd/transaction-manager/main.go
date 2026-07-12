@@ -16,6 +16,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /api/v1/transactions", handler.CreateTransaction)
+	mux.HandleFunc("GET /api/v1/transactions", handler.GetTransactions)
 	mux.HandleFunc("GET /api/v1/transactions/{id}", handler.GetTransaction)
 	mux.HandleFunc("PUT /api/v1/transactions/{id}/status", handler.UpdateStatus)
 	mux.HandleFunc("POST /api/v1/transactions/{id}/escrow/fund", handler.FundEscrow)

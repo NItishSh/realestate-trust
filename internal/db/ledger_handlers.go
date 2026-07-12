@@ -75,3 +75,20 @@ func (h *LedgerHandler) GetLog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(entry)
 }
+
+// GetLogs handles GET /logs
+func (h *LedgerHandler) GetLogs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	logs, err := h.Repo.ListLogs()
+	if err != nil {
+		http.Error(w, "Failed to retrieve logs", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(logs)
+}

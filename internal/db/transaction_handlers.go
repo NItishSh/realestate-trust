@@ -138,3 +138,20 @@ func (h *TransactionHandler) FundEscrow(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"funding_received"}`))
 }
+
+// GetTransactions handles GET /transactions
+func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	txs, err := h.Repo.ListTransactions()
+	if err != nil {
+		http.Error(w, "Failed to retrieve transactions", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(txs)
+}

@@ -16,6 +16,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /api/v1/loans", handler.ApplyLoan)
+	mux.HandleFunc("GET /api/v1/loans", handler.GetLoans)
 	mux.HandleFunc("GET /api/v1/loans/{id}", handler.GetLoan)
 	mux.HandleFunc("POST /api/v1/loans/{id}/disburse", handler.DisburseLoan)
 	mux.HandleFunc("POST /api/v1/loans/webhooks/bank", handler.BankWebhook)

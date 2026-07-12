@@ -32,6 +32,7 @@ type FinancingRepository interface {
 	GetLoan(id string) (*Loan, error)
 	ApproveLoan(id string, appAmount float64) error
 	CreateDisbursement(loanID, vaNumber string, amount float64) (*Disbursement, error)
+	ListLoans() ([]*Loan, error)
 }
 
 // InMemoryFinancingRepository implements FinancingRepository.
@@ -111,4 +112,18 @@ func (r *InMemoryFinancingRepository) CreateDisbursement(loanID, vaNumber string
 	}
 
 	return disb, nil
+}
+
+func (r *InMemoryFinancingRepository) ListLoans() ([]*Loan, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var result []*Loan
+	for _, l := range r.loans {
+		result = append(result, l)
+	}
+	if result == nil {
+		return []*Loan{}, nil
+	}
+	return result, nil
 }

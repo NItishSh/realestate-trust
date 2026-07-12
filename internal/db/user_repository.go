@@ -17,13 +17,13 @@ type User struct {
 }
 
 type KYCVerification struct {
-	ID                string    `json:"id"`
-	UserID            string    `json:"userId"`
-	DocumentType      string    `json:"documentType"`
-	DocumentReference string    `json:"documentReference"`
-	Status            string    `json:"status"`
+	ID                string     `json:"id"`
+	UserID            string     `json:"userId"`
+	DocumentType      string     `json:"documentType"`
+	DocumentReference string     `json:"documentReference"`
+	Status            string     `json:"status"`
 	VerifiedAt        *time.Time `json:"verifiedAt"`
-	CreatedAt         time.Time `json:"createdAt"`
+	CreatedAt         time.Time  `json:"createdAt"`
 }
 
 // UserRepository interface defines data actions for users.
@@ -32,18 +32,19 @@ type UserRepository interface {
 	GetUser(id string) (*User, error)
 	SubmitKYC(userID, docType, docRef string) (*KYCVerification, error)
 	GetKYCStatus(userID string) (string, *time.Time, error)
+	ListUsers() ([]*User, error)
 }
 
 // InMemoryUserRepository implements UserRepository using memory stores.
 type InMemoryUserRepository struct {
-	mu           sync.RWMutex
-	users        map[string]*User
+	mu            sync.RWMutex
+	users         map[string]*User
 	verifications map[string]*KYCVerification
 }
 
 func NewInMemoryUserRepository() *InMemoryUserRepository {
 	return &InMemoryUserRepository{
-		users:        make(map[string]*User),
+		users:         make(map[string]*User),
 		verifications: make(map[string]*KYCVerification),
 	}
 }
@@ -102,4 +103,18 @@ func (r *InMemoryUserRepository) GetKYCStatus(userID string) (string, *time.Time
 		return "PENDING", nil, nil
 	}
 	return kyc.Status, kyc.VerifiedAt, nil
+}
+
+func (r *InMemoryUserRepository) ListUsers() ([]*User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var result []*User
+	for _, u := range r.users {
+		result = append(result, u)
+	}
+	if result == nil {
+		return []*User{}, nil
+	}
+	return result, nil
 }

@@ -81,3 +81,20 @@ func (h *TokenizationHandler) BuyShares(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(holding)
 }
+
+// GetPools handles GET /pools
+func (h *TokenizationHandler) GetPools(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pools, err := h.Repo.ListPools()
+	if err != nil {
+		http.Error(w, "Failed to retrieve pools", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(pools)
+}

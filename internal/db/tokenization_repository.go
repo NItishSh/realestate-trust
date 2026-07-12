@@ -12,6 +12,7 @@ type TokenizationRepository interface {
 	CreatePool(propertyID string, totalTokens int64, price float64) (*core.FractionalPool, error)
 	GetPool(id string) (*core.FractionalPool, error)
 	BuyTokens(poolID, investorID string, count int64) (*core.FractionalHolding, error)
+	ListPools() ([]*core.FractionalPool, error)
 }
 
 // InMemoryTokenizationRepository implements TokenizationRepository.
@@ -85,6 +86,21 @@ func (r *InMemoryTokenizationRepository) BuyTokens(poolID, investorID string, co
 	holding.TokenCount += count
 	return holding, nil
 }
+
+func (r *InMemoryTokenizationRepository) ListPools() ([]*core.FractionalPool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var result []*core.FractionalPool
+	for _, p := range r.pools {
+		result = append(result, p)
+	}
+	if result == nil {
+		return []*core.FractionalPool{}, nil
+	}
+	return result, nil
+}
+
 type TokenizationRepositoryTest interface {
 	InMemoryTokenizationRepository
 }

@@ -18,6 +18,7 @@ func main() {
 
 	// Endpoints configured with native Go 1.22+ routing features
 	mux.HandleFunc("POST /api/v1/users", handler.RegisterUser)
+	mux.HandleFunc("GET /api/v1/users", handler.GetUsers)
 	mux.HandleFunc("GET /api/v1/users/{id}", handler.GetUser)
 	mux.HandleFunc("POST /api/v1/users/{id}/kyc", handler.SubmitKYC)
 	mux.HandleFunc("GET /api/v1/users/{id}/kyc/status", handler.GetKYCStatus)

@@ -16,6 +16,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /api/v1/pools", handler.CreatePool)
+	mux.HandleFunc("GET /api/v1/pools", handler.GetPools)
 	mux.HandleFunc("POST /api/v1/pools/{id}/buy", handler.BuyShares)
 
 	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {

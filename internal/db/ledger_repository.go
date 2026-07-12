@@ -13,6 +13,7 @@ type LedgerRepository interface {
 	WriteLog(payload string) (*core.AuditEntry, error)
 	GetLog(index int64) (*core.AuditEntry, error)
 	GetChainLength() int64
+	ListLogs() ([]*core.AuditEntry, error)
 }
 
 // InMemoryLedgerRepository implements LedgerRepository.
@@ -64,4 +65,18 @@ func (r *InMemoryLedgerRepository) GetChainLength() int64 {
 	defer r.mu.RUnlock()
 
 	return int64(len(r.chain))
+}
+
+func (r *InMemoryLedgerRepository) ListLogs() ([]*core.AuditEntry, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	// Return a copy to avoid concurrency issues during serialization
+	result := make([]*core.AuditEntry, len(r.chain))
+	copy(result, r.chain)
+
+	if result == nil {
+		return []*core.AuditEntry{}, nil
+	}
+	return result, nil
 }
