@@ -1,0 +1,42 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/financing-engine
+service:
+  targetPort: 8082
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying financing-engine Loan underwriting API endpoint..."
+    curl -f -X POST -H "Content-Type: application/json" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00}' http://financing-engine:8082/api/v1/loans
+db:
+  migrations:
+    enabled: true
+    scripts:
+      000001_init_financing.up.sql: |
+        CREATE TYPE loan_status AS ENUM ('APPLIED', 'UNDERWRITING', 'APPROVED', 'REJECTED', 'DISBURSED');
+        CREATE TYPE disbursement_status AS ENUM ('PENDING', 'COMPLETED', 'FAILED');
+        CREATE TABLE loans (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            transaction_id UUID NOT NULL,
+            user_id UUID NOT NULL,
+            lender_id UUID,
+            requested_amount DECIMAL(15, 2) NOT NULL,
+            approved_amount DECIMAL(15, 2),
+            status loan_status NOT NULL DEFAULT 'APPLIED',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE disbursements (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+            virtual_account_number VARCHAR(50) NOT NULL,
+            disbursed_amount DECIMAL(15, 2) NOT NULL,
+            transaction_reference VARCHAR(100) UNIQUE NOT NULL,
+            status disbursement_status NOT NULL DEFAULT 'PENDING',
+            disbursed_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX idx_loans_transaction ON loans(transaction_id);
+        CREATE INDEX idx_disbursements_loan ON disbursements(loan_id);

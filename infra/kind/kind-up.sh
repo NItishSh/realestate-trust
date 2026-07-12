@@ -100,42 +100,83 @@ deploy_argocd_and_postgres() {
     log "ArgoCD will now sync the applications from Git."
 }
 
+deploy_helm_local_and_postgres() {
+    step "Deploying Local Helm Charts and PostgreSQL"
+
+    # Create target namespace
+    kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
+
+    # Deploy PostgreSQL
+    kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
+
+    log "Waiting for PostgreSQL to be ready..."
+    kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=120s
+
+    step "Installing Microservices via Helm"
+    local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "frontend")
+    for svc in "${services[@]}"; do
+        log "Installing ${svc}..."
+        helm upgrade --install "${svc}" "${PROJECT_ROOT}/infra/helm/charts/microservice" \
+            --namespace realestate-trust \
+            --values "${SCRIPT_DIR}/values/${svc}.yaml" \
+            --set image.pullPolicy=Never
+    done
+    log "All Helm charts deployed locally."
+}
+
 print_status() {
     step "Cluster Status"
     echo ""
     kubectl get pods -n realestate-trust -o wide
     echo ""
-    log "Access ArgoCD UI:"
-    echo "  kubectl port-forward svc/argocd-server -n argocd 8080:443"
-    echo "  Password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d"
+    log "Access your application:"
+    echo "  Frontend:            http://localhost:3000"
+    echo "  Transaction Manager: http://localhost:8080/api/v1/health"
+    echo "  Identity Service:    http://localhost:8081/api/v1/health"
+    echo "  Financing Engine:    http://localhost:8082/api/v1/health"
+    echo "  Tokenization Engine: http://localhost:8083/api/v1/health"
+    echo "  Ledger Service:      http://localhost:8084/api/v1/health"
     echo ""
     log "Useful commands:"
-    echo "  kubectl get applications -n argocd           # List ArgoCD apps"
-    echo "  kubectl get pods -n realestate-trust         # List application pods"
+    echo "  kubectl get pods -n realestate-trust         # List pods"
+    echo "  ./infra/kind/kind-up.sh --down               # Tear down"
 }
 
 main() {
-    case "${1:-}" in
-        --down)
-            check_dependencies
-            cluster_down
-            ;;
-        --reset)
-            check_dependencies
-            cluster_down
-            cluster_up
-            build_and_load_images
-            deploy_argocd_and_postgres
-            print_status
-            ;;
-        *)
-            check_dependencies
-            cluster_up
-            build_and_load_images
-            deploy_argocd_and_postgres
-            print_status
-            ;;
-    esac
+    local mode="helm"
+
+    for arg in "$@"; do
+        case $arg in
+            --down)
+                check_dependencies
+                cluster_down
+                exit 0
+                ;;
+            --reset)
+                check_dependencies
+                cluster_down
+                cluster_up
+                build_and_load_images
+                ;;
+            --argocd)
+                mode="argocd"
+                ;;
+        esac
+    done
+
+    # If not resetting but cluster doesn't exist, create it
+    if ! kind get clusters 2>/dev/null | grep -q "^${CLUSTER_NAME}$"; then
+        check_dependencies
+        cluster_up
+        build_and_load_images
+    fi
+
+    if [ "$mode" = "argocd" ]; then
+        deploy_argocd_and_postgres
+    else
+        deploy_helm_local_and_postgres
+    fi
+    print_status
 }
 
 main "$@"

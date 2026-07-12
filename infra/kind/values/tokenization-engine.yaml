@@ -1,0 +1,18 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/tokenization-engine
+service:
+  targetPort: 8083
+resources:
+  limits:
+    cpu: 800m
+    memory: 384Mi
+  requests:
+    cpu: 400m
+    memory: 192Mi
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying tokenization-engine pool creation API endpoint..."
+    curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","totalTokens":1000,"tokenPrice":500.0}' http://tokenization-engine:8083/api/v1/pools

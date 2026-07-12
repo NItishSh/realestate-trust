@@ -1,0 +1,45 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/identity-service
+service:
+  targetPort: 8081
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying identity-service User Registration API endpoint..."
+    curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service:8081/api/v1/users
+db:
+  migrations:
+    enabled: true
+    scripts:
+      000001_init_user.up.sql: |
+        CREATE TYPE user_role AS ENUM ('BUYER', 'SELLER', 'BROKER', 'OFFICER', 'ADMIN');
+        CREATE TYPE kyc_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+        CREATE TABLE users (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            email VARCHAR(255) UNIQUE NOT NULL,
+            full_name VARCHAR(150) NOT NULL,
+            role user_role NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE kyc_verifications (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            document_type VARCHAR(50) NOT NULL,
+            document_reference VARCHAR(100) NOT NULL,
+            status kyc_status NOT NULL DEFAULT 'PENDING',
+            verified_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX idx_users_email ON users(email);
+        CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);

@@ -1,0 +1,49 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/transaction-manager
+service:
+  targetPort: 8080
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 500m
+    memory: 256Mi
+ingress:
+  enabled: true
+  whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"
+  path: /api/v1/transactions
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying transaction-manager Escrow Transaction API endpoint..."
+    curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions
+db:
+  migrations:
+    enabled: true
+    scripts:
+      000001_init_escrow.up.sql: |
+        CREATE TYPE transaction_status AS ENUM ('DRAFT', 'ESCROW', 'FUNDED', 'CLOSED', 'CANCELLED');
+        CREATE TABLE transactions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            property_id UUID NOT NULL,
+            buyer_id UUID NOT NULL,
+            seller_id UUID NOT NULL,
+            total_amount DECIMAL(15, 2) NOT NULL,
+            status transaction_status NOT NULL DEFAULT 'DRAFT',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE escrow_accounts (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+            virtual_account_number VARCHAR(50) UNIQUE NOT NULL,
+            bank_partner VARCHAR(100) NOT NULL,
+            balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX idx_transactions_status ON transactions(status);
+        CREATE INDEX idx_escrow_accounts_va ON escrow_accounts(virtual_account_number);
