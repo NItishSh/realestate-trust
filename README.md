@@ -76,12 +76,34 @@ To launch a microservice locally (e.g. Transaction Manager on `:8080`):
 go run cmd/transaction-manager/main.go
 ```
 
-### Running the Complete Stack (Docker Compose)
-To spin up all five services, the PostgreSQL database, and run all SQL migrations sequentially:
+### 1. Docker Compose (Quick Local Dev)
+The fastest way to spin up the entire application stack including the Next.js frontend, all 5 Go microservices, the PostgreSQL database, and run all SQL migrations:
 ```bash
-docker compose up --build
+docker-compose up --build
 ```
-This spins up the database, initializes the three service schemas, applies database migrations, and exposes ports `8080` (Transaction Manager), `8081` (Identity Service), `8082` (Financing Engine), `8083` (Tokenization Engine), and `8084` (Ledger Service) locally.
+This environment is perfect for rapid development and automatically seeds non-production demo data on startup. It exposes:
+* **Frontend UI**: `http://localhost:3000`
+* **Transaction Manager**: `:8080`
+* **Identity Service**: `:8081`
+* **Financing Engine**: `:8082`
+* **Tokenization Engine**: `:8083`
+* **Ledger Service**: `:8084`
+* **Database**: `:5432`
+
+### 2. Kind Cluster (Local Kubernetes & GitOps Testing)
+If you need to validate Kubernetes manifests, Helm charts, or the ArgoCD pipeline locally, we provide a complete bootstrap script for [Kind (Kubernetes in Docker)](https://kind.sigs.k8s.io/).
+
+To provision a local cluster, install ArgoCD, and deploy all services exactly as they run in production via GitOps:
+```bash
+./infra/kind/kind-up.sh
+```
+
+**Commands for Kind:**
+* `./infra/kind/kind-up.sh` — Bootstraps the full cluster and deploys via ArgoCD.
+* `./infra/kind/kind-up.sh --down` — Tears down and deletes the cluster.
+* `./infra/kind/kind-up.sh --reset` — Destroys and recreates the cluster from scratch.
+
+> **Note:** The Kind setup maps the same host ports (`3000`, `8080-8084`) to the cluster's ingress/node ports, meaning the application can be accessed exactly identically regardless of whether you use Docker Compose or Kind.
 
 ---
 
