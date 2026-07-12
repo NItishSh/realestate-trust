@@ -72,9 +72,19 @@ jobs:
     - name: Run Helm Template check
       run: helm template transaction-manager infra/helm/charts/microservice
 
+  verify-compose-stack:
+    name: Verify Docker Compose Stack
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Verify Docker Compose Build
+      run: docker compose build
+
   build-and-push:
     name: Build & Push to GHCR
-    needs: lint-and-test
+    needs: [lint-and-test, verify-compose-stack]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
