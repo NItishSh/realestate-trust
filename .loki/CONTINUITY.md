@@ -3,12 +3,13 @@
 ## Current Phase: Architecture & Design
 
 ### Working Memory
-- **Current Objective**: Refactor Helm smoke tests to enable service-specific critical path script injections via GitOps.
+- **Current Objective**: Design Next.js dashboard portal structure using Tailwind v4 styling and Zustand stores.
 - **Recent Actions**:
-  - Identified that a generic health ping does not test application-specific business requirements.
-  - Drafted an implementation plan templating `smokeTest.script` blocks to execute customized POST API requests against identity, transaction, and financing routes.
+  - Consulted preferences with user (Next.js + Tailwind v4 selected).
+  - Checked `create-next-app` help options.
+  - Drafted an implementation plan detailing directory setups, client state stores, API proxies, layout components, and build test validations.
 
 ### Next Steps
 - Await plan approval.
-- Execute writing Helm template modifications and overrides.
-- Dry-run validation tests.
+- Execute project creation using `create-next-app --disable-git`.
+- Construct components and layouts.

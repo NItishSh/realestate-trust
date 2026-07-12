@@ -93,5 +93,17 @@ services:
     ports:
       - "8084:8084"
 
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - transaction-manager
+      - identity-service
+      - financing-engine
+      - tokenization-engine
+      - ledger-service
+
 volumes:
   pgdata:
