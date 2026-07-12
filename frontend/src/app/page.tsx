@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../lib/store';
 import {
   ShieldAlert,
@@ -9,12 +9,15 @@ import {
   Activity,
   FileCheck2,
   TrendingUp,
-  Cpu
+  Cpu,
+  ArrowRight,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Dashboard() {
   const { transactions, loans, pools, ledger, isLoading } = useStore();
+  const [activeJourney, setActiveJourney] = useState<'buyer' | 'investor' | 'auditor'>('buyer');
 
   // Metrics calculations
   const totalEscrowLocked = transactions
@@ -76,6 +79,120 @@ export default function Dashboard() {
             </div>
           );
         })}
+      </div>
+
+      {/* Guided Demo Journeys */}
+      <div className="glass-panel p-6 rounded-2xl mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-md font-bold tracking-tight">Interactive Guided Journeys</h3>
+            <p className="text-xs text-slate-400">Step-by-step walkthroughs to test the integrated microservices.</p>
+          </div>
+          <Link
+            href="file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/user_journeys.md"
+            target="_blank"
+            className="flex items-center gap-1.5 text-xs text-accent-cyan hover:underline font-mono"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Read Spec Manual
+          </Link>
+        </div>
+
+        <div className="flex gap-4 border-b border-card-border pb-4 mb-6 flex-wrap">
+          <button
+            onClick={() => setActiveJourney('buyer')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'buyer' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Buyer Escrow Flow
+          </button>
+          <button
+            onClick={() => setActiveJourney('investor')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'investor' ? 'bg-accent-blue/15 text-accent-blue' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Fractional Investor Flow
+          </button>
+          <button
+            onClick={() => setActiveJourney('auditor')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'auditor' ? 'bg-violet-400/15 text-violet-400' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            System Auditor Flow
+          </button>
+        </div>
+
+        {activeJourney === 'buyer' && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+              <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 1: Onboard Buyer <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Go to KYC tab, register account as Buyer, and simulate KYC approval.</p>
+            </Link>
+            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+              <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 2: Init Escrow <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Go to Escrow tab and create a new escrow transaction deal.</p>
+            </Link>
+            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+              <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 3: Fund Virtual Acct <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Select transaction, initialize virtual account, and confirm deposit.</p>
+            </Link>
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+              <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 4: Release & Seal <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Close the escrow to release payout. Verify the sealed hash in Ledger logs.</p>
+            </Link>
+          </div>
+        )}
+
+        {activeJourney === 'investor' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+              <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 1: Verify KYC <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Ensure your active user status is KYC APPROVED to unlock pools purchase.</p>
+            </Link>
+            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+              <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 2: Browse Pools <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Explore real estate listings (e.g. PROP-101) and share costs.</p>
+            </Link>
+            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+              <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 3: Buy & Track Yield <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Purchase shares, observe dividend increments, and inspect logs.</p>
+            </Link>
+          </div>
+        )}
+
+        {activeJourney === 'auditor' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-all group">
+              <div className="text-violet-400 font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 1: Write Custom Block <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Enter custom log details and publish a sealed compliance record block.</p>
+            </Link>
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-all group">
+              <div className="text-violet-400 font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
+                Step 2: Verify Hashes Chaining <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[10px] text-slate-500">Analyze the SHA256 chain. Verify that Block Hash matches previous block links.</p>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Grid: Activity Log and Pools Overview */}
