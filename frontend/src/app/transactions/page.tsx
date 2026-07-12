@@ -139,7 +139,7 @@ export default function Transactions() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-slate-500 font-mono block mb-1">ESCROW AMOUNT (USD)</label>
+                <label className="text-[10px] text-slate-500 font-mono block mb-1">ESCROW AMOUNT (INR)</label>
                 <input
                   type="number"
                   value={totalAmount}
@@ -176,7 +176,7 @@ export default function Transactions() {
                 >
                   <div>
                     <h4 className="text-xs font-bold text-slate-200 font-mono">{tx.id}</h4>
-                    <span className="text-[9px] text-slate-500 font-mono">Amt: ${tx.totalAmount.toLocaleString()}</span>
+                    <span className="text-[9px] text-slate-500 font-mono">Amt: ₹{tx.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                   <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full ${
                     tx.status === 'CLOSED' ? 'bg-accent-emerald/10 text-accent-emerald' :
@@ -205,7 +205,7 @@ export default function Transactions() {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-slate-400 font-sans block">Total Purchase Value</span>
-                    <span className="text-xl font-bold font-mono text-slate-200">${selectedTx.totalAmount.toLocaleString()}</span>
+                    <span className="text-xl font-bold font-mono text-slate-200">₹{selectedTx.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 

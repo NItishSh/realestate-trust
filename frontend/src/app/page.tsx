@@ -26,7 +26,7 @@ export default function Dashboard() {
   const totalPoolsSize = pools.length;
 
   const cardData = [
-    { name: 'Escrow Volume Locked', val: `$${totalEscrowLocked.toLocaleString()}`, unit: 'USD', icon: Coins, color: 'text-accent-cyan', bg: 'bg-accent-cyan/10' },
+    { name: 'Escrow Volume Locked', val: `₹${totalEscrowLocked.toLocaleString('en-IN')}`, unit: 'INR', icon: Coins, color: 'text-accent-cyan', bg: 'bg-accent-cyan/10' },
     { name: 'Active Trust Transactions', val: activeDeals, unit: 'Deals', icon: CircleDollarSign, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
     { name: 'Underwritten Mortgages', val: approvedLoans, unit: 'Approved', icon: FileCheck2, color: 'text-accent-emerald', bg: 'bg-accent-emerald/10' },
     { name: 'Cryptographic Blocks', val: ledger.length, unit: 'Sealed', icon: Cpu, color: 'text-violet-400', bg: 'bg-violet-400/10' },
@@ -135,7 +135,7 @@ export default function Dashboard() {
                   <div key={pool.id} className="p-4 rounded-xl bg-slate-900/40 border border-card-border">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-bold text-slate-200 uppercase">{pool.propertyId}</span>
-                      <span className="text-xs font-mono text-accent-cyan">${pool.tokenPrice}/share</span>
+                      <span className="text-xs font-mono text-accent-cyan">₹{pool.tokenPrice.toLocaleString('en-IN')}/share</span>
                     </div>
 
                     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">

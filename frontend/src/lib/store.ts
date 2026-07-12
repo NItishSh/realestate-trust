@@ -81,7 +81,7 @@ export const useStore = create<State>((set, get) => ({
   createTransaction: async (txForm) => {
     const newTx = await api.createTransaction(txForm);
     set((state) => ({ transactions: [...state.transactions, newTx] }));
-    const log = await api.writeLedgerLog(`Transaction Created: ${newTx.id} - ${newTx.totalAmount} USD`);
+    const log = await api.writeLedgerLog(`Transaction Created: ${newTx.id} - ${newTx.totalAmount} INR`);
     set((state) => ({ ledger: [...state.ledger, log] }));
   },
 

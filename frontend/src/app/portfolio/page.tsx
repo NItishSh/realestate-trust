@@ -83,7 +83,7 @@ export default function Portfolio() {
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">Holdings Portfolio Value</span>
-            <h4 className="text-xl font-bold font-mono mt-0.5">${totalValueInvested.toLocaleString()}</h4>
+            <h4 className="text-xl font-bold font-mono mt-0.5">₹{totalValueInvested.toLocaleString('en-IN')}</h4>
           </div>
         </div>
         <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
@@ -92,7 +92,7 @@ export default function Portfolio() {
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">Est. Annualized Dividends (8.2%)</span>
-            <h4 className="text-xl font-bold font-mono mt-0.5 text-accent-emerald">${estimatedYield.toLocaleString()}</h4>
+            <h4 className="text-xl font-bold font-mono mt-0.5 text-accent-emerald">₹{estimatedYield.toLocaleString('en-IN')}</h4>
           </div>
         </div>
         <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
@@ -138,7 +138,7 @@ export default function Portfolio() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 font-mono block mb-1">SHARE PRICE ($)</label>
+                  <label className="text-[10px] text-slate-500 font-mono block mb-1">SHARE PRICE (INR)</label>
                   <input
                     type="text"
                     value={tokenPrice}
@@ -182,7 +182,7 @@ export default function Portfolio() {
                       </h4>
                       <span className="text-[9px] text-slate-500 font-mono mt-1 block">Sold: {percentSold.toFixed(0)}%</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-accent-cyan">${pool.tokenPrice}</span>
+                    <span className="text-xs font-mono font-bold text-accent-cyan">₹{pool.tokenPrice.toLocaleString('en-IN')}</span>
                   </button>
                 );
               })}
@@ -202,7 +202,7 @@ export default function Portfolio() {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-slate-400 block">Unit Cost</span>
-                    <span className="text-xl font-bold font-mono text-slate-200">${selectedPool.tokenPrice.toFixed(2)}</span>
+                    <span className="text-xl font-bold font-mono text-slate-200">₹{selectedPool.tokenPrice.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -259,7 +259,7 @@ export default function Portfolio() {
                           : 'bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary hover:opacity-90 active:scale-95'
                       }`}
                     >
-                      {buyLoading ? 'Processing...' : `Purchase shares for $${(parseInt(shareCount || '0') * selectedPool.tokenPrice).toLocaleString()}`}
+                      {buyLoading ? 'Processing...' : `Purchase shares for ₹${(parseInt(shareCount || '0') * selectedPool.tokenPrice).toLocaleString('en-IN')}`}
                     </button>
                   </div>
                 </form>
