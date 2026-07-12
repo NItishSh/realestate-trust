@@ -2,6 +2,7 @@ image:
   repository: ghcr.io/realestate-trust/monorepo/identity-service
 service:
   type: NodePort
+  port: 8081
   targetPort: 8081
   nodePort: 30081
 resources:
