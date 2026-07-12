@@ -23,7 +23,7 @@ func main() {
 		w.Write([]byte(`{"status":"UP"}`))
 	})
 
-	if err := http.ListenAndServe(":8084", mux); err != nil {
+	if err := http.ListenAndServe(":8084", db.EnableCORS(mux)); err != nil {
 		panic(err)
 	}
 }
