@@ -1,7 +1,9 @@
 image:
   repository: ghcr.io/realestate-trust/monorepo/tokenization-engine
 service:
+  type: NodePort
   targetPort: 8083
+  nodePort: 30083
 resources:
   limits:
     cpu: 800m

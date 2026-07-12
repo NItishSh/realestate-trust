@@ -1,7 +1,9 @@
 image:
   repository: ghcr.io/realestate-trust/monorepo/ledger-service
 service:
+  type: NodePort
   targetPort: 8084
+  nodePort: 30084
 smokeTest:
   enabled: true
   script: |

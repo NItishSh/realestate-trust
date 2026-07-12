@@ -1,7 +1,11 @@
 image:
   repository: ghcr.io/realestate-trust/monorepo/frontend
 service:
+  type: NodePort
   targetPort: 3000
+  nodePort: 30000
+healthCheck:
+  path: /
 resources:
   limits:
     cpu: 500m
