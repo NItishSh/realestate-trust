@@ -44,4 +44,7 @@ db:
 
 smokeTest:
   enabled: false
-  path: /api/v1/health
+  script: |
+    echo "Verifying health of {{ .Release.Name }} on port {{ .Values.service.port }}..."
+    sleep 5
+    curl -f http://{{ .Release.Name }}:{{ .Values.service.port }}/api/v1/health

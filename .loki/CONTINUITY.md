@@ -1,14 +1,14 @@
 # Loki Mode: CONTINUITY
 
-## Current Phase: Git Hooks Integration Completed
+## Current Phase: Architecture & Design
 
 ### Working Memory
-- **Current Objective**: Configure local Git pre-commit hooks to automate formatting, linting, and commit message checks. -> **COMPLETED**.
+- **Current Objective**: Refactor Helm smoke tests to enable service-specific critical path script injections via GitOps.
 - **Recent Actions**:
-  - Designed [.pre-commit-config.yaml](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/.pre-commit-config.yaml) containing exclusions for trailing whitespaces, file end fixes, YAML linting, `go-fmt`, `go-vet`, `golangci-lint`, `helm lint` and `conventional-pre-commit` stages.
-  - Installed Git hooks locally in `.git/hooks/`.
-  - Executed two commits (`chore: configure pre-commit hooks...` and `docs: document pre-commit setup...`) triggering full verification passes cleanly.
-  - Documented setup inside root README.md.
+  - Identified that a generic health ping does not test application-specific business requirements.
+  - Drafted an implementation plan templating `smokeTest.script` blocks to execute customized POST API requests against identity, transaction, and financing routes.
 
 ### Next Steps
-- Production pipeline testing validation loops.
+- Await plan approval.
+- Execute writing Helm template modifications and overrides.
+- Dry-run validation tests.

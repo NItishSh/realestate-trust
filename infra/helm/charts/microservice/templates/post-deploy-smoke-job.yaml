@@ -21,10 +21,7 @@ spec:
         - "sh"
         - "-c"
         - |
-          echo "Verifying health of {{ .Release.Name }} on port {{ .Values.service.port }}..."
-          sleep 5
-          curl -f http://{{ .Release.Name }}:{{ .Values.service.port }}{{ .Values.smokeTest.path }} || exit 1
-          echo "Smoke test passed successfully!"
+          {{- tpl .Values.smokeTest.script . | nindent 10 }}
       restartPolicy: Never
   backoffLimit: 2
 {{- end }}
