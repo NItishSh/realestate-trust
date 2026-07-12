@@ -62,6 +62,7 @@ realestate-trust/
 * Go compiler installed (**v1.26.5** or newer)
 * Docker
 * Helm
+* [pre-commit](https://pre-commit.com/) (run `pre-commit install && pre-commit install --hook-type commit-msg` to install hooks locally)
 
 ### Running Tests
 To run the full unit and integration test suite across the workspace:
