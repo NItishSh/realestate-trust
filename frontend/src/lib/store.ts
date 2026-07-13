@@ -23,6 +23,7 @@ interface State {
   setActiveTxId: (id: string | null) => void;
   login: (email: string, password?: string) => Promise<void>;
   logout: () => void;
+  logAction: (message: string) => Promise<void>;
 }
 
 export const useStore = create<State>((set, get) => ({
@@ -67,8 +68,10 @@ export const useStore = create<State>((set, get) => ({
     const newUser = await api.registerUser(userForm);
     set((state) => ({ users: [...state.users, newUser], currentUser: newUser }));
     if (typeof window !== 'undefined') localStorage.setItem('user_email', newUser.email);
-    // Log to ledger
-    const log = await api.writeLedgerLog(`User Registered: ${newUser.fullName} (${newUser.role})`);
+  },
+
+  logAction: async (message: string) => {
+    const log = await api.writeLedgerLog(message);
     set((state) => ({ ledger: [...state.ledger, log] }));
   },
 

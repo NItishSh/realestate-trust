@@ -14,7 +14,7 @@ export default function SignupPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { registerUser, login } = useStore();
+  const { registerUser, login, logAction } = useStore();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +25,10 @@ export default function SignupPage() {
       await registerUser(formData);
       // Automatically login after signup
       await login(formData.email, formData.password);
+
+      // Log to ledger after we have a valid token
+      await logAction(`User Registered: ${formData.fullName} (${formData.role})`);
+
       window.location.href = '/';
     } catch (err) {
       setError('Registration failed. Please try again.');
@@ -39,7 +43,7 @@ export default function SignupPage() {
           <ShieldCheck className="w-10 h-10 text-bg-primary" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-2">Create an Account</h1>
-        <p className="text-slate-400">Join Trust RealEstate Monorepo Portal</p>
+        <p className="text-slate-400">Join Trust RealEstate Portal</p>
       </div>
 
       <div className="glass-panel p-8 rounded-3xl relative overflow-hidden">

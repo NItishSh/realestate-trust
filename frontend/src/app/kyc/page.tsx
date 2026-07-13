@@ -58,7 +58,7 @@ export default function KYCPage() {
   };
 
   const checklistItems = [
-    { name: 'Profile Registration', desc: 'Monorepo account initialized', done: !!currentUser },
+    { name: 'Profile Registration', desc: 'Account initialized', done: !!currentUser },
     { name: 'Identity Document Submission', desc: 'Secure ID/Passport details verified', done: !!(currentUser && currentUser.documentReference) },
     { name: 'KYC Verification Status', desc: 'Loki KYC engines consent checks passed', done: !!(currentUser && currentUser.kycStatus === 'APPROVED') },
     { name: 'Compliance Escrow Permission', desc: 'Virtual accounts and payment rails unlocked', done: !!(currentUser && currentUser.kycStatus === 'APPROVED') }

@@ -33,7 +33,7 @@ export default function LoginPage() {
           <ShieldCheck className="w-10 h-10 text-bg-primary" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome Back</h1>
-        <p className="text-slate-400">Sign in to Trust RealEstate Monorepo Portal</p>
+        <p className="text-slate-400">Sign in to Trust RealEstate Portal</p>
       </div>
 
       <div className="glass-panel p-8 rounded-3xl relative overflow-hidden">

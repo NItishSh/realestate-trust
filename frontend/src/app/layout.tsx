@@ -53,7 +53,7 @@ export default function RootLayout({
               </div>
               <div>
                 <h1 className="font-bold text-sm tracking-wide uppercase">Trust RealEstate</h1>
-                <span className="text-xs text-accent-cyan font-mono">Monorepo Portal</span>
+                <span className="text-xs text-accent-cyan font-mono">Portal</span>
               </div>
             </div>
 
