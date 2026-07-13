@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
@@ -44,7 +45,9 @@ func (h *LedgerHandler) WriteLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(entry)
+	if err := json.NewEncoder(w).Encode(entry); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetLog handles GET /logs/{index}
@@ -73,7 +76,9 @@ func (h *LedgerHandler) GetLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(entry)
+	if err := json.NewEncoder(w).Encode(entry); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetLogs handles GET /logs
@@ -90,5 +95,7 @@ func (h *LedgerHandler) GetLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
+	if err := json.NewEncoder(w).Encode(logs); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

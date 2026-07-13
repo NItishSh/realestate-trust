@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -23,7 +24,9 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(properties)
+	if err := json.NewEncoder(w).Encode(properties); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 func (h *PropertyHandler) GetProperty(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +43,9 @@ func (h *PropertyHandler) GetProperty(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(p)
+	if err := json.NewEncoder(w).Encode(p); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // UnlockDocuments Request Payload
@@ -95,5 +100,7 @@ func (h *PropertyHandler) UnlockDocuments(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

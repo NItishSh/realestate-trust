@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -49,7 +50,9 @@ func SeedUsers(repo *InMemoryUserRepository) {
 	for _, u := range users {
 		user, _ := repo.CreateUser(u.Email, "dummyhash", u.FullName, u.Role)
 		// Submit KYC for seed users
-		repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID)
+		if _, err := repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID); err != nil {
+			slog.Error("failed to submit KYC", "err", err)
+		}
 		fmt.Printf("  [seed] User: %s (%s) — KYC SUBMITTED\n", user.FullName, user.ID)
 	}
 }
@@ -72,7 +75,9 @@ func SeedTransactions(repo *InMemoryTransactionRepository) {
 		tx, _ := repo.CreateTransaction(t.PropertyID, t.BuyerID, t.SellerID, t.TotalAmount)
 		if t.Advance {
 			// Advance from DRAFT → ESCROW
-			repo.UpdateTransactionStatus(tx.ID, core.Escrow)
+			if err := repo.UpdateTransactionStatus(tx.ID, core.Escrow); err != nil {
+				slog.Error("failed to update tx status", "err", err)
+			}
 		}
 		fmt.Printf("  [seed] Transaction: %s — ₹%.0f (%s)\n", tx.ID, tx.TotalAmount, tx.Status)
 	}
@@ -94,7 +99,9 @@ func SeedLoans(repo *InMemoryFinancingRepository) {
 	for _, l := range loans {
 		loan, _ := repo.CreateLoan(l.TxID, l.UserID, l.ReqAmount)
 		if l.Approved {
-			repo.ApproveLoan(loan.ID, l.AppAmount)
+			if err := repo.ApproveLoan(loan.ID, l.AppAmount); err != nil {
+				slog.Error("failed to approve loan", "err", err)
+			}
 		}
 		fmt.Printf("  [seed] Loan: %s — ₹%.0f (status: %s)\n", loan.ID, loan.RequestedAmount, loan.Status)
 	}
@@ -115,7 +122,9 @@ func SeedPools(repo *InMemoryTokenizationRepository) {
 	for _, p := range pools {
 		pool, _ := repo.CreatePool(p.PropertyID, p.TotalTokens, p.TokenPrice)
 		if p.SoldTokens > 0 {
-			repo.BuyTokens(pool.ID, "usr-aryan.dev@realestate.in", p.SoldTokens)
+			if _, err := repo.BuyTokens(pool.ID, "usr-aryan.dev@realestate.in", p.SoldTokens); err != nil {
+				slog.Error("failed to buy tokens", "err", err)
+			}
 		}
 		fmt.Printf("  [seed] Pool: %s — ₹%.0f/share (%d/%d sold)\n", pool.PropertyID, pool.TokenPrice, p.SoldTokens, p.TotalTokens)
 	}
@@ -135,7 +144,9 @@ func SeedLedger(repo *InMemoryLedgerRepository) {
 	}
 
 	for _, payload := range entries {
-		repo.WriteLog(payload)
+		if _, err := repo.WriteLog(payload); err != nil {
+			slog.Error("failed to write ledger log", "err", err)
+		}
 	}
 	fmt.Printf("  [seed] Ledger: %d audit entries sealed\n", len(entries))
 }

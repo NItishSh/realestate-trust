@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -49,7 +50,9 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(tx)
+	if err := json.NewEncoder(w).Encode(tx); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetTransaction handles GET /transactions/{id}
@@ -73,7 +76,9 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tx)
+	if err := json.NewEncoder(w).Encode(tx); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // UpdateStatus handles PUT /transactions/{id}/status
@@ -104,7 +109,7 @@ func (h *TransactionHandler) UpdateStatus(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"success"}`))
+	_, _ = w.Write([]byte(`{"status":"success"}`))
 }
 
 // FundEscrow handles POST /transactions/{id}/escrow/fund
@@ -140,7 +145,7 @@ func (h *TransactionHandler) FundEscrow(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"funding_received"}`))
+	_, _ = w.Write([]byte(`{"status":"funding_received"}`))
 }
 
 // GetTransactions handles GET /transactions
@@ -157,5 +162,7 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(txs)
+	if err := json.NewEncoder(w).Encode(txs); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

@@ -75,8 +75,5 @@ func (r *InMemoryLedgerRepository) ListLogs() ([]*core.AuditEntry, error) {
 	result := make([]*core.AuditEntry, len(r.chain))
 	copy(result, r.chain)
 
-	if result == nil {
-		return []*core.AuditEntry{}, nil
-	}
 	return result, nil
 }

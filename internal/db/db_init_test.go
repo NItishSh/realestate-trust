@@ -21,7 +21,11 @@ func TestLiveDatabaseMigrations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("failed to close db: %v", err)
+		}
+	}()
 
 	// Verify connection is alive
 	if err := db.Ping(); err != nil {

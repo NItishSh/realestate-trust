@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -49,7 +50,9 @@ func (h *FinancingHandler) ApplyLoan(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(loan)
+	if err := json.NewEncoder(w).Encode(loan); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetLoan handles GET /loans/{id}
@@ -72,7 +75,9 @@ func (h *FinancingHandler) GetLoan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(loan)
+	if err := json.NewEncoder(w).Encode(loan); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // DisburseLoan handles POST /loans/{id}/disburse
@@ -112,7 +117,9 @@ func (h *FinancingHandler) DisburseLoan(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(disb)
+	if err := json.NewEncoder(w).Encode(disb); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // BankWebhook handles POST /loans/webhooks/bank
@@ -142,7 +149,7 @@ func (h *FinancingHandler) BankWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"processed"}`))
+	_, _ = w.Write([]byte(`{"status":"processed"}`))
 }
 
 // GetLoans handles GET /loans
@@ -159,5 +166,7 @@ func (h *FinancingHandler) GetLoans(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(loans)
+	if err := json.NewEncoder(w).Encode(loans); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -51,7 +52,9 @@ func (h *TokenizationHandler) CreatePool(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(pool)
+	if err := json.NewEncoder(w).Encode(pool); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // BuyShares handles POST /pools/{id}/buy
@@ -81,7 +84,9 @@ func (h *TokenizationHandler) BuyShares(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(holding)
+	if err := json.NewEncoder(w).Encode(holding); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetPools handles GET /pools
@@ -98,5 +103,7 @@ func (h *TokenizationHandler) GetPools(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(pools)
+	if err := json.NewEncoder(w).Encode(pools); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

@@ -6,6 +6,7 @@ func TestValidateRegistration(t *testing.T) {
 	valid := RegisterUserRequest{
 		Email:    "buyer@example.com",
 		FullName: "Jane Doe",
+		Password: "secret123",
 		Role:     Buyer,
 	}
 	if err := ValidateRegistration(valid); err != nil {
@@ -15,6 +16,7 @@ func TestValidateRegistration(t *testing.T) {
 	invalidEmail := RegisterUserRequest{
 		Email:    "invalid-email",
 		FullName: "Jane Doe",
+		Password: "secret123",
 		Role:     Buyer,
 	}
 	if err := ValidateRegistration(invalidEmail); err == nil {

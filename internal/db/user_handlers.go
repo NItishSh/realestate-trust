@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -50,7 +51,9 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 type LoginRequest struct {
@@ -95,9 +98,11 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"token": token,
-	})
+	}); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetUser handles GET /users/{id}
@@ -121,7 +126,9 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // SubmitKYC handles POST /users/{id}/kyc
@@ -157,7 +164,9 @@ func (h *UserHandler) SubmitKYC(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(kyc)
+	if err := json.NewEncoder(w).Encode(kyc); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetKYCStatus handles GET /users/{id}/kyc/status
@@ -180,11 +189,13 @@ func (h *UserHandler) GetKYCStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"userId":     userID,
 		"status":     status,
 		"verifiedAt": verifiedAt,
-	})
+	}); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }
 
 // GetUsers handles GET /users
@@ -201,5 +212,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		slog.Error("failed to encode response", "err", err)
+	}
 }

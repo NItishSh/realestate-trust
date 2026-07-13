@@ -18,6 +18,7 @@ func TestUserHandlersIntegration(t *testing.T) {
 	reqBody, _ := json.Marshal(core.RegisterUserRequest{
 		Email:    "test@example.com",
 		FullName: "Test User",
+		Password: "secretpassword",
 		Role:     core.Buyer,
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/users", bytes.NewBuffer(reqBody))
@@ -29,7 +30,9 @@ func TestUserHandlersIntegration(t *testing.T) {
 	}
 
 	var user User
-	json.NewDecoder(w.Body).Decode(&user)
+	if err := json.NewDecoder(w.Body).Decode(&user); err != nil {
+		t.Fatalf("failed to decode: %v", err)
+	}
 	if user.Email != "test@example.com" {
 		t.Errorf("expected user email test@example.com; got %s", user.Email)
 	}
@@ -39,7 +42,7 @@ func TestUserHandlersIntegration(t *testing.T) {
 		DocumentType:      "PASSPORT",
 		DocumentReference: "P987654321",
 	})
-	
+
 	// We mimic path parameter mapping since standard ServeMux context values are populated by router
 	reqKYC := httptest.NewRequest(http.MethodPost, "/api/v1/users/usr-test@example.com/kyc", bytes.NewBuffer(kycBody))
 	reqKYC.SetPathValue("id", "usr-test@example.com")
@@ -71,7 +74,9 @@ func TestTransactionHandlersIntegration(t *testing.T) {
 	}
 
 	var tx Transaction
-	json.NewDecoder(w.Body).Decode(&tx)
+	if err := json.NewDecoder(w.Body).Decode(&tx); err != nil {
+		t.Fatalf("failed to decode: %v", err)
+	}
 	if tx.TotalAmount != 1000000.0 || tx.Status != core.Draft {
 		t.Errorf("unexpected transaction fields: %+v", tx)
 	}
@@ -112,4 +117,3 @@ func TestLedgerHandlersIntegration(t *testing.T) {
 		t.Errorf("expected status 201 Created; got %d", w.Code)
 	}
 }
-
