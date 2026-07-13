@@ -92,7 +92,8 @@ const ports = {
   identity: 8081,
   financing: 8082,
   tokenization: 8083,
-  ledger: 8084
+  ledger: 8084,
+  properties: 8085
 };
 
 async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Promise<T> {
@@ -209,5 +210,10 @@ export const api = {
     payload: log,
     previousHash: mockBlocks[mockBlocks.length - 1].hash,
     hash: Math.random().toString(36).substr(2, 10) + "mockhash"
-  })
+  }),
+
+  // 6. Property Registry API mappings
+  getProperties: () => safeFetch<any[]>(`${API_BASE}:${ports.properties}/api/v1/properties`, { method: "GET" }, [
+    { id: "prop-101", address: "123 Ocean View Dr, Malibu", description: "Luxury beachfront villa", value: 4500000, thumbnail: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", ownerId: "usr-priya.sharma@realestate.in" }
+  ])
 };

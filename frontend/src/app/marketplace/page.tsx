@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { api } from '../../lib/api';
 
 interface Property {
   id: string;
@@ -18,11 +19,7 @@ export default function MarketplacePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8085/api/v1/properties')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch properties');
-        return res.json();
-      })
+    api.getProperties()
       .then((data) => {
         setProperties(data || []);
         setLoading(false);
