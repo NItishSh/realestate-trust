@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/realestate-trust/monorepo/internal/core"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ShouldSeed returns true when the environment is non-production.
@@ -48,7 +49,8 @@ func SeedUsers(repo *InMemoryUserRepository) {
 	}
 
 	for _, u := range users {
-		user, _ := repo.CreateUser(u.Email, "dummyhash", u.FullName, u.Role)
+		hash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+		user, _ := repo.CreateUser(u.Email, string(hash), u.FullName, u.Role)
 		// Submit KYC for seed users
 		if _, err := repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID); err != nil {
 			slog.Error("failed to submit KYC", "err", err)

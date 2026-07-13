@@ -3,7 +3,7 @@ package db
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
@@ -23,7 +23,7 @@ type CreateLoanRequest struct {
 }
 
 // ApplyLoan handles POST /loans
-func (h *FinancingHandler) ApplyLoan(c echo.Context) error {
+func (h *FinancingHandler) ApplyLoan(c *echo.Context) error {
 	var req CreateLoanRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
@@ -43,7 +43,7 @@ func (h *FinancingHandler) ApplyLoan(c echo.Context) error {
 }
 
 // GetLoan handles GET /loans/{id}
-func (h *FinancingHandler) GetLoan(c echo.Context) error {
+func (h *FinancingHandler) GetLoan(c *echo.Context) error {
 	loanID := c.Param("id")
 	if loanID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing loan ID"})
@@ -58,7 +58,7 @@ func (h *FinancingHandler) GetLoan(c echo.Context) error {
 }
 
 // DisburseLoan handles POST /loans/{id}/disburse
-func (h *FinancingHandler) DisburseLoan(c echo.Context) error {
+func (h *FinancingHandler) DisburseLoan(c *echo.Context) error {
 	loanID := c.Param("id")
 	if loanID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing loan ID"})
@@ -88,7 +88,7 @@ func (h *FinancingHandler) DisburseLoan(c echo.Context) error {
 }
 
 // BankWebhook handles POST /loans/webhooks/bank
-func (h *FinancingHandler) BankWebhook(c echo.Context) error {
+func (h *FinancingHandler) BankWebhook(c *echo.Context) error {
 	var payload struct {
 		ApplicationID  string  `json:"applicationId"`
 		Status         string  `json:"status"`
@@ -110,7 +110,7 @@ func (h *FinancingHandler) BankWebhook(c echo.Context) error {
 }
 
 // GetLoans handles GET /loans
-func (h *FinancingHandler) GetLoans(c echo.Context) error {
+func (h *FinancingHandler) GetLoans(c *echo.Context) error {
 	loans, err := h.Repo.ListLoans()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve loans"})

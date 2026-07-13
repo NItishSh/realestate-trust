@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,7 +18,7 @@ func NewUserHandler(repo UserRepository) *UserHandler {
 }
 
 // RegisterUser handles POST /users
-func (h *UserHandler) RegisterUser(c echo.Context) error {
+func (h *UserHandler) RegisterUser(c *echo.Context) error {
 	var req core.RegisterUserRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
@@ -48,7 +48,7 @@ type LoginRequest struct {
 }
 
 // Login handles POST /login
-func (h *UserHandler) Login(c echo.Context) error {
+func (h *UserHandler) Login(c *echo.Context) error {
 	var req LoginRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
@@ -77,7 +77,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 }
 
 // GetUser handles GET /users/{id}
-func (h *UserHandler) GetUser(c echo.Context) error {
+func (h *UserHandler) GetUser(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
@@ -93,7 +93,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 }
 
 // SubmitKYC handles POST /users/{id}/kyc
-func (h *UserHandler) SubmitKYC(c echo.Context) error {
+func (h *UserHandler) SubmitKYC(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
@@ -118,7 +118,7 @@ func (h *UserHandler) SubmitKYC(c echo.Context) error {
 }
 
 // GetKYCStatus handles GET /users/{id}/kyc/status
-func (h *UserHandler) GetKYCStatus(c echo.Context) error {
+func (h *UserHandler) GetKYCStatus(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
@@ -137,7 +137,7 @@ func (h *UserHandler) GetKYCStatus(c echo.Context) error {
 }
 
 // GetUsers handles GET /users
-func (h *UserHandler) GetUsers(c echo.Context) error {
+func (h *UserHandler) GetUsers(c *echo.Context) error {
 	users, err := h.Repo.ListUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve users"})

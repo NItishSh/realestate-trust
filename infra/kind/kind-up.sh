@@ -118,7 +118,7 @@ deploy_helm_local_and_postgres() {
 
     log "Waiting for PostgreSQL to be ready..."
     sleep 5
-    kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=120s
+    kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
 
     step "Installing Microservices via Helm"
     local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")

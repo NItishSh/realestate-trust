@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type LedgerHandler struct {
@@ -20,7 +20,7 @@ type WriteLogRequest struct {
 }
 
 // WriteLog handles POST /logs
-func (h *LedgerHandler) WriteLog(c echo.Context) error {
+func (h *LedgerHandler) WriteLog(c *echo.Context) error {
 	var req WriteLogRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
@@ -39,7 +39,7 @@ func (h *LedgerHandler) WriteLog(c echo.Context) error {
 }
 
 // GetLog handles GET /logs/{index}
-func (h *LedgerHandler) GetLog(c echo.Context) error {
+func (h *LedgerHandler) GetLog(c *echo.Context) error {
 	idxStr := c.Param("index")
 	if idxStr == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing index parameter"})
@@ -59,7 +59,7 @@ func (h *LedgerHandler) GetLog(c echo.Context) error {
 }
 
 // GetLogs handles GET /logs
-func (h *LedgerHandler) GetLogs(c echo.Context) error {
+func (h *LedgerHandler) GetLogs(c *echo.Context) error {
 	logs, err := h.Repo.ListLogs()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve logs"})

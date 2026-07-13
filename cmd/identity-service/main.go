@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -31,9 +31,6 @@ func main() {
 	handler := db.NewUserHandler(repo)
 
 	e := echo.New()
-	e.HideBanner = true
-	e.HidePort = true
-
 	// Security and global middlewares
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -46,10 +43,10 @@ func main() {
 		ContentTypeNosniff: "nosniff",
 		XFrameOptions:      "DENY",
 	}))
-	e.Use(middleware.BodyLimit("1M"))
+	e.Use(middleware.BodyLimit(1 << 20))
 
 	// Health check
-	e.GET("/api/v1/health", func(c echo.Context) error {
+	e.GET("/api/v1/health", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
 	})
 

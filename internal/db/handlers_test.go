@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
@@ -55,8 +55,7 @@ func TestUserHandlersIntegration(t *testing.T) {
 	reqKYC.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	wKYC := httptest.NewRecorder()
 	cKYC := e.NewContext(reqKYC, wKYC)
-	cKYC.SetParamNames("id")
-	cKYC.SetParamValues("usr-test@example.com")
+	cKYC.SetPathValues(echo.PathValues{echo.PathValue{Name: "id", Value: "usr-test@example.com"}})
 
 	errKYC := handler.SubmitKYC(cKYC)
 	if errKYC != nil {

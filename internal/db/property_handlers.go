@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type PropertyHandler struct {
@@ -17,7 +17,7 @@ func NewPropertyHandler(repo PropertyRepository) *PropertyHandler {
 	return &PropertyHandler{Repo: repo}
 }
 
-func (h *PropertyHandler) ListProperties(c echo.Context) error {
+func (h *PropertyHandler) ListProperties(c *echo.Context) error {
 	properties, err := h.Repo.ListProperties()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -26,7 +26,7 @@ func (h *PropertyHandler) ListProperties(c echo.Context) error {
 	return c.JSON(http.StatusOK, properties)
 }
 
-func (h *PropertyHandler) GetProperty(c echo.Context) error {
+func (h *PropertyHandler) GetProperty(c *echo.Context) error {
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing id"})
@@ -45,7 +45,7 @@ type UnlockRequest struct {
 	BuyerID string `json:"buyerId"`
 }
 
-func (h *PropertyHandler) UnlockDocuments(c echo.Context) error {
+func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing property id"})

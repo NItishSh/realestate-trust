@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
@@ -24,7 +24,7 @@ type CreateTxRequest struct {
 }
 
 // CreateTransaction handles POST /transactions
-func (h *TransactionHandler) CreateTransaction(c echo.Context) error {
+func (h *TransactionHandler) CreateTransaction(c *echo.Context) error {
 	var req CreateTxRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
@@ -43,7 +43,7 @@ func (h *TransactionHandler) CreateTransaction(c echo.Context) error {
 }
 
 // GetTransaction handles GET /transactions/{id}
-func (h *TransactionHandler) GetTransaction(c echo.Context) error {
+func (h *TransactionHandler) GetTransaction(c *echo.Context) error {
 	txID := c.Param("id")
 	if txID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
@@ -59,7 +59,7 @@ func (h *TransactionHandler) GetTransaction(c echo.Context) error {
 }
 
 // UpdateStatus handles PUT /transactions/{id}/status
-func (h *TransactionHandler) UpdateStatus(c echo.Context) error {
+func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 	txID := c.Param("id")
 	if txID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
@@ -81,7 +81,7 @@ func (h *TransactionHandler) UpdateStatus(c echo.Context) error {
 }
 
 // FundEscrow handles POST /transactions/{id}/escrow/fund
-func (h *TransactionHandler) FundEscrow(c echo.Context) error {
+func (h *TransactionHandler) FundEscrow(c *echo.Context) error {
 	txID := c.Param("id")
 	if txID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
@@ -107,7 +107,7 @@ func (h *TransactionHandler) FundEscrow(c echo.Context) error {
 }
 
 // GetTransactions handles GET /transactions
-func (h *TransactionHandler) GetTransactions(c echo.Context) error {
+func (h *TransactionHandler) GetTransactions(c *echo.Context) error {
 	txs, err := h.Repo.ListTransactions()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve transactions"})

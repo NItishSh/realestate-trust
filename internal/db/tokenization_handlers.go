@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type TokenizationHandler struct {
@@ -27,7 +27,7 @@ type BuySharesRequest struct {
 }
 
 // CreatePool handles POST /pools
-func (h *TokenizationHandler) CreatePool(c echo.Context) error {
+func (h *TokenizationHandler) CreatePool(c *echo.Context) error {
 	var req CreatePoolRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
@@ -46,7 +46,7 @@ func (h *TokenizationHandler) CreatePool(c echo.Context) error {
 }
 
 // BuyShares handles POST /pools/{id}/buy
-func (h *TokenizationHandler) BuyShares(c echo.Context) error {
+func (h *TokenizationHandler) BuyShares(c *echo.Context) error {
 	poolID := c.Param("id")
 	if poolID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing pool ID"})
@@ -67,7 +67,7 @@ func (h *TokenizationHandler) BuyShares(c echo.Context) error {
 }
 
 // GetPools handles GET /pools
-func (h *TokenizationHandler) GetPools(c echo.Context) error {
+func (h *TokenizationHandler) GetPools(c *echo.Context) error {
 	pools, err := h.Repo.ListPools()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve pools"})
