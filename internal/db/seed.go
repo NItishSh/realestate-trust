@@ -47,7 +47,7 @@ func SeedUsers(repo *InMemoryUserRepository) {
 	}
 
 	for _, u := range users {
-		user, _ := repo.CreateUser(u.Email, u.FullName, u.Role)
+		user, _ := repo.CreateUser(u.Email, "dummyhash", u.FullName, u.Role)
 		// Submit KYC for seed users
 		repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID)
 		fmt.Printf("  [seed] User: %s (%s) — KYC SUBMITTED\n", user.FullName, user.ID)

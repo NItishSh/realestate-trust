@@ -18,7 +18,7 @@ smokeTest:
     echo "Sleeping for pod startup..."
     sleep 5
     echo "Verifying identity-service User Registration API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service:8081/api/v1/users
+    curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","password":"SecurePassword123!","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service:8081/api/v1/users
 env:
   - name: DATABASE_URL
     valueFrom:
@@ -54,3 +54,5 @@ db:
         );
         CREATE INDEX idx_users_email ON users(email);
         CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);
+      000002_add_password.up.sql: |
+        ALTER TABLE users ADD COLUMN password_hash VARCHAR(255) NOT NULL DEFAULT '';

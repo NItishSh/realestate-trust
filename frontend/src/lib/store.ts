@@ -21,6 +21,8 @@ interface State {
   buyTokens: (poolId: string, count: number) => Promise<void>;
   createPool: (pool: Partial<FractionalPool>) => Promise<void>;
   setActiveTxId: (id: string | null) => void;
+  login: (email: string, password?: string) => Promise<void>;
+  logout: () => void;
 }
 
 export const useStore = create<State>((set, get) => ({
@@ -43,13 +45,15 @@ export const useStore = create<State>((set, get) => ({
         api.getPools(),
         api.getLedger()
       ]);
+      const currentEmail = typeof window !== 'undefined' ? localStorage.getItem('user_email') : null;
+      const currentUser = users.find(u => u.email === currentEmail) || users[0] || null;
       set({
         users,
         transactions,
         loans,
         pools,
         ledger,
-        currentUser: users[0] || null,
+        currentUser,
         isLoading: false
       });
     } catch (e) {
@@ -62,6 +66,7 @@ export const useStore = create<State>((set, get) => ({
   registerUser: async (userForm) => {
     const newUser = await api.registerUser(userForm);
     set((state) => ({ users: [...state.users, newUser], currentUser: newUser }));
+    if (typeof window !== 'undefined') localStorage.setItem('user_email', newUser.email);
     // Log to ledger
     const log = await api.writeLedgerLog(`User Registered: ${newUser.fullName} (${newUser.role})`);
     set((state) => ({ ledger: [...state.ledger, log] }));
@@ -119,5 +124,28 @@ export const useStore = create<State>((set, get) => ({
     set((state) => ({ ledger: [...state.ledger, log] }));
   },
 
-  setActiveTxId: (id) => set({ activeTxId: id })
+  setActiveTxId: (id) => set({ activeTxId: id }),
+
+  login: async (email: string, password?: string) => {
+    const data = await api.login(email, password);
+    if (data && data.token) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_email', email);
+      }
+      const users = await api.getUsers();
+      const currentUser = users.find(u => u.email === email) || users[0] || null;
+      set({ users, currentUser });
+    } else {
+      throw new Error("Invalid login response");
+    }
+  },
+
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('user_email');
+      window.location.href = '/login';
+    }
+    set({ currentUser: null });
+  }
 }));

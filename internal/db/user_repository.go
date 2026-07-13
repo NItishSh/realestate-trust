@@ -9,11 +9,12 @@ import (
 )
 
 type User struct {
-	ID        string        `json:"id"`
-	Email     string        `json:"email"`
-	FullName  string        `json:"fullName"`
-	Role      core.UserRole `json:"role"`
-	CreatedAt time.Time     `json:"createdAt"`
+	ID           string        `json:"id"`
+	Email        string        `json:"email"`
+	PasswordHash string        `json:"-"`
+	FullName     string        `json:"fullName"`
+	Role         core.UserRole `json:"role"`
+	CreatedAt    time.Time     `json:"createdAt"`
 }
 
 type KYCVerification struct {
@@ -28,8 +29,9 @@ type KYCVerification struct {
 
 // UserRepository interface defines data actions for users.
 type UserRepository interface {
-	CreateUser(email, name string, role core.UserRole) (*User, error)
+	CreateUser(email, passwordHash, name string, role core.UserRole) (*User, error)
 	GetUser(id string) (*User, error)
+	GetUserByEmail(email string) (*User, error)
 	SubmitKYC(userID, docType, docRef string) (*KYCVerification, error)
 	GetKYCStatus(userID string) (string, *time.Time, error)
 	ListUsers() ([]*User, error)
@@ -49,18 +51,19 @@ func NewInMemoryUserRepository() *InMemoryUserRepository {
 	}
 }
 
-func (r *InMemoryUserRepository) CreateUser(email, name string, role core.UserRole) (*User, error) {
+func (r *InMemoryUserRepository) CreateUser(email, passwordHash, name string, role core.UserRole) (*User, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	// Minimal mock UUID generation
 	id := "usr-" + email
 	user := &User{
-		ID:        id,
-		Email:     email,
-		FullName:  name,
-		Role:      role,
-		CreatedAt: time.Now(),
+		ID:           id,
+		Email:        email,
+		PasswordHash: passwordHash,
+		FullName:     name,
+		Role:         role,
+		CreatedAt:    time.Now(),
 	}
 	r.users[id] = user
 	return user, nil
@@ -75,6 +78,18 @@ func (r *InMemoryUserRepository) GetUser(id string) (*User, error) {
 		return nil, errors.New("user not found")
 	}
 	return user, nil
+}
+
+func (r *InMemoryUserRepository) GetUserByEmail(email string) (*User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, user := range r.users {
+		if user.Email == email {
+			return user, nil
+		}
+	}
+	return nil, errors.New("user not found")
 }
 
 func (r *InMemoryUserRepository) SubmitKYC(userID, docType, docRef string) (*KYCVerification, error) {

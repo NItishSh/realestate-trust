@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -31,11 +32,17 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := core.ValidateRegistration(req); err != nil {
 		log.Printf("ValidateRegistration error: %v\n", err)
-		http.Error(w, "Invalid registration data", http.StatusBadRequest)
+		http.Error(w, "Invalid registration data: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.Repo.CreateUser(req.Email, req.FullName, req.Role)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Failed to process password", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := h.Repo.CreateUser(req.Email, string(hashedPassword), req.FullName, req.Role)
 	if err != nil {
 		http.Error(w, "Failed to register user", http.StatusInternalServerError)
 		return
@@ -47,7 +54,8 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type LoginRequest struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // Login handles POST /login
@@ -63,14 +71,23 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Email == "" {
-		http.Error(w, "Email required", http.StatusBadRequest)
+	if req.Email == "" || req.Password == "" {
+		http.Error(w, "Email and password required", http.StatusBadRequest)
 		return
 	}
 
-	// For demo: Generate a JWT with user ID based on email
-	userID := "usr-" + req.Email
-	token, err := GenerateJWT(userID)
+	user, err := h.Repo.GetUserByEmail(req.Email)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := GenerateJWT(user.ID)
 	if err != nil {
 		log.Printf("GenerateJWT error: %v\n", err)
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)

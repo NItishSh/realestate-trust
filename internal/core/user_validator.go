@@ -18,6 +18,7 @@ const (
 
 type RegisterUserRequest struct {
 	Email    string   `json:"email"`
+	Password string   `json:"password"`
 	FullName string   `json:"fullName"`
 	Role     UserRole `json:"role"`
 }
@@ -32,6 +33,10 @@ func ValidateRegistration(req RegisterUserRequest) error {
 	_, err := mail.ParseAddress(req.Email)
 	if err != nil {
 		return errors.New("invalid email address format")
+	}
+
+	if len(req.Password) < 8 {
+		return errors.New("password must be at least 8 characters long")
 	}
 
 	if len(strings.TrimSpace(req.FullName)) < 2 {

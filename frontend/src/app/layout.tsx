@@ -13,7 +13,8 @@ import {
   User as UserIcon,
   ShieldCheck,
   RefreshCw,
-  Search
+  Search,
+  LogOut
 } from 'lucide-react';
 import './globals.css';
 
@@ -23,7 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { currentUser, users, fetchInitialData, setCurrentUser } = useStore();
+  const { currentUser, users, fetchInitialData, logout } = useStore();
+  const isAuthRoute = pathname === '/login' || pathname === '/signup';
 
   useEffect(() => {
     fetchInitialData();
@@ -41,8 +43,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="flex h-screen bg-bg-primary text-foreground font-sans">
-        {/* Sidebar Navigation */}
-        <aside className="w-64 bg-bg-secondary border-r border-card-border flex flex-col justify-between shrink-0">
+        {!isAuthRoute && (
+          <aside className="w-64 bg-bg-secondary border-r border-card-border flex flex-col justify-between shrink-0">
           <div>
             {/* Header */}
             <div className="p-6 border-b border-card-border flex items-center gap-3">
@@ -92,21 +94,14 @@ export default function RootLayout({
                   </div>
                 </div>
 
-                {/* Profile switcher */}
-                <select
-                  className="bg-transparent border-0 text-[10px] text-slate-400 cursor-pointer focus:outline-none hover:text-foreground font-mono"
-                  value={currentUser.id}
-                  onChange={(e) => {
-                    const selected = users.find(u => u.id === e.target.value);
-                    if (selected) setCurrentUser(selected);
-                  }}
+                {/* Logout Button */}
+                <button
+                  onClick={() => logout()}
+                  className="bg-transparent border-0 text-slate-400 cursor-pointer hover:text-red-400 transition-colors p-1"
+                  title="Logout"
                 >
-                  {users.map(u => (
-                    <option key={u.id} value={u.id} className="bg-bg-secondary text-foreground text-xs">
-                      {u.fullName.split(' ')[0]}
-                    </option>
-                  ))}
-                </select>
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             )}
             <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500 font-mono">
@@ -118,10 +113,11 @@ export default function RootLayout({
             </div>
           </div>
         </aside>
+        )}
 
         {/* Content Container */}
-        <main className="flex-1 overflow-y-auto p-8 relative">
-          <div className="max-w-6xl mx-auto">
+        <main className={`flex-1 overflow-y-auto relative ${isAuthRoute ? 'flex items-center justify-center p-0 bg-bg-secondary' : 'p-8'}`}>
+          <div className={isAuthRoute ? 'w-full max-w-md' : 'max-w-6xl mx-auto'}>
             {children}
           </div>
         </main>

@@ -10,6 +10,7 @@ export interface User {
   kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   documentType?: string;
   documentReference?: string;
+  password?: string;
 }
 
 export interface Transaction {
@@ -111,25 +112,31 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
 
     if (res.status === 401) {
        console.error("Unauthorized request");
-       // Could redirect to login here
+       if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+         window.location.href = '/login';
+       }
+       throw new Error("Unauthorized");
     }
 
     if (!res.ok) throw new Error("API error status");
     return await res.json() as T;
   } catch (e) {
-    // Graceful fallback to mock data
+    if (e instanceof Error && e.message === "Unauthorized") {
+      throw e;
+    }
+    // Graceful fallback to mock data for other errors
     return fallback;
   }
 }
 
 export const api = {
   // Auth
-  login: async (email: string) => {
+  login: async (email: string, password?: string) => {
     try {
       const res = await fetch(`${API_BASE}:${ports.identity}/api/v1/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, password })
       });
       if (res.ok) {
         const data = await res.json();
