@@ -66,7 +66,7 @@ export default function SignupPage() {
               <input
                 type="text"
                 required
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -83,7 +83,7 @@ export default function SignupPage() {
               <input
                 type="email"
                 required
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
                 placeholder="investor@gmail.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -100,7 +100,7 @@ export default function SignupPage() {
               <input
                 type="password"
                 required
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -115,7 +115,7 @@ export default function SignupPage() {
                 <Briefcase className="h-5 w-5 text-slate-500" />
               </div>
               <select
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors appearance-none"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors appearance-none"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
               >
@@ -131,7 +131,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isLoading || !formData.email || !formData.fullName || !formData.password}
-            className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-bg-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-bg-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors transition-transform transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

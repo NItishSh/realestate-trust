@@ -122,7 +122,7 @@ export default function Portfolio() {
                   type="text"
                   value={propertyId}
                   onChange={e => setPropertyId(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -133,7 +133,7 @@ export default function Portfolio() {
                     type="number"
                     value={totalTokens}
                     onChange={e => setTotalTokens(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -143,7 +143,7 @@ export default function Portfolio() {
                     type="text"
                     value={tokenPrice}
                     onChange={e => setTokenPrice(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -152,9 +152,9 @@ export default function Portfolio() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isSubmitting ? 'Creating...' : 'Initialize Pool'}
+                {isSubmitting ? 'Creating…' : 'Initialize Pool'}
               </button>
             </form>
           </div>
@@ -169,7 +169,7 @@ export default function Portfolio() {
                   <button
                     key={pool.id}
                     onClick={() => setSelectedPoolId(pool.id)}
-                    className={`w-full p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
+                    className={`w-full p-3 rounded-xl text-left border transition-colors transition-transform transition-opacity flex items-center justify-between ${
                       selectedPool?.id === pool.id
                         ? 'bg-slate-800/40 border-accent-cyan/40'
                         : 'bg-transparent border-card-border hover:bg-slate-900/40'
@@ -214,7 +214,7 @@ export default function Portfolio() {
                   </div>
                   <div className="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-card-border">
                     <div
-                      className="bg-gradient-to-r from-accent-cyan to-accent-blue h-full transition-all duration-500"
+                      className="bg-gradient-to-r from-accent-cyan to-accent-blue h-full transition-colors transition-transform transition-opacity duration-500"
                       style={{ width: `${(selectedPool.tokensSold / selectedPool.totalTokens) * 100}%` }}
                     />
                   </div>
@@ -244,7 +244,7 @@ export default function Portfolio() {
                       value={shareCount}
                       onChange={e => setShareCount(e.target.value)}
                       disabled={currentUser?.kycStatus !== 'APPROVED'}
-                      className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                      className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                       required
                     />
                   </div>
@@ -253,13 +253,13 @@ export default function Portfolio() {
                     <button
                       type="submit"
                       disabled={buyLoading || currentUser?.kycStatus !== 'APPROVED'}
-                      className={`w-full font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      className={`w-full font-bold text-xs py-3 rounded-xl transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer ${
                         currentUser?.kycStatus !== 'APPROVED'
                           ? 'bg-slate-800 text-slate-600 border border-card-border cursor-not-allowed'
                           : 'bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary hover:opacity-90 active:scale-95'
                       }`}
                     >
-                      {buyLoading ? 'Processing...' : `Purchase shares for ₹${(parseInt(shareCount || '0') * selectedPool.tokenPrice).toLocaleString('en-IN')}`}
+                      {buyLoading ? 'Processing…' : `Purchase shares for ₹${(parseInt(shareCount || '0') * selectedPool.tokenPrice).toLocaleString('en-IN')}`}
                     </button>
                   </div>
                 </form>

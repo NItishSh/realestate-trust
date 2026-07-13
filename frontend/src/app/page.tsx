@@ -40,7 +40,7 @@ export default function Dashboard() {
       <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <RefreshCwIcon className="w-8 h-8 text-accent-cyan animate-spin" />
-          <p className="text-slate-400 text-sm font-mono">Synchronizing workspace states...</p>
+          <p className="text-slate-400 text-sm font-mono">Synchronizing workspace states…</p>
         </div>
       </div>
     );
@@ -63,7 +63,7 @@ export default function Dashboard() {
         {cardData.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.name} className="glass-panel p-6 rounded-2xl relative overflow-hidden group transition-all duration-300 hover:-translate-y-1">
+            <div key={card.name} className="glass-panel p-6 rounded-2xl relative overflow-hidden group transition-colors transition-transform transition-opacity duration-300 hover:-translate-y-1">
               <div className="flex justify-between items-start mb-4">
                 <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase">{card.name}</span>
                 <div className={`p-2 rounded-xl ${card.bg}`}>
@@ -101,7 +101,7 @@ export default function Dashboard() {
         <div className="flex gap-4 border-b border-card-border pb-4 mb-6 flex-wrap">
           <button
             onClick={() => setActiveJourney('buyer')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
               activeJourney === 'buyer' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -109,7 +109,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveJourney('investor')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
               activeJourney === 'investor' ? 'bg-accent-blue/15 text-accent-blue' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -117,7 +117,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveJourney('auditor')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
               activeJourney === 'auditor' ? 'bg-violet-400/15 text-violet-400' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -127,25 +127,25 @@ export default function Dashboard() {
 
         {activeJourney === 'buyer' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 1: Onboard Buyer <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Go to KYC tab, register account as Buyer, and simulate KYC approval.</p>
             </Link>
-            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 2: Init Escrow <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Go to Escrow tab and create a new escrow transaction deal.</p>
             </Link>
-            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+            <Link href="/transactions" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 3: Fund Virtual Acct <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Select transaction, initialize virtual account, and confirm deposit.</p>
             </Link>
-            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all group">
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-cyan font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 4: Release & Seal <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -156,19 +156,19 @@ export default function Dashboard() {
 
         {activeJourney === 'investor' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+            <Link href="/kyc" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 1: Verify KYC <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Ensure your active user status is KYC APPROVED to unlock pools purchase.</p>
             </Link>
-            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 2: Browse Pools <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Explore real estate listings (e.g. PROP-101) and share costs.</p>
             </Link>
-            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-all group">
+            <Link href="/portfolio" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-blue/20 transition-colors transition-transform transition-opacity group">
               <div className="text-accent-blue font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 3: Buy & Track Yield <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -179,13 +179,13 @@ export default function Dashboard() {
 
         {activeJourney === 'auditor' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-all group">
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-colors transition-transform transition-opacity group">
               <div className="text-violet-400 font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 1: Write Custom Block <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-500">Enter custom log details and publish a sealed compliance record block.</p>
             </Link>
-            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-all group">
+            <Link href="/ledger" className="p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-violet-400/20 transition-colors transition-transform transition-opacity group">
               <div className="text-violet-400 font-bold text-xs mb-1 group-hover:underline flex items-center gap-1">
                 Step 2: Verify Hashes Chaining <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </div>

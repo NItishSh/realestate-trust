@@ -56,7 +56,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
                 placeholder="investor@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -73,7 +73,7 @@ export default function LoginPage() {
               <input
                 type="password"
                 required
-                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
+                className="w-full bg-slate-900/50 border border-card-border rounded-xl py-3 pl-12 pr-4 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-colors"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -84,7 +84,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading || !email || !password}
-            className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-bg-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-bg-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors transition-transform transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

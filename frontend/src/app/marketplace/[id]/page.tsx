@@ -86,7 +86,7 @@ export default function PropertyDetailsPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading property...</div>;
+  if (loading) return <div className="p-8 text-center">Loading property…</div>;
   if (error || !property) return <div className="p-8 text-center text-red-500">Error: {error || 'Property not found'}</div>;
 
   return (
@@ -138,7 +138,7 @@ export default function PropertyDetailsPage() {
                   disabled={unlocking}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
                 >
-                  {unlocking ? 'Processing Escrow...' : 'Deposit ₹50,000 & Unlock Docs'}
+                  {unlocking ? 'Processing Escrow…' : 'Deposit ₹50,000 & Unlock Docs'}
                 </button>
                 {unlockMessage && (
                   <p className="mt-4 text-red-500 text-sm">{unlockMessage}</p>
@@ -159,7 +159,7 @@ export default function PropertyDetailsPage() {
                     type="number"
                     value={totalTokens}
                     onChange={e => setTotalTokens(e.target.value)}
-                    className="w-full border border-blue-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full border border-blue-300 rounded-lg px-4 py-2 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus:border-blue-500"
                     required
                   />
                 </div>
@@ -169,7 +169,7 @@ export default function PropertyDetailsPage() {
                     type="number"
                     value={tokenPrice}
                     onChange={e => setTokenPrice(e.target.value)}
-                    className="w-full border border-blue-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full border border-blue-300 rounded-lg px-4 py-2 outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus:border-blue-500"
                     required
                   />
                 </div>
@@ -178,7 +178,7 @@ export default function PropertyDetailsPage() {
                   disabled={isTokenizing}
                   className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-blue-400"
                 >
-                  {isTokenizing ? 'Processing...' : 'Create Fractional Pool'}
+                  {isTokenizing ? 'Processing…' : 'Create Fractional Pool'}
                 </button>
               </form>
             </div>

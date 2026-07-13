@@ -129,7 +129,7 @@ export default function Transactions() {
                   type="text"
                   value={propertyId}
                   onChange={e => setPropertyId(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -140,7 +140,7 @@ export default function Transactions() {
                     type="text"
                     value={buyerId}
                     onChange={e => setBuyerId(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -150,7 +150,7 @@ export default function Transactions() {
                     type="text"
                     value={sellerId}
                     onChange={e => setSellerId(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -161,7 +161,7 @@ export default function Transactions() {
                   type="number"
                   value={totalAmount}
                   onChange={e => setTotalAmount(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -169,9 +169,9 @@ export default function Transactions() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isSubmitting ? 'Creating...' : 'Initialize Escrow'}
+                {isSubmitting ? 'Creating…' : 'Initialize Escrow'}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </form>
@@ -185,7 +185,7 @@ export default function Transactions() {
                 <button
                   key={tx.id}
                   onClick={() => setSelectedTxId(tx.id)}
-                  className={`w-full p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
+                  className={`w-full p-3 rounded-xl text-left border transition-colors transition-transform transition-opacity flex items-center justify-between ${
                     selectedTx?.id === tx.id
                       ? 'bg-slate-800/40 border-accent-cyan/40'
                       : 'bg-transparent border-card-border hover:bg-slate-900/40'
@@ -282,7 +282,7 @@ export default function Transactions() {
                         value={fundAmount}
                         onChange={(e) => setFundAmount(e.target.value)}
                         placeholder="Amount to deposit"
-                        className="bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-blue font-mono w-40"
+                        className="bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus:border-accent-blue font-mono w-40"
                         required
                       />
                       <button
@@ -291,7 +291,7 @@ export default function Transactions() {
                         className="px-6 py-3 rounded-xl bg-accent-blue text-white text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <Coins className="w-4 h-4" />
-                        {isFunding ? 'Funding...' : 'Confirm Funding Deposit'}
+                        {isFunding ? 'Funding…' : 'Confirm Funding Deposit'}
                       </button>
                     </form>
                   )}

@@ -88,7 +88,7 @@ export default function KYCPage() {
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-sans"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-sans"
                   placeholder="e.g. John Doe"
                   required
                 />
@@ -99,7 +99,7 @@ export default function KYCPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   placeholder="name@domain.com"
                   required
                 />
@@ -109,7 +109,7 @@ export default function KYCPage() {
                 <select
                   value={role}
                   onChange={e => setRole(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan cursor-pointer"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                 >
                   <option value="BUYER">BUYER (Investor / Homeowner)</option>
                   <option value="SELLER">SELLER (Builder / Owner)</option>
@@ -120,9 +120,9 @@ export default function KYCPage() {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
-                {regLoading ? 'Registering...' : 'Register Account'}
+                {regLoading ? 'Registering…' : 'Register Account'}
               </button>
             </form>
           </div>
@@ -140,7 +140,7 @@ export default function KYCPage() {
                   <select
                     value={docType}
                     onChange={e => setDocType(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan cursor-pointer"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                   >
                     <option value="PASSPORT">PASSPORT</option>
                     <option value="DRIVERS_LICENSE">DRIVER'S LICENSE</option>
@@ -153,7 +153,7 @@ export default function KYCPage() {
                     type="text"
                     value={docRef}
                     onChange={e => setDocRef(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan font-mono"
+                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     placeholder="e.g. P120389A"
                     required
                   />
@@ -162,13 +162,13 @@ export default function KYCPage() {
                 <button
                   type="submit"
                   disabled={kycLoading || !!currentUser.documentReference}
-                  className={`w-full font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`w-full font-bold text-xs py-3 rounded-xl transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer ${
                     currentUser.documentReference
                       ? 'bg-slate-800 text-slate-500 border border-card-border cursor-not-allowed'
                       : 'bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary hover:opacity-90 active:scale-95'
                   }`}
                 >
-                  {kycLoading ? 'Submitting...' : currentUser.documentReference ? 'KYC Already Submitted' : 'Submit Verification'}
+                  {kycLoading ? 'Submitting…' : currentUser.documentReference ? 'KYC Already Submitted' : 'Submit Verification'}
                 </button>
               </form>
             </div>

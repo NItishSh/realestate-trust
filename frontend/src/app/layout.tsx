@@ -66,7 +66,7 @@ export default function RootLayout({
                   <Link
                     key={item.name}
                     href={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors transition-transform transition-opacity duration-200 ${
                       isActive
                         ? 'bg-accent-cyan/10 text-accent-cyan font-semibold border-l-2 border-accent-cyan'
                         : 'text-slate-400 hover:bg-slate-800/40 hover:text-foreground'

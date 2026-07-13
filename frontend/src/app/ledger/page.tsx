@@ -63,7 +63,7 @@ export default function LedgerPage() {
                 <textarea
                   value={logPayload}
                   onChange={e => setLogPayload(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent-cyan min-h-[100px]"
+                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan min-h-[100px]"
                   placeholder="e.g. Escrow verification released for transaction tx-1"
                   required
                 />
@@ -72,9 +72,9 @@ export default function LedgerPage() {
               <button
                 type="submit"
                 disabled={writeLoading}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
-                {writeLoading ? 'Writing Block...' : 'Publish Audit Block'}
+                {writeLoading ? 'Writing Block…' : 'Publish Audit Block'}
               </button>
             </form>
           </div>
@@ -103,10 +103,10 @@ export default function LedgerPage() {
             <Search className="w-5 h-5 text-slate-500 shrink-0" />
             <input
               type="text"
-              placeholder="Search logs by payload message or hash..."
+              placeholder="Search logs by payload message or hash…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="bg-transparent border-0 text-xs w-full text-foreground focus:outline-none placeholder-slate-500"
+              className="bg-transparent border-0 text-xs w-full text-foreground outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan placeholder-slate-500"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function LedgerPage() {
                     </div>
 
                     {/* Block Info */}
-                    <div className="flex-1 p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-all duration-300">
+                    <div className="flex-1 p-4 rounded-xl bg-slate-900/40 border border-card-border hover:border-accent-cyan/20 transition-colors transition-transform transition-opacity duration-300">
                       <div className="flex justify-between items-start gap-4 mb-2 flex-wrap">
                         <p className="text-xs font-bold text-slate-200 font-sans">{block.payload}</p>
                         <span className="text-[10px] text-slate-500 font-mono">
