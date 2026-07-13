@@ -1,5 +1,5 @@
 # --- BASE BUILDER STAGE ---
-FROM golang:alpine AS builder-base
+FROM golang:1.26.5-alpine AS builder-base
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \

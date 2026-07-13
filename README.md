@@ -16,6 +16,8 @@ The platform is structured as a single monorepo comprising five isolated Go micr
 4. **Fractional Tokenization Engine** (`cmd/tokenization-engine`): Handles fractional pool creation, token purchases, and property digital share bounds.
 5. **Immutable Audit Ledger** (`cmd/ledger-service`): Implements a SHA256 cryptographic logging ledger, guaranteeing tamperproof trails for all platform transactions.
 
+> 📖 **Read the Definitive Guide:** For an in-depth deep dive into the architecture, state machines, deployment patterns, and security models, read the comprehensive [System Manual](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/system_manual.md).
+
 ---
 
 ## 2. Directory Layout
@@ -33,6 +35,7 @@ realestate-trust/
 │   ├── tokenization-engine/
 │   └── transaction-manager/
 ├── docs/                         # Architecture, research, and analysis documentation
+│   ├── system_manual.md          # Definitive System Manual and architectural guide
 │   └── research/                 # Observability, database HA, and network security specs
 ├── infra/                        # Infrastructure configurations
 │   ├── gitops/                   # Declarative ArgoCD App-of-Apps manifests
