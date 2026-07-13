@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -66,7 +67,8 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 
 	tx, err := h.Repo.GetTransaction(txID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Printf("GetTransaction error: %v\n", err)
+		http.Error(w, "Transaction not found", http.StatusNotFound)
 		return
 	}
 
@@ -96,7 +98,8 @@ func (h *TransactionHandler) UpdateStatus(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := h.Repo.UpdateTransactionStatus(txID, req.NewState); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("UpdateTransactionStatus error: %v\n", err)
+		http.Error(w, "Failed to update transaction status", http.StatusBadRequest)
 		return
 	}
 
@@ -131,7 +134,8 @@ func (h *TransactionHandler) FundEscrow(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := h.Repo.FundEscrow(txID, req.Amount); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("FundEscrow error: %v\n", err)
+		http.Error(w, "Failed to fund escrow", http.StatusInternalServerError)
 		return
 	}
 

@@ -36,3 +36,8 @@ pgdata/
 # Coverage reports
 coverage.txt
 coverage.html
+
+# Crypto/Security keys
+*.pem
+*.key
+*.crt

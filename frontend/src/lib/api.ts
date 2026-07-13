@@ -96,7 +96,24 @@ const ports = {
 
 async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Promise<T> {
   try {
-    const res = await fetch(url, { ...options, signal: AbortSignal.timeout(1500) });
+    // Inject Authorization header if token exists
+    const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
+    const headers = new Headers(options.headers || {});
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      signal: AbortSignal.timeout(1500)
+    });
+
+    if (res.status === 401) {
+       console.error("Unauthorized request");
+       // Could redirect to login here
+    }
+
     if (!res.ok) throw new Error("API error status");
     return await res.json() as T;
   } catch (e) {
@@ -106,6 +123,26 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
 }
 
 export const api = {
+  // Auth
+  login: async (email: string) => {
+    try {
+      const res = await fetch(`${API_BASE}:${ports.identity}/api/v1/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('jwt_token', data.token);
+        }
+        return data;
+      }
+    } catch (e) {
+      console.error("Login failed", e);
+    }
+  },
+
   // 1. Identity Service API mappings
   getUsers: () => safeFetch<User[]>(`${API_BASE}:${ports.identity}/api/v1/users`, { method: "GET" }, mockUsers),
   registerUser: (user: Partial<User>) => safeFetch<User>(`${API_BASE}:${ports.identity}/api/v1/users`, {

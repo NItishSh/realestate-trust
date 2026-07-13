@@ -85,6 +85,9 @@ deploy_argocd_and_postgres() {
     # Create target namespace
     kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
 
+    # Create Secrets
+    "${SCRIPT_DIR}/create-secrets.sh"
+
     # Deploy PostgreSQL (Dependency for ArgoCD apps)
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
 
@@ -106,6 +109,9 @@ deploy_helm_local_and_postgres() {
 
     # Create target namespace
     kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
+
+    # Create Secrets
+    "${SCRIPT_DIR}/create-secrets.sh"
 
     # Deploy PostgreSQL
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"

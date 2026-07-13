@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -74,7 +75,8 @@ func (h *TokenizationHandler) BuyShares(w http.ResponseWriter, r *http.Request) 
 
 	holding, err := h.Repo.BuyTokens(poolID, req.InvestorID, req.TokenCount)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("BuyTokens error: %v\n", err)
+		http.Error(w, "Failed to buy shares", http.StatusBadRequest)
 		return
 	}
 

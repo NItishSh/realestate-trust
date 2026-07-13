@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -29,7 +30,8 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := core.ValidateRegistration(req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("ValidateRegistration error: %v\n", err)
+		http.Error(w, "Invalid registration data", http.StatusBadRequest)
 		return
 	}
 
@@ -42,6 +44,43 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(user)
+}
+
+type LoginRequest struct {
+	Email string `json:"email"`
+}
+
+// Login handles POST /login
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.Email == "" {
+		http.Error(w, "Email required", http.StatusBadRequest)
+		return
+	}
+
+	// For demo: Generate a JWT with user ID based on email
+	userID := "usr-" + req.Email
+	token, err := GenerateJWT(userID)
+	if err != nil {
+		log.Printf("GenerateJWT error: %v\n", err)
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"token": token,
+	})
 }
 
 // GetUser handles GET /users/{id}
@@ -59,7 +98,8 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Repo.GetUser(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Printf("GetUser error: %v\n", err)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -87,7 +127,8 @@ func (h *UserHandler) SubmitKYC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := core.ValidateKYC(req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("ValidateKYC error: %v\n", err)
+		http.Error(w, "Invalid KYC data", http.StatusBadRequest)
 		return
 	}
 

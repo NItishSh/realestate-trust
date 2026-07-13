@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/realestate-trust/monorepo/internal/db"
 )
@@ -22,18 +23,26 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /api/v1/transactions", handler.CreateTransaction)
-	mux.HandleFunc("GET /api/v1/transactions", handler.GetTransactions)
-	mux.HandleFunc("GET /api/v1/transactions/{id}", handler.GetTransaction)
-	mux.HandleFunc("PUT /api/v1/transactions/{id}/status", handler.UpdateStatus)
-	mux.HandleFunc("POST /api/v1/transactions/{id}/escrow/fund", handler.FundEscrow)
+	mux.Handle("POST /api/v1/transactions", db.JWTAuth(http.HandlerFunc(handler.CreateTransaction)))
+	mux.Handle("GET /api/v1/transactions", db.JWTAuth(http.HandlerFunc(handler.GetTransactions)))
+	mux.Handle("GET /api/v1/transactions/{id}", db.JWTAuth(http.HandlerFunc(handler.GetTransaction)))
+	mux.Handle("PUT /api/v1/transactions/{id}/status", db.JWTAuth(http.HandlerFunc(handler.UpdateStatus)))
+	mux.Handle("POST /api/v1/transactions/{id}/escrow/fund", db.JWTAuth(http.HandlerFunc(handler.FundEscrow)))
 
 	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"UP"}`))
 	})
 
-	if err := http.ListenAndServe(":8080", db.EnableCORS(mux)); err != nil {
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      db.Chain(mux, db.EnableCORS, db.SecurityHeaders, db.MaxBodySize(1<<20)),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	fmt.Println("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
+	if err := srv.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

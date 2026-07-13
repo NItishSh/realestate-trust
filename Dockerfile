@@ -13,44 +13,44 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/tokenization-engi
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/ledger-service cmd/ledger-service/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/property-registry-service cmd/property-registry-service/main.go
 
+# --- BASE RUNTIME STAGE ---
+FROM alpine:latest AS base-runtime
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup -u 1001
+WORKDIR /home/appuser
+USER appuser
+
 # --- TARGET: Transaction Manager ---
-FROM alpine:latest AS transaction-manager
-WORKDIR /root/
-COPY --from=builder /bin/transaction-manager .
+FROM base-runtime AS transaction-manager
+COPY --from=builder --chown=appuser:appgroup /bin/transaction-manager .
 EXPOSE 8080
 CMD ["./transaction-manager"]
 
 # --- TARGET: Identity Service ---
-FROM alpine:latest AS identity-service
-WORKDIR /root/
-COPY --from=builder /bin/identity-service .
+FROM base-runtime AS identity-service
+COPY --from=builder --chown=appuser:appgroup /bin/identity-service .
 EXPOSE 8081
 CMD ["./identity-service"]
 
 # --- TARGET: Financing Engine ---
-FROM alpine:latest AS financing-engine
-WORKDIR /root/
-COPY --from=builder /bin/financing-engine .
+FROM base-runtime AS financing-engine
+COPY --from=builder --chown=appuser:appgroup /bin/financing-engine .
 EXPOSE 8082
 CMD ["./financing-engine"]
 
 # --- TARGET: Tokenization Engine ---
-FROM alpine:latest AS tokenization-engine
-WORKDIR /root/
-COPY --from=builder /bin/tokenization-engine .
+FROM base-runtime AS tokenization-engine
+COPY --from=builder --chown=appuser:appgroup /bin/tokenization-engine .
 EXPOSE 8083
 CMD ["./tokenization-engine"]
 
 # --- TARGET: Ledger Service ---
-FROM alpine:latest AS ledger-service
-WORKDIR /root/
-COPY --from=builder /bin/ledger-service .
+FROM base-runtime AS ledger-service
+COPY --from=builder --chown=appuser:appgroup /bin/ledger-service .
 EXPOSE 8084
 CMD ["./ledger-service"]
 
 # --- TARGET: Property Registry Service ---
-FROM alpine:latest AS property-registry-service
-WORKDIR /root/
-COPY --from=builder /bin/property-registry-service .
+FROM base-runtime AS property-registry-service
+COPY --from=builder --chown=appuser:appgroup /bin/property-registry-service .
 EXPOSE 8085
 CMD ["./property-registry-service"]

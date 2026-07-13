@@ -14,21 +14,6 @@ data:
         CREATE DATABASE financing_db;
     EOSQL
 ---
-# PostgreSQL Secret
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-credentials
-  namespace: realestate-trust
-type: Opaque
-stringData:
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_DB: postgres
-  DATABASE_URL_IDENTITY: postgres://postgres:postgres@postgres:5432/identity_db?sslmode=disable
-  DATABASE_URL_TRANSACTIONS: postgres://postgres:postgres@postgres:5432/transactions_db?sslmode=disable
-  DATABASE_URL_FINANCING: postgres://postgres:postgres@postgres:5432/financing_db?sslmode=disable
----
 # PostgreSQL Service (headless for StatefulSet)
 apiVersion: v1
 kind: Service
