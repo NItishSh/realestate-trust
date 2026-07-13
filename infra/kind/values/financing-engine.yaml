@@ -10,8 +10,10 @@ smokeTest:
   script: |
     echo "Sleeping for pod startup..."
     sleep 5
+    echo "Getting JWT token..."
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"investor@gmail.com"}' http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
     echo "Verifying financing-engine Loan underwriting API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00,"propertyValue":1000000.00}' http://financing-engine:8082/api/v1/loans
+    curl -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00,"propertyValue":1000000.00}' http://financing-engine:8082/api/v1/loans
 env:
   - name: DATABASE_URL
     valueFrom:

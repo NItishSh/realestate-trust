@@ -21,8 +21,10 @@ smokeTest:
   script: |
     echo "Sleeping for pod startup..."
     sleep 5
+    echo "Getting JWT token..."
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"investor@gmail.com"}' http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
     echo "Verifying transaction-manager Escrow Transaction API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions
+    curl -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions
 env:
   - name: DATABASE_URL
     valueFrom:

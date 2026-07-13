@@ -10,5 +10,7 @@ smokeTest:
   script: |
     echo "Sleeping for pod startup..."
     sleep 5
+    echo "Getting JWT token..."
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"investor@gmail.com"}' http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
     echo "Verifying ledger-service transaction block write API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -d '{"payload":"smoke audit log"}' http://ledger-service:8084/api/v1/logs
+    curl -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"payload":"smoke audit log"}' http://ledger-service:8084/api/v1/logs
