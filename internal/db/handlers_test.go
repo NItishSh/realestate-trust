@@ -7,10 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/labstack/echo/v4"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 func TestUserHandlersIntegration(t *testing.T) {
+	e := echo.New()
 	repo := NewInMemoryUserRepository()
 	handler := NewUserHandler(repo)
 
@@ -22,8 +24,14 @@ func TestUserHandlersIntegration(t *testing.T) {
 		Role:     core.Buyer,
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/users", bytes.NewBuffer(reqBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
-	handler.RegisterUser(w, req)
+	c := e.NewContext(req, w)
+
+	err := handler.RegisterUser(c)
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected status 201 Created; got %d", w.Code)
@@ -43,11 +51,17 @@ func TestUserHandlersIntegration(t *testing.T) {
 		DocumentReference: "P987654321",
 	})
 
-	// We mimic path parameter mapping since standard ServeMux context values are populated by router
 	reqKYC := httptest.NewRequest(http.MethodPost, "/api/v1/users/usr-test@example.com/kyc", bytes.NewBuffer(kycBody))
-	reqKYC.SetPathValue("id", "usr-test@example.com")
+	reqKYC.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	wKYC := httptest.NewRecorder()
-	handler.SubmitKYC(wKYC, reqKYC)
+	cKYC := e.NewContext(reqKYC, wKYC)
+	cKYC.SetParamNames("id")
+	cKYC.SetParamValues("usr-test@example.com")
+
+	errKYC := handler.SubmitKYC(cKYC)
+	if errKYC != nil {
+		t.Fatalf("handler returned error: %v", errKYC)
+	}
 
 	if wKYC.Code != http.StatusAccepted {
 		t.Errorf("expected status 202 Accepted; got %d", wKYC.Code)
@@ -55,6 +69,7 @@ func TestUserHandlersIntegration(t *testing.T) {
 }
 
 func TestTransactionHandlersIntegration(t *testing.T) {
+	e := echo.New()
 	repo := NewInMemoryTransactionRepository()
 	handler := NewTransactionHandler(repo)
 
@@ -66,8 +81,14 @@ func TestTransactionHandlersIntegration(t *testing.T) {
 		TotalAmount: 1000000.0,
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/transactions", bytes.NewBuffer(txBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
-	handler.CreateTransaction(w, req)
+	c := e.NewContext(req, w)
+
+	err := handler.CreateTransaction(c)
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected status 201 Created; got %d", w.Code)
@@ -83,6 +104,7 @@ func TestTransactionHandlersIntegration(t *testing.T) {
 }
 
 func TestTokenizationHandlersIntegration(t *testing.T) {
+	e := echo.New()
 	repo := NewInMemoryTokenizationRepository()
 	handler := NewTokenizationHandler(repo)
 
@@ -93,8 +115,14 @@ func TestTokenizationHandlersIntegration(t *testing.T) {
 		TokenPrice:  500.0,
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/pools", bytes.NewBuffer(poolBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
-	handler.CreatePool(w, req)
+	c := e.NewContext(req, w)
+
+	err := handler.CreatePool(c)
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected status 201 Created; got %d", w.Code)
@@ -102,6 +130,7 @@ func TestTokenizationHandlersIntegration(t *testing.T) {
 }
 
 func TestLedgerHandlersIntegration(t *testing.T) {
+	e := echo.New()
 	repo := NewInMemoryLedgerRepository()
 	handler := NewLedgerHandler(repo)
 
@@ -110,8 +139,14 @@ func TestLedgerHandlersIntegration(t *testing.T) {
 		Payload: "Transaction closed prop-456",
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/logs", bytes.NewBuffer(logBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
-	handler.WriteLog(w, req)
+	c := e.NewContext(req, w)
+
+	err := handler.WriteLog(c)
+	if err != nil {
+		t.Fatalf("handler returned error: %v", err)
+	}
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected status 201 Created; got %d", w.Code)

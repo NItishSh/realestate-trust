@@ -1,10 +1,10 @@
 package db
 
 import (
-	"encoding/json"
 	"log"
-	"log/slog"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 type TokenizationHandler struct {
@@ -27,83 +27,51 @@ type BuySharesRequest struct {
 }
 
 // CreatePool handles POST /pools
-func (h *TokenizationHandler) CreatePool(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *TokenizationHandler) CreatePool(c echo.Context) error {
 	var req CreatePoolRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
 	}
 
 	if req.PropertyID == "" || req.TotalTokens <= 0 || req.TokenPrice <= 0 {
-		http.Error(w, "Invalid pool payload parameters", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid pool payload parameters"})
 	}
 
 	pool, err := h.Repo.CreatePool(req.PropertyID, req.TotalTokens, req.TokenPrice)
 	if err != nil {
-		http.Error(w, "Failed to create fractional pool", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create fractional pool"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(pool); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusCreated, pool)
 }
 
 // BuyShares handles POST /pools/{id}/buy
-func (h *TokenizationHandler) BuyShares(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	poolID := r.PathValue("id")
+func (h *TokenizationHandler) BuyShares(c echo.Context) error {
+	poolID := c.Param("id")
 	if poolID == "" {
-		http.Error(w, "Missing pool ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing pool ID"})
 	}
 
 	var req BuySharesRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
 	}
 
 	holding, err := h.Repo.BuyTokens(poolID, req.InvestorID, req.TokenCount)
 	if err != nil {
 		log.Printf("BuyTokens error: %v\n", err)
-		http.Error(w, "Failed to buy shares", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to buy shares"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(holding); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, holding)
 }
 
 // GetPools handles GET /pools
-func (h *TokenizationHandler) GetPools(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *TokenizationHandler) GetPools(c echo.Context) error {
 	pools, err := h.Repo.ListPools()
 	if err != nil {
-		http.Error(w, "Failed to retrieve pools", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve pools"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(pools); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, pools)
 }

@@ -10,6 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -26,24 +29,44 @@ func main() {
 
 	handler := db.NewFinancingHandler(repo)
 
-	mux := http.NewServeMux()
+	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
 
-	mux.Handle("POST /api/v1/loans", db.JWTAuth(http.HandlerFunc(handler.ApplyLoan)))
-	mux.Handle("GET /api/v1/loans", db.JWTAuth(http.HandlerFunc(handler.GetLoans)))
-	mux.Handle("GET /api/v1/loans/{id}", db.JWTAuth(http.HandlerFunc(handler.GetLoan)))
-	mux.Handle("POST /api/v1/loans/{id}/disburse", db.JWTAuth(http.HandlerFunc(handler.DisburseLoan)))
+	// Security and global middlewares
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:      "1; mode=block",
+		ContentTypeNosniff: "nosniff",
+		XFrameOptions:      "DENY",
+	}))
+	e.Use(middleware.BodyLimit("1M"))
 
-	// Webhooks can remain public or use a different auth scheme, but for simplicity here we keep it public
-	mux.HandleFunc("POST /api/v1/loans/webhooks/bank", handler.BankWebhook)
-
-	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"status":"UP"}`))
+	e.GET("/api/v1/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
 	})
+
+	// Webhooks can remain public
+	e.POST("/api/v1/loans/webhooks/bank", handler.BankWebhook)
+
+	api := e.Group("/api/v1")
+	api.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: db.JWTSecret,
+		ContextKey: "user",
+	}))
+	api.POST("/loans", handler.ApplyLoan)
+	api.GET("/loans", handler.GetLoans)
+	api.GET("/loans/:id", handler.GetLoan)
+	api.POST("/loans/:id/disburse", handler.DisburseLoan)
 
 	srv := &http.Server{
 		Addr:         ":8082",
-		Handler:      db.Chain(mux, db.EnableCORS, db.SecurityHeaders, db.MaxBodySize(1<<20)),
+		Handler:      e,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

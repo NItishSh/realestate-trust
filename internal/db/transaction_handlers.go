@@ -1,11 +1,10 @@
 package db
 
 import (
-	"encoding/json"
 	"log"
-	"log/slog"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
@@ -25,144 +24,94 @@ type CreateTxRequest struct {
 }
 
 // CreateTransaction handles POST /transactions
-func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *TransactionHandler) CreateTransaction(c echo.Context) error {
 	var req CreateTxRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
 	}
 
 	if req.PropertyID == "" || req.BuyerID == "" || req.SellerID == "" || req.TotalAmount <= 0 {
-		http.Error(w, "Missing or invalid payload inputs", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing or invalid payload inputs"})
 	}
 
 	tx, err := h.Repo.CreateTransaction(req.PropertyID, req.BuyerID, req.SellerID, req.TotalAmount)
 	if err != nil {
-		http.Error(w, "Failed to create transaction", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create transaction"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(tx); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusCreated, tx)
 }
 
 // GetTransaction handles GET /transactions/{id}
-func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	txID := r.PathValue("id")
+func (h *TransactionHandler) GetTransaction(c echo.Context) error {
+	txID := c.Param("id")
 	if txID == "" {
-		http.Error(w, "Missing transaction ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
 	}
 
 	tx, err := h.Repo.GetTransaction(txID)
 	if err != nil {
 		log.Printf("GetTransaction error: %v\n", err)
-		http.Error(w, "Transaction not found", http.StatusNotFound)
-		return
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction not found"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(tx); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, tx)
 }
 
 // UpdateStatus handles PUT /transactions/{id}/status
-func (h *TransactionHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	txID := r.PathValue("id")
+func (h *TransactionHandler) UpdateStatus(c echo.Context) error {
+	txID := c.Param("id")
 	if txID == "" {
-		http.Error(w, "Missing transaction ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
 	}
 
 	var req struct {
 		NewState core.TransactionState `json:"newState"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
 	if err := h.Repo.UpdateTransactionStatus(txID, req.NewState); err != nil {
 		log.Printf("UpdateTransactionStatus error: %v\n", err)
-		http.Error(w, "Failed to update transaction status", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to update transaction status"})
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"status":"success"}`))
+	return c.JSON(http.StatusOK, map[string]string{"status": "success"})
 }
 
 // FundEscrow handles POST /transactions/{id}/escrow/fund
-func (h *TransactionHandler) FundEscrow(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	txID := r.PathValue("id")
+func (h *TransactionHandler) FundEscrow(c echo.Context) error {
+	txID := c.Param("id")
 	if txID == "" {
-		http.Error(w, "Missing transaction ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
 	}
 
 	var req struct {
 		Amount float64 `json:"amount"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
 
 	if req.Amount <= 0 {
-		http.Error(w, "Amount must be positive", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Amount must be positive"})
 	}
 
 	if err := h.Repo.FundEscrow(txID, req.Amount); err != nil {
 		log.Printf("FundEscrow error: %v\n", err)
-		http.Error(w, "Failed to fund escrow", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fund escrow"})
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"status":"funding_received"}`))
+	return c.JSON(http.StatusOK, map[string]string{"status": "funding_received"})
 }
 
 // GetTransactions handles GET /transactions
-func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *TransactionHandler) GetTransactions(c echo.Context) error {
 	txs, err := h.Repo.ListTransactions()
 	if err != nil {
-		http.Error(w, "Failed to retrieve transactions", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve transactions"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(txs); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, txs)
 }

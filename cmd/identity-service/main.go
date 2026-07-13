@@ -10,6 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -27,32 +30,55 @@ func main() {
 
 	handler := db.NewUserHandler(repo)
 
-	mux := http.NewServeMux()
+	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
 
-	// Endpoints configured with native Go 1.22+ routing features
+	// Security and global middlewares
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:      "1; mode=block",
+		ContentTypeNosniff: "nosniff",
+		XFrameOptions:      "DENY",
+	}))
+	e.Use(middleware.BodyLimit("1M"))
+
+	// Health check
+	e.GET("/api/v1/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
+	})
+
+	api := e.Group("/api/v1")
+
 	// Public routes
-	mux.HandleFunc("POST /api/v1/users", handler.RegisterUser)
-	mux.HandleFunc("POST /api/v1/login", handler.Login)
+	api.POST("/users", handler.RegisterUser)
+	api.POST("/login", handler.Login)
 
 	// Protected routes
-	mux.Handle("GET /api/v1/users", db.JWTAuth(http.HandlerFunc(handler.GetUsers)))
-	mux.Handle("GET /api/v1/users/{id}", db.JWTAuth(http.HandlerFunc(handler.GetUser)))
-	mux.Handle("POST /api/v1/users/{id}/kyc", db.JWTAuth(http.HandlerFunc(handler.SubmitKYC)))
-	mux.Handle("GET /api/v1/users/{id}/kyc/status", db.JWTAuth(http.HandlerFunc(handler.GetKYCStatus)))
-
-	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"status":"UP"}`))
-	})
+	protected := api.Group("")
+	protected.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: db.JWTSecret,
+		ContextKey: "user",
+	}))
+	protected.GET("/users", handler.GetUsers)
+	protected.GET("/users/:id", handler.GetUser)
+	protected.POST("/users/:id/kyc", handler.SubmitKYC)
+	protected.GET("/users/:id/kyc/status", handler.GetKYCStatus)
 
 	srv := &http.Server{
 		Addr:         ":8081",
-		Handler:      db.Chain(mux, db.EnableCORS, db.SecurityHeaders, db.MaxBodySize(1<<20)),
+		Handler:      e,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 	slog.Info("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

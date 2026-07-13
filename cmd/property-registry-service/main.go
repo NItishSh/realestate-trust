@@ -10,6 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -24,20 +27,41 @@ func main() {
 	}
 
 	handler := db.NewPropertyHandler(repo)
-	mux := http.NewServeMux()
 
-	mux.Handle("GET /api/v1/properties", db.JWTAuth(http.HandlerFunc(handler.ListProperties)))
-	mux.Handle("GET /api/v1/properties/{id}", db.JWTAuth(http.HandlerFunc(handler.GetProperty)))
-	mux.Handle("POST /api/v1/properties/{id}/documents/unlock", db.JWTAuth(http.HandlerFunc(handler.UnlockDocuments)))
+	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
 
-	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"status":"UP"}`))
+	// Security and global middlewares
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:      "1; mode=block",
+		ContentTypeNosniff: "nosniff",
+		XFrameOptions:      "DENY",
+	}))
+	e.Use(middleware.BodyLimit("1M"))
+
+	e.GET("/api/v1/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
 	})
+
+	api := e.Group("/api/v1")
+	api.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: db.JWTSecret,
+		ContextKey: "user",
+	}))
+	api.GET("/properties", handler.ListProperties)
+	api.GET("/properties/:id", handler.GetProperty)
+	api.POST("/properties/:id/documents/unlock", handler.UnlockDocuments)
 
 	srv := &http.Server{
 		Addr:         ":8085",
-		Handler:      db.Chain(mux, db.EnableCORS, db.SecurityHeaders, db.MaxBodySize(1<<20)),
+		Handler:      e,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

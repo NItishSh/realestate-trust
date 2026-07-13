@@ -1,10 +1,10 @@
 package db
 
 import (
-	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 type LedgerHandler struct {
@@ -20,82 +20,50 @@ type WriteLogRequest struct {
 }
 
 // WriteLog handles POST /logs
-func (h *LedgerHandler) WriteLog(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *LedgerHandler) WriteLog(c echo.Context) error {
 	var req WriteLogRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 	}
 
 	if req.Payload == "" {
-		http.Error(w, "Payload content cannot be empty", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Payload content cannot be empty"})
 	}
 
 	entry, err := h.Repo.WriteLog(req.Payload)
 	if err != nil {
-		http.Error(w, "Failed to commit log to audit ledger", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit log to audit ledger"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(entry); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusCreated, entry)
 }
 
 // GetLog handles GET /logs/{index}
-func (h *LedgerHandler) GetLog(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idxStr := r.PathValue("index")
+func (h *LedgerHandler) GetLog(c echo.Context) error {
+	idxStr := c.Param("index")
 	if idxStr == "" {
-		http.Error(w, "Missing index parameter", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing index parameter"})
 	}
 
 	idx, err := strconv.ParseInt(idxStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid index parameter format", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid index parameter format"})
 	}
 
 	entry, err := h.Repo.GetLog(idx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(entry); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, entry)
 }
 
 // GetLogs handles GET /logs
-func (h *LedgerHandler) GetLogs(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *LedgerHandler) GetLogs(c echo.Context) error {
 	logs, err := h.Repo.ListLogs()
 	if err != nil {
-		http.Error(w, "Failed to retrieve logs", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve logs"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(logs); err != nil {
-		slog.Error("failed to encode response", "err", err)
-	}
+	return c.JSON(http.StatusOK, logs)
 }
