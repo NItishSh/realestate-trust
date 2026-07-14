@@ -143,12 +143,8 @@ export const useStore = create<State>((set, get) => ({
     }
   },
 
-  logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('user_email');
-      window.location.href = '/login';
-    }
+  logout: async () => {
+    await api.logout();
     set({ currentUser: null });
   }
 }));

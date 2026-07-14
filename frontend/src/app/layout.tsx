@@ -31,6 +31,36 @@ export default function RootLayout({
     fetchInitialData();
   }, [fetchInitialData]);
 
+  useEffect(() => {
+    if (isAuthRoute) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // 15 minutes idle timeout (900000 ms)
+      timeoutId = setTimeout(() => {
+        console.warn("User idle for 15 minutes. Logging out…");
+        logout();
+      }, 900000);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [logout, isAuthRoute]);
+
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Marketplace', path: '/marketplace', icon: Search },

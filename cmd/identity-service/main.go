@@ -55,6 +55,8 @@ func main() {
 	// Public routes
 	api.POST("/users", handler.RegisterUser)
 	api.POST("/login", handler.Login)
+	api.POST("/refresh", handler.RefreshToken)
+	api.POST("/logout", handler.Logout)
 
 	// Protected routes
 	protected := api.Group("")

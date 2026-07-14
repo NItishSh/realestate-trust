@@ -73,7 +73,76 @@ func (h *UserHandler) Login(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"token": token})
+	refreshToken, err := h.Repo.CreateSession(user.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate session"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"token":        token,
+		"refreshToken": refreshToken,
+	})
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+// RefreshToken handles POST /refresh
+func (h *UserHandler) RefreshToken(c *echo.Context) error {
+	var req RefreshRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+	}
+
+	if req.RefreshToken == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Refresh token is required"})
+	}
+
+	userID, err := h.Repo.ValidateSession(req.RefreshToken)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid or expired refresh token"})
+	}
+
+	user, err := h.Repo.GetUser(userID)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not found"})
+	}
+
+	accessToken, err := GenerateJWT(user.ID, user.Role)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate access token"})
+	}
+
+	// Rotate the refresh token
+	_ = h.Repo.RevokeSession(req.RefreshToken)
+	newRefreshToken, err := h.Repo.CreateSession(user.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate new refresh token"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"token":        accessToken,
+		"refreshToken": newRefreshToken,
+	})
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+// Logout handles POST /logout
+func (h *UserHandler) Logout(c *echo.Context) error {
+	var req LogoutRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+	}
+
+	if req.RefreshToken != "" {
+		_ = h.Repo.RevokeSession(req.RefreshToken)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out successfully"})
 }
 
 // GetUser handles GET /users/{id}

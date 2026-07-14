@@ -96,27 +96,90 @@ const ports = {
   properties: 8085
 };
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
 async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Promise<T> {
   try {
-    // Inject Authorization header if token exists
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
     const headers = new Headers(options.headers || {});
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       ...options,
       headers,
       signal: AbortSignal.timeout(1500)
     });
 
     if (res.status === 401) {
-       console.error("Unauthorized request");
-       if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-         window.location.href = '/login';
-       }
-       throw new Error("Unauthorized");
+      console.warn("Access token expired. Attempting refresh...");
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+
+      if (!refreshToken) {
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+          window.location.href = '/login';
+        }
+        throw new Error("Unauthorized");
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await fetch(`${API_BASE}:${ports.identity}/api/v1/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            if (data.token && data.refreshToken) {
+              localStorage.setItem('jwt_token', data.token);
+              localStorage.setItem('refresh_token', data.refreshToken);
+              isRefreshing = false;
+              onRefreshed(data.token);
+            } else {
+              throw new Error("Invalid refresh response");
+            }
+          } else {
+            throw new Error("Refresh failed");
+          }
+        } catch (err) {
+          isRefreshing = false;
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user_email');
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          throw new Error("Unauthorized");
+        }
+      }
+
+      const newToken = await new Promise<string>((resolve) => {
+        subscribeTokenRefresh(token => resolve(token));
+      });
+
+      headers.set('Authorization', `Bearer ${newToken}`);
+      res = await fetch(url, {
+        ...options,
+        headers,
+        signal: AbortSignal.timeout(1500)
+      });
+
+      if (!res.ok) throw new Error("API error status");
+      return await res.json() as T;
     }
 
     if (!res.ok) throw new Error("API error status");
@@ -125,7 +188,6 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
     if (e instanceof Error && e.message === "Unauthorized") {
       throw e;
     }
-    // Graceful fallback to mock data for other errors
     return fallback;
   }
 }
@@ -141,13 +203,36 @@ export const api = {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.token && typeof window !== 'undefined') {
+        if (data.token && data.refreshToken && typeof window !== 'undefined') {
           localStorage.setItem('jwt_token', data.token);
+          localStorage.setItem('refresh_token', data.refreshToken);
         }
         return data;
       }
     } catch (e) {
       console.error("Login failed", e);
+    }
+  },
+
+  logout: async () => {
+    try {
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+      if (refreshToken) {
+        await fetch(`${API_BASE}:${ports.identity}/api/v1/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken })
+        });
+      }
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_email');
+        window.location.href = '/login';
+      }
     }
   },
 

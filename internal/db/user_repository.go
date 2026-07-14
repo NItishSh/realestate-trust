@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
@@ -27,6 +28,12 @@ type KYCVerification struct {
 	CreatedAt         time.Time  `json:"createdAt"`
 }
 
+type RefreshTokenSession struct {
+	Token     string    `json:"token"`
+	UserID    string    `json:"userId"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
 // UserRepository interface defines data actions for users.
 type UserRepository interface {
 	CreateUser(email, passwordHash, name string, role core.UserRole) (*User, error)
@@ -35,6 +42,9 @@ type UserRepository interface {
 	SubmitKYC(userID, docType, docRef string) (*KYCVerification, error)
 	GetKYCStatus(userID string) (string, *time.Time, error)
 	ListUsers() ([]*User, error)
+	CreateSession(userID string) (string, error)
+	ValidateSession(token string) (string, error)
+	RevokeSession(token string) error
 }
 
 // InMemoryUserRepository implements UserRepository using memory stores.
@@ -42,12 +52,14 @@ type InMemoryUserRepository struct {
 	mu            sync.RWMutex
 	users         map[string]*User
 	verifications map[string]*KYCVerification
+	sessions      map[string]*RefreshTokenSession
 }
 
 func NewInMemoryUserRepository() *InMemoryUserRepository {
 	return &InMemoryUserRepository{
 		users:         make(map[string]*User),
 		verifications: make(map[string]*KYCVerification),
+		sessions:      make(map[string]*RefreshTokenSession),
 	}
 }
 
@@ -132,4 +144,39 @@ func (r *InMemoryUserRepository) ListUsers() ([]*User, error) {
 		return []*User{}, nil
 	}
 	return result, nil
+}
+
+func (r *InMemoryUserRepository) CreateSession(userID string) (string, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	token := uuid.NewString()
+	r.sessions[token] = &RefreshTokenSession{
+		Token:     token,
+		UserID:    userID,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+	}
+	return token, nil
+}
+
+func (r *InMemoryUserRepository) ValidateSession(token string) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	session, ok := r.sessions[token]
+	if !ok {
+		return "", errors.New("session not found")
+	}
+	if time.Now().After(session.ExpiresAt) {
+		return "", errors.New("session expired")
+	}
+	return session.UserID, nil
+}
+
+func (r *InMemoryUserRepository) RevokeSession(token string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	delete(r.sessions, token)
+	return nil
 }
