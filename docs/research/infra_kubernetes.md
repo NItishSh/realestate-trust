@@ -12,12 +12,12 @@ We deploy on a managed Kubernetes service (AWS EKS or Google GKE) to ensure resi
 * **Standard CNI**: Use **Cilium** or **AWS VPC CNI**. Cilium is preferred for its high-performance eBPF-based networking, low resource consumption, and secure IP-address-management.
 * **Network Policies**: Implement strict namespace-level network policies. The `LedgerService` and `transaction-manager` should restrict outbound internet traffic, allowing connections only to whitelisted banking endpoints and PostgreSQL instances.
 
-### 1.2 Karpenter Node Auto-scaler (AWS EKS)
-Instead of standard cluster auto-scalers that scale based on fixed node groups, Karpenter monitors the pod scheduler queue and directly provisions the exact VM sizes requested.
+### 1.2 Karpenter Node Auto-scaler (EKS/GKE/IKS)
+Instead of standard cluster auto-scalers that scale based on fixed node groups, Karpenter monitors the pod scheduler queue and directly provisions the exact VM sizes requested. This is supported natively on AWS EKS and can be integrated into GKE or IKS setups to optimize compute resources.
 
 * **Spot vs. On-Demand Allocation**:
   * **On-Demand**: Used for PostgreSQL database statefulsets and the core `transaction-manager` to ensure zero disruption.
-  * **Spot (Preemptive Nodes)**: Used for stateless, queue-driven workers (e.g., `LedgerService`, tokenization trackers), cutting compute costs by up to 70%.
+  * **Spot (Preemptive/Spot Nodes)**: Karpenter dynamically schedules stateless, queue-driven workers (e.g., `LedgerService`, tokenization trackers) onto Spot instances, cutting compute costs by up to 70-90%.
 
 ---
 
@@ -72,7 +72,7 @@ High-value financial ledger data must have high durability and transaction consi
 Since Go services spawn separate connection pools (`pgxpool`), a spike in pods during high-traffic events (e.g., fractional asset launches) can overwhelm PostgreSQL.
 
 * **PgBouncer Deployment**: Deploy PgBouncer as a Kubernetes deployment inside the same namespace.
-* **Service Config**: Adjust services to communicate with PgBouncer (`port 6432`) rather than directly with PostgreSQL (`port 5432`). 
+* **Service Config**: Adjust services to communicate with PgBouncer (`port 6432`) rather than directly with PostgreSQL (`port 5432`).
 * PgBouncer manages connection pooling efficiently, keeping PostgreSQL resource consumption low and preventing memory-exhaustion crashes.
 
 ---
@@ -86,3 +86,20 @@ To prevent security compliance failures, the platform implements **ESO (External
   2. Developers deploy an `ExternalSecret` manifest mapping remote secret keys to Kubernetes secrets.
   3. ESO automatically queries AWS Secrets Manager, fetches the keys, and creates a local Kubernetes Secret dynamically.
   4. The Go app container mounts this secret as an environment variable or as a volume.
+
+---
+
+## 5. Event-Driven Autoscaling (KEDA)
+
+Traditional horizontal pod autoscaling (HPA) scales based on resource utilization metrics (CPU/Memory). However, for event-driven workers like `LedgerService` and `transaction-manager` that process queue messages asynchronously, resource usage does not represent real-time traffic demand.
+
+* **KEDA Integration**: Deploy KEDA (Kubernetes Event-driven Autoscaler) to connect directly to the RabbitMQ broker.
+* **Queue Metrics**: Define a `ScaledObject` that monitors the `transaction-events` queue length. If a burst of transactions occurs and the queue size increases, KEDA immediately scales out the `ledger-service` subscriber pods to drain the backlog, and scales them down to zero when the queue is idle.
+
+---
+
+## 6. Infrastructure as Code (Terraform)
+
+Production environments require automated provisioning and infrastructure consistency.
+
+* **Terraform IaC**: Declaratively define the GKE, EKS, or IKS cluster resources, VPC subnet topologies, IAM execution roles, and node provisioning policies using Terraform modules. This ensures cluster rebuilds are fast, secure, and reproducible.

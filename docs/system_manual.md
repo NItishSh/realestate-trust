@@ -173,3 +173,8 @@ Before deploying this platform to a public cloud production environment (e.g. AW
 ### 8.3 SSL/TLS Ingress & Network Policies
 - Enforce strict HTTPS/WSS communication globally by implementing a production-grade ingress controller (like NGINX Ingress or Traefik) bound to cert-manager for automatic Let's Encrypt SSL certificate provisioning.
 - Set up strict Kubernetes NetworkPolicies to lock down inter-service communication (e.g., only allowing `transaction-manager` and `ledger-service` to connect to RabbitMQ, while blocking direct access from the frontend).
+
+### 8.4 Infrastructure as Code (IaC) & Dynamic Autoscaling
+- **Terraform Cluster Provisioning**: Implement declarative Infrastructure as Code (IaC) using Terraform to spin up GKE, EKS, or IKS clusters with secure networking (VPCs, private endpoints) and IAM role configurations.
+- **Just-in-Time Node Scaling (Karpenter)**: Install **Karpenter** to replace standard Kubernetes Cluster Autoscalers. Karpenter will dynamically provision right-sized compute nodes based on pod pending resource requests, prioritizing low-cost **Spot instances** for worker nodes to optimize cloud spending.
+- **Event-Driven Pod Autoscaling (KEDA)**: Deploy **KEDA** (Kubernetes Event-driven Autoscaler) to scale microservice pod replicas (especially `ledger-service` and `transaction-manager`) dynamically based on event-broker load (e.g. RabbitMQ queue depth/message backlog) rather than relying solely on traditional CPU and memory metrics.
