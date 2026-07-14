@@ -70,7 +70,7 @@ func TestUserHandlersIntegration(t *testing.T) {
 func TestTransactionHandlersIntegration(t *testing.T) {
 	e := echo.New()
 	repo := NewInMemoryTransactionRepository()
-	handler := NewTransactionHandler(repo)
+	handler := NewTransactionHandler(repo, nil)
 
 	// Test 1: Create Transaction
 	txBody, _ := json.Marshal(CreateTxRequest{

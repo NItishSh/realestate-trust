@@ -13,7 +13,9 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/db"
+	"github.com/realestate-trust/monorepo/internal/events"
 )
 
 func main() {
@@ -25,6 +27,32 @@ func main() {
 	if db.ShouldSeed() {
 		slog.Info("🌱 Seeding demo ledger (APP_ENV != production)...")
 		db.SeedLedger(repo)
+	}
+
+	var rabbitConn *amqp.Connection
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL != "" {
+		slog.Info("Connecting to RabbitMQ...", "url", rabbitURL)
+		conn, err := events.Connect(rabbitURL)
+		if err != nil {
+			slog.Error("Failed to connect to RabbitMQ", "err", err)
+		} else {
+			slog.Info("Connected to RabbitMQ successfully!")
+			rabbitConn = conn
+			defer rabbitConn.Close()
+
+			// Start RabbitMQ background consumer
+			err = events.Consume(rabbitConn, "transaction-events", func(event events.TransactionEvent) error {
+				slog.Info("Writing consumed event to immutable ledger", "payload", event.Payload)
+				_, err := repo.WriteLog(event.Payload)
+				return err
+			})
+			if err != nil {
+				slog.Error("Failed to start RabbitMQ consumer", "err", err)
+			}
+		}
+	} else {
+		slog.Warn("RABBITMQ_URL is empty. Running without event consumption.")
 	}
 
 	handler := db.NewLedgerHandler(repo)

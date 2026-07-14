@@ -90,8 +90,8 @@ export const useStore = create<State>((set, get) => ({
   createTransaction: async (txForm) => {
     const newTx = await api.createTransaction(txForm);
     set((state) => ({ transactions: [...state.transactions, newTx] }));
-    const log = await api.writeLedgerLog(`Transaction Created: ${newTx.id} - ${newTx.totalAmount} INR`);
-    set((state) => ({ ledger: [...state.ledger, log] }));
+    // Wait for RabbitMQ consumer to process and write to ledger, then refetch
+    setTimeout(() => get().fetchInitialData(), 400);
   },
 
   fundEscrow: async (txId, amount) => {
@@ -101,8 +101,8 @@ export const useStore = create<State>((set, get) => ({
         t.id === txId ? { ...t, status: 'FUNDED' } : t
       )
     }));
-    const log = await api.writeLedgerLog(`Escrow Funded: ${amount} INR for Transaction ${txId}`);
-    set((state) => ({ ledger: [...state.ledger, log] }));
+    // Wait for RabbitMQ consumer to process and write to ledger, then refetch
+    setTimeout(() => get().fetchInitialData(), 400);
   },
 
   applyLoan: async (loanForm) => {

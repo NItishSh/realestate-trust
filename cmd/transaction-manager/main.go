@@ -13,11 +13,29 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/db"
+	"github.com/realestate-trust/monorepo/internal/events"
 )
 
 func main() {
 	slog.Info("Starting Transaction & Escrow Manager API on :8080...")
+
+	var rabbitConn *amqp.Connection
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL != "" {
+		slog.Info("Connecting to RabbitMQ...", "url", rabbitURL)
+		conn, err := events.Connect(rabbitURL)
+		if err != nil {
+			slog.Error("Failed to connect to RabbitMQ, running without event publishing", "err", err)
+		} else {
+			slog.Info("Connected to RabbitMQ successfully!")
+			rabbitConn = conn
+			defer rabbitConn.Close()
+		}
+	} else {
+		slog.Warn("RABBITMQ_URL is empty. Running without event publishing.")
+	}
 
 	repo := db.NewInMemoryTransactionRepository()
 
@@ -27,7 +45,7 @@ func main() {
 		db.SeedTransactions(repo)
 	}
 
-	handler := db.NewTransactionHandler(repo)
+	handler := db.NewTransactionHandler(repo, rabbitConn)
 
 	e := echo.New()
 	// Security and global middlewares

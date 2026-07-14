@@ -155,3 +155,21 @@ The local development environment mirrors production networking using a Kind (Ku
 ### Journey 3: Cryptographic Auditor Flow
 1. **Inspect Logs**: System Auditors can view the Ledger Logs UI to examine sequential block hashes.
 2. **Verify Chain**: By comparing the `Hash` of Block N-1 with the `Prev Hash` of Block N, auditors can independently verify the unbroken cryptochain of the real estate transaction's history.
+
+---
+
+## 8. Production Readiness & Future Enhancements
+
+Before deploying this platform to a public cloud production environment (e.g. AWS EKS, GCP GKE), the following engineering enhancements must be implemented:
+
+### 8.1 Industry-Standard Managed Chart Migrations
+- **Database & Queue Infrastructure**: Replace the local custom minimalist Kubernetes manifests (`manifests/postgres.yaml` and `manifests/rabbitmq.yaml`) with official **Bitnami Helm Charts** (or Cloud-native managed services like AWS RDS for Postgres and Amazon MQ for RabbitMQ).
+- **High Availability & Clustering**: Deploy RabbitMQ in a clustered multi-node configuration with quorum queues, and deploy PostgreSQL with PgBouncer connection pooling and active replication (Primary/Standby).
+
+### 8.2 Secret Management & Hardening
+- **Decouple Secrets**: Migrate raw connection string environment variables (like `RABBITMQ_URL` and `DATABASE_URL`) out of Helm values and configuration maps.
+- **Vault/KMS Integrations**: Store database credentials and queue authentication tokens inside a secure secrets manager (like HashiCorp Vault, AWS Secrets Manager, or Google Secret Manager) and inject them dynamically via **Kubernetes external-secrets** or AWS IAM Roles for Service Accounts (IRSA).
+
+### 8.3 SSL/TLS Ingress & Network Policies
+- Enforce strict HTTPS/WSS communication globally by implementing a production-grade ingress controller (like NGINX Ingress or Traefik) bound to cert-manager for automatic Let's Encrypt SSL certificate provisioning.
+- Set up strict Kubernetes NetworkPolicies to lock down inter-service communication (e.g., only allowing `transaction-manager` and `ledger-service` to connect to RabbitMQ, while blocking direct access from the frontend).

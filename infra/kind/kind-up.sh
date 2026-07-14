@@ -113,12 +113,16 @@ deploy_helm_local_and_postgres() {
     # Create Secrets
     "${SCRIPT_DIR}/create-secrets.sh"
 
-    # Deploy PostgreSQL
+    # Deploy PostgreSQL & RabbitMQ
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
+    kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
 
     log "Waiting for PostgreSQL to be ready..."
     sleep 5
     kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
+
+    log "Waiting for RabbitMQ to be ready..."
+    kubectl wait --for=condition=Ready pods -l app=rabbitmq -n realestate-trust --timeout=300s
 
     step "Installing Microservices via Helm"
     local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")

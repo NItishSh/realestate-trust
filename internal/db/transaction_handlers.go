@@ -3,17 +3,22 @@ package db
 import (
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v5"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/core"
+	"github.com/realestate-trust/monorepo/internal/events"
 )
 
 type TransactionHandler struct {
-	Repo TransactionRepository
+	Repo       TransactionRepository
+	RabbitConn *amqp.Connection
 }
 
-func NewTransactionHandler(repo TransactionRepository) *TransactionHandler {
-	return &TransactionHandler{Repo: repo}
+func NewTransactionHandler(repo TransactionRepository, rabbitConn *amqp.Connection) *TransactionHandler {
+	return &TransactionHandler{Repo: repo, RabbitConn: rabbitConn}
 }
 
 type CreateTxRequest struct {
@@ -37,6 +42,14 @@ func (h *TransactionHandler) CreateTransaction(c *echo.Context) error {
 	tx, err := h.Repo.CreateTransaction(req.PropertyID, req.BuyerID, req.SellerID, req.TotalAmount)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create transaction"})
+	}
+
+	if h.RabbitConn != nil {
+		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			Action:    "created",
+			Payload:   "Transaction Created: " + tx.ID + " - " + strconv.FormatFloat(tx.TotalAmount, 'f', 2, 64) + " INR",
+			Timestamp: time.Now(),
+		})
 	}
 
 	return c.JSON(http.StatusCreated, tx)
@@ -77,6 +90,14 @@ func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to update transaction status"})
 	}
 
+	if h.RabbitConn != nil {
+		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			Action:    "updated",
+			Payload:   "Transaction " + txID + " State Updated to " + string(req.NewState),
+			Timestamp: time.Now(),
+		})
+	}
+
 	return c.JSON(http.StatusOK, map[string]string{"status": "success"})
 }
 
@@ -101,6 +122,14 @@ func (h *TransactionHandler) FundEscrow(c *echo.Context) error {
 	if err := h.Repo.FundEscrow(txID, req.Amount); err != nil {
 		log.Printf("FundEscrow error: %v\n", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fund escrow"})
+	}
+
+	if h.RabbitConn != nil {
+		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			Action:    "funded",
+			Payload:   "Escrow Funded: " + strconv.FormatFloat(req.Amount, 'f', 2, 64) + " INR for Transaction " + txID,
+			Timestamp: time.Now(),
+		})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"status": "funding_received"})

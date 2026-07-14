@@ -31,6 +31,8 @@ env:
       secretKeyRef:
         name: transaction-manager-db-secret
         key: DATABASE_URL
+  - name: RABBITMQ_URL
+    value: "amqp://guest:guest@rabbitmq:5672/"
 db:
   migrations:
     enabled: true
