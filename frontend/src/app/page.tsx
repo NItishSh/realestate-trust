@@ -49,11 +49,11 @@ export default function Dashboard() {
   return (
     <div>
       {/* Welcome Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold tracking-tight mb-2">
+      <div className="mb-8 border-b border-card-border pb-6">
+        <h2 className="text-4xl font-bold tracking-wide mb-2 text-slate-100 font-serif uppercase">
           RealEstate <span className="gradient-text">Trust Operations</span>
         </h2>
-        <p className="text-slate-400 text-sm">
+        <p className="text-slate-400 text-sm font-sans tracking-wide">
           Platform-wide metrics monitoring real-time escrow, smart fractionalization, and immutable audit logs.
         </p>
       </div>
@@ -63,9 +63,9 @@ export default function Dashboard() {
         {cardData.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.name} className="glass-panel p-6 rounded-2xl relative overflow-hidden group transition-colors transition-transform transition-opacity duration-300 hover:-translate-y-1">
+            <div key={card.name} className="glass-panel p-6 rounded-2xl relative overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:border-accent-gold/20 cursor-pointer">
               <div className="flex justify-between items-start mb-4">
-                <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase">{card.name}</span>
+                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase font-mono">{card.name}</span>
                 <div className={`p-2 rounded-xl ${card.bg}`}>
                   <Icon className={`w-5 h-5 ${card.color}`} />
                 </div>
@@ -75,7 +75,7 @@ export default function Dashboard() {
                 <span className="text-xs text-slate-500 font-mono">{card.unit}</span>
               </div>
               {/* Card bottom glow */}
-              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-accent-cyan/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-accent-gold/30 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
             </div>
           );
         })}
@@ -85,13 +85,13 @@ export default function Dashboard() {
       <div className="glass-panel p-6 rounded-2xl mb-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-md font-bold tracking-tight">Interactive Guided Journeys</h3>
+            <h3 className="text-md font-bold tracking-wide uppercase text-slate-200">Interactive Guided Journeys</h3>
             <p className="text-xs text-slate-400">Step-by-step walkthroughs to test the integrated microservices.</p>
           </div>
           <Link
             href="file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/user_journeys.md"
             target="_blank"
-            className="flex items-center gap-1.5 text-xs text-accent-cyan hover:underline font-mono"
+            className="flex items-center gap-1.5 text-xs text-accent-gold hover:underline font-mono"
           >
             <BookOpen className="w-3.5 h-3.5" />
             Read Spec Manual
@@ -101,24 +101,24 @@ export default function Dashboard() {
         <div className="flex gap-4 border-b border-card-border pb-4 mb-6 flex-wrap">
           <button
             onClick={() => setActiveJourney('buyer')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
-              activeJourney === 'buyer' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-slate-400 hover:text-slate-200'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'buyer' ? 'bg-accent-gold/15 text-accent-gold border border-accent-gold/20' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Buyer Escrow Flow
           </button>
           <button
             onClick={() => setActiveJourney('investor')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
-              activeJourney === 'investor' ? 'bg-accent-blue/15 text-accent-blue' : 'text-slate-400 hover:text-slate-200'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'investor' ? 'bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Fractional Investor Flow
           </button>
           <button
             onClick={() => setActiveJourney('auditor')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors transition-transform transition-opacity cursor-pointer ${
-              activeJourney === 'auditor' ? 'bg-violet-400/15 text-violet-400' : 'text-slate-400 hover:text-slate-200'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeJourney === 'auditor' ? 'bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/20' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             System Auditor Flow

@@ -80,12 +80,12 @@ export default function RootLayout({
           <div>
             {/* Header */}
             <div className="p-6 border-b border-card-border flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent-cyan flex items-center justify-center shadow-lg shadow-accent-cyan/20">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-gold to-accent-cyan flex items-center justify-center shadow-lg shadow-accent-gold/20">
                 <ShieldCheck className="w-5 h-5 text-bg-primary" />
               </div>
               <div>
-                <h1 className="font-bold text-sm tracking-wide uppercase">Trust RealEstate</h1>
-                <span className="text-xs text-accent-cyan font-mono">Portal</span>
+                <h1 className="font-bold text-sm tracking-wider uppercase text-slate-100 font-serif">Trust RealEstate</h1>
+                <span className="text-[10px] text-accent-gold font-bold font-mono tracking-widest block uppercase">Portal</span>
               </div>
             </div>
 
@@ -98,10 +98,10 @@ export default function RootLayout({
                   <Link
                     key={item.name}
                     href={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors transition-transform transition-opacity duration-200 ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'bg-accent-cyan/10 text-accent-cyan font-semibold border-l-2 border-accent-cyan'
-                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-foreground'
+                        ? 'bg-accent-gold/10 text-accent-gold font-bold border-l-2 border-accent-gold shadow-sm shadow-accent-gold/5'
+                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
