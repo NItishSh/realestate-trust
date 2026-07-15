@@ -47,13 +47,13 @@ realestate-trust/
 
 ## 2. Containerization Strategy: Separate Containers
 
-Yes! **Each microservice must compile into a distinct Docker container image and run as a separate Deployment entity inside the Kubernetes cluster.** 
+Yes! **Each microservice must compile into a distinct Docker container image and run as a separate Deployment entity inside the Kubernetes cluster.**
 
 We do not bundle multiple services inside a single container. Here is why this design is critical:
 
 ### 2.1 Benefits of Service Isolation
 * **Independent Scalability**: `transaction-manager` and `tokenization-engine` will scale up and down based on API request spikes (e.g. during peak investment hours). `ledger-service` runs as a background message queue subscriber and scales based on queue depth (RabbitMQ/Kafka message lag).
-* **Least-Privilege Security (IAM Isolation)**: Kubernetes assigns IAM Roles directly to Pod **ServiceAccounts** (via IAM Roles for Service Accounts - IRSA). 
+* **Least-Privilege Security (IAM Isolation)**: Kubernetes assigns IAM Roles directly to Pod **ServiceAccounts** (via IAM Roles for Service Accounts - IRSA).
   * `identity-service` needs access to KYC secrets and database vaults.
   * `transaction-manager` needs access to banking API secrets.
   * By splitting them into separate deployments, they only get the specific permissions they need, reducing the blast radius of a credential leak.

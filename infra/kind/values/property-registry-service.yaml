@@ -16,6 +16,15 @@ smokeTest:
   enabled: true
   script: |
     echo "Sleeping for pod startup..."
-    sleep 5
-    echo "Verifying property-registry-service..."
-    curl -f http://property-registry-service:8085/api/v1/health
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf http://property-registry-service:8085/api/v1/health; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "property-registry-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1

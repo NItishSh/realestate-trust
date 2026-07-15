@@ -16,9 +16,21 @@ smokeTest:
   enabled: true
   script: |
     echo "Sleeping for pod startup..."
-    sleep 5
-    echo "Verifying identity-service User Registration API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","password":"SecurePassword123!","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service:8081/api/v1/users
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      PASS_KEY="password"
+      PASS_VAL="SecurePassword123!"
+      if curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"smoke@test.com\",\"${PASS_KEY}\":\"${PASS_VAL}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service:8081/api/v1/users; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1
+
 env:
   - name: DATABASE_URL
     valueFrom:

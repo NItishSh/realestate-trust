@@ -82,7 +82,7 @@ Land records in India are handled by state-specific governments:
 * **Uttar Pradesh**: Bhulekh UP.
 
 ### 3.2 Aggregation Middleware Providers
-Because there is no single national API for all states, third-party middleware APIs (e.g., Karza Land Records API, Surepass Land API) are used. 
+Because there is no single national API for all states, third-party middleware APIs (e.g., Karza Land Records API, Surepass Land API) are used.
 
 #### Request Parameters:
 To query land records, the platform must send a normalized payload mapping:

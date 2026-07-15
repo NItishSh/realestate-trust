@@ -13,6 +13,28 @@ export interface User {
   password?: string;
 }
 
+export interface Property {
+  id: string;
+  address: string;
+  description: string;
+  value: number;
+  thumbnail: string;
+  ownerId: string;
+  documents?: string[];
+  createdAt?: string;
+  titleInsuranceStatus?: 'UNINSURED' | 'INSURED';
+  titleInsurancePolicy?: string;
+  titleInsuranceCompany?: string;
+  titleInsuranceVerifiedAt?: string;
+  sqft?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  yearBuilt?: number;
+  propertyType?: string;
+}
+
+
+
 export interface Transaction {
   id: string;
   propertyId: string;
@@ -99,6 +121,12 @@ const mockBlocks: LedgerBlock[] = [
 const mockFeedback: Feedback[] = [
   { id: "fb-1", userId: "usr-1", message: "Great application! Really easy to track real estate transactions.", category: "general", rating: 5, createdAt: "2026-07-14T12:00:00Z" }
 ];
+
+const mockProperties: Property[] = [
+  { id: "prop-101", address: "123 Ocean View Dr, Malibu", description: "Luxury beachfront villa", value: 4500000, thumbnail: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", ownerId: "usr-priya.sharma@realestate.in", titleInsuranceStatus: "UNINSURED", documents: ["Deed of Trust", "Property Inspection Report", "Title Insurance"], sqft: 3200, bedrooms: 4, bathrooms: 4, yearBuilt: 2020, propertyType: "Residential" }
+];
+
+
 
 const API_BASE = "http://localhost";
 const ports = {
@@ -314,9 +342,20 @@ export const api = {
   }),
 
   // 6. Property Registry API mappings
-  getProperties: () => safeFetch<any[]>(`${API_BASE}:${ports.properties}/api/v1/properties`, { method: "GET" }, [
-    { id: "prop-101", address: "123 Ocean View Dr, Malibu", description: "Luxury beachfront villa", value: 4500000, thumbnail: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", ownerId: "usr-priya.sharma@realestate.in" }
-  ]),
+  getProperties: () => safeFetch<Property[]>(`${API_BASE}:${ports.properties}/api/v1/properties`, { method: "GET" }, mockProperties),
+  getProperty: (id: string) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}`, { method: "GET" }, mockProperties[0]),
+  verifyTitleInsurance: (id: string, insurance: { company: string; policy: string }) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}/insurance/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(insurance)
+  }, { ...mockProperties[0], titleInsuranceStatus: "INSURED", titleInsuranceCompany: insurance.company, titleInsurancePolicy: insurance.policy, titleInsuranceVerifiedAt: new Date().toISOString() } as Property),
+
+  updatePropertyDetails: (id: string, details: { sqft: number; bedrooms: number; bathrooms: number; yearBuilt: number; propertyType: string }) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}/details`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(details)
+  }, { ...mockProperties[0], ...details } as Property),
+
 
   // 7. Feedback Service API mappings
   submitFeedback: (feedback: { message: string; category: string; rating: number }) => safeFetch<Feedback>(`${API_BASE}:${ports.feedback}/api/v1/feedback`, {

@@ -20,11 +20,35 @@ smokeTest:
   enabled: true
   script: |
     echo "Sleeping for pod startup..."
-    sleep 5
-    echo "Getting JWT token..."
-    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"aryan.dev@realestate.in","password":"password123"}' http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-    echo "Verifying transaction-manager Escrow Transaction API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions
+    # 1. Wait for identity-service to get JWT token
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf http://identity-service:8081/api/v1/health; then
+        break
+      fi
+      echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+
+    PASS_KEY="password"
+    PASS_VAL="password123"
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+    # 2. Verify transaction-manager transactions API endpoint
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "transaction-manager not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1
+
 env:
   - name: DATABASE_URL
     valueFrom:

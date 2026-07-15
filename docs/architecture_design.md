@@ -1,6 +1,6 @@
 # Real Estate Trust & Escrow Platform Architecture
 
-This document outlines the system architecture, transactional state machine, database schema, API contracts, and security controls for the **Real Estate Trust & Escrow Platform**. 
+This document outlines the system architecture, transactional state machine, database schema, API contracts, and security controls for the **Real Estate Trust & Escrow Platform**.
 
 Unlike typical e-commerce payments, real estate transactions deal with high-value capital, multi-party legal sign-offs, external banking virtual accounts, and fractional investments. The system is designed around a strict, auditable transaction ledger and a robust state machine.
 
@@ -13,30 +13,30 @@ The platform is designed as an event-driven microservices architecture to ensure
 ```mermaid
 graph TD
     Client[Web/Mobile Client] -->|HTTPS / WSS| Gateway[API Gateway & Auth]
-    
+
     %% Microservices
     Gateway --> EscrowMgr[Transaction & Escrow Manager]
     Gateway --> FinanceEng[Embedded Financing Engine]
     Gateway --> TokenEng[Fractional Tokenization Engine]
-    
+
     %% Core Databases
     EscrowMgr -->|Read/Write| DB[(PostgreSQL Database)]
     FinanceEng -->|Read/Write| DB
     TokenEng -->|Read/Write| DB
-    
+
     %% Queue & Events
     EscrowMgr -->|Publish State Events| EventBus[Event Broker: RabbitMQ/Kafka]
     EventBus --> LedgerService[Ledger & Auditing Service]
     LedgerService -->|Append Only| LedgerDB[(Immutable Audit Ledger)]
-    
+
     %% Third-Party Integrations & Adapter Layer
     EscrowMgr -->|API Calls| Adapter[Banking Adapter Factory]
     Adapter -->|Provider REST/SOAP/ISO| BankA[Yes Bank API]
     Adapter -->|Provider REST/SOAP/ISO| BankB[ICICI Bank API]
     Adapter -->|Provider REST/SOAP/ISO| BankC[HDFC Bank API]
-    
+
     FinanceEng -->|API Calls| NBFC_API[Lender & NBFC Portals]
-    
+
     %% Webhooks routing
     Webhooks[Multi-Bank Webhook Router] -->|Unified Format| EscrowMgr
 ```
@@ -120,23 +120,23 @@ stateDiagram-v2
     [*] --> DRAFT : Transaction Initiated
     DRAFT --> FINANCING_PENDING : Financing Option Selected
     DRAFT --> FUNDING_PENDING : Out-of-pocket Payment Selected
-    
+
     FINANCING_PENDING --> FUNDING_PENDING : Loan Approved & Disbursed
     FINANCING_PENDING --> REJECTED : Loan Application Rejected
-    
+
     FUNDING_PENDING --> FUNDED : Virtual Account Deposit Verified (Webhook)
-    
+
     FUNDED --> DUE_DILIGENCE_APPROVED : Title/Due Diligence Approved
     FUNDED --> DISPUTED : Due Diligence Failed / Buyer Dispute
-    
+
     DUE_DILIGENCE_APPROVED --> REGISTRATION_PENDING : Deed Submitted to Registrar
-    
+
     REGISTRATION_PENDING --> COMPLETED : Deed Registered & Released (Funds Paid)
     REGISTRATION_PENDING --> DISPUTED : Deed Rejection / Legal Block
-    
+
     DISPUTED --> REFUNDED : Mediation Resolves to Refund
     DISPUTED --> REGISTRATION_PENDING : Dispute Resolved (Proceed)
-    
+
     REFUNDED --> [*]
     COMPLETED --> [*]
     REJECTED --> [*]
@@ -222,8 +222,8 @@ CREATE TABLE escrow_accounts (
 
 -- Core Transactions
 CREATE TYPE transaction_state AS ENUM (
-    'DRAFT', 'FINANCING_PENDING', 'FUNDING_PENDING', 'FUNDED', 
-    'DUE_DILIGENCE_APPROVED', 'REGISTRATION_PENDING', 'COMPLETED', 
+    'DRAFT', 'FINANCING_PENDING', 'FUNDING_PENDING', 'FUNDED',
+    'DUE_DILIGENCE_APPROVED', 'REGISTRATION_PENDING', 'COMPLETED',
     'REFUNDED', 'DISPUTED'
 );
 

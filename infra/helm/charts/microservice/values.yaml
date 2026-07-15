@@ -46,5 +46,15 @@ smokeTest:
   enabled: false
   script: |
     echo "Verifying health of {{ .Release.Name }} on port {{ .Values.service.port }}..."
-    sleep 5
-    curl -f http://{{ .Release.Name }}:{{ .Values.service.port }}/api/v1/health
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf http://{{ .Release.Name }}:{{ .Values.service.port }}/api/v1/health; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "Not ready yet, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1

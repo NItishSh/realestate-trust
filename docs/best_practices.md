@@ -1,6 +1,6 @@
 # Best Practices - Real Estate Trust & Escrow Platform
 
-This document outlines the recommended architectural, security, operational, and cost-optimization practices for running and maintaining the Real Estate Trust & Escrow Platform. 
+This document outlines the recommended architectural, security, operational, and cost-optimization practices for running and maintaining the Real Estate Trust & Escrow Platform.
 
 Given the high transaction volumes and values handled by the system, these principles ensure a secure, resilient, and cost-effective deployment.
 

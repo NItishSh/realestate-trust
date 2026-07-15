@@ -3,18 +3,18 @@ package core
 import "errors"
 
 type FractionalPool struct {
-	ID             string  `json:"id"`
-	PropertyID     string  `json:"propertyId"`
-	TotalTokens    int64   `json:"totalTokens"`
-	TokensSold     int64   `json:"tokensSold"`
-	TokenPrice     float64 `json:"tokenPrice"`
+	ID          string  `json:"id"`
+	PropertyID  string  `json:"propertyId"`
+	TotalTokens int64   `json:"totalTokens"`
+	TokensSold  int64   `json:"tokensSold"`
+	TokenPrice  float64 `json:"tokenPrice"`
 }
 
 type FractionalHolding struct {
-	ID          string `json:"id"`
-	PoolID      string `json:"poolId"`
-	InvestorID  string `json:"investorId"`
-	TokenCount  int64  `json:"tokenCount"`
+	ID         string `json:"id"`
+	PoolID     string `json:"poolId"`
+	InvestorID string `json:"investorId"`
+	TokenCount int64  `json:"tokenCount"`
 }
 
 // ValidateTokenPurchase checks if a purchase requested exceeds available pool bounds.

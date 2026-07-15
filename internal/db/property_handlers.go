@@ -88,3 +88,86 @@ func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+type VerifyInsuranceRequest struct {
+	Company string `json:"company"`
+	Policy  string `json:"policy"`
+}
+
+func (h *PropertyHandler) VerifyTitleInsurance(c *echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing property id"})
+	}
+
+	var req VerifyInsuranceRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.Company == "" || req.Policy == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "company and policy are required"})
+	}
+
+	p, err := h.Repo.UpdateTitleInsurance(id, "INSURED", req.Company, req.Policy)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+	}
+
+	// Record verification in the ledger log
+	payload := fmt.Sprintf("Title Insurance Verified: Policy #%s issued by %s for property at %s", req.Policy, req.Company, p.Address)
+	logRequest := map[string]string{"payload": payload}
+	bodyBytes, _ := json.Marshal(logRequest)
+
+	resp, postErr := http.Post("http://ledger-service:8084/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
+	if postErr != nil {
+		fmt.Printf("Error sending ledger log: %v\n", postErr)
+	} else {
+		defer resp.Body.Close()
+	}
+
+	return c.JSON(http.StatusOK, p)
+}
+
+type UpdatePropertyDetailsRequest struct {
+	SqFt         int    `json:"sqft"`
+	Bedrooms     int    `json:"bedrooms"`
+	Bathrooms    int    `json:"bathrooms"`
+	YearBuilt    int    `json:"yearBuilt"`
+	PropertyType string `json:"propertyType"`
+}
+
+func (h *PropertyHandler) UpdatePropertyDetails(c *echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing property id"})
+	}
+
+	var req UpdatePropertyDetailsRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.SqFt <= 0 || req.Bedrooms < 0 || req.Bathrooms < 0 || req.YearBuilt <= 0 || req.PropertyType == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid details values"})
+	}
+
+	p, err := h.Repo.UpdatePropertyDetails(id, req.SqFt, req.Bedrooms, req.Bathrooms, req.YearBuilt, req.PropertyType)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+	}
+
+	// Record updating in ledger log
+	payload := fmt.Sprintf("Property Details Updated: ID %s, SqFt %d, Bed %d, Bath %d, Year %d, Type %s", p.ID, p.SqFt, p.Bedrooms, p.Bathrooms, p.YearBuilt, p.PropertyType)
+	logRequest := map[string]string{"payload": payload}
+	bodyBytes, _ := json.Marshal(logRequest)
+
+	resp, postErr := http.Post("http://ledger-service:8084/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
+	if postErr != nil {
+		fmt.Printf("Error sending ledger log: %v\n", postErr)
+	} else {
+		defer resp.Body.Close()
+	}
+
+	return c.JSON(http.StatusOK, p)
+}

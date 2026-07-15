@@ -16,9 +16,19 @@ smokeTest:
   enabled: true
   script: |
     echo "Sleeping for pod startup..."
-    sleep 5
-    echo "Verifying feedback-service health check..."
-    curl -f http://feedback-service:8086/api/v1/health
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf http://feedback-service:8086/api/v1/health; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "feedback-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1
+
 env:
   - name: DATABASE_URL
     valueFrom:

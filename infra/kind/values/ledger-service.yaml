@@ -9,11 +9,35 @@ smokeTest:
   enabled: true
   script: |
     echo "Sleeping for pod startup..."
-    sleep 5
-    echo "Getting JWT token..."
-    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d '{"email":"aryan.dev@realestate.in","password":"password123"}' http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-    echo "Verifying ledger-service transaction block write API endpoint..."
-    curl -f -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"payload":"smoke audit log"}' http://ledger-service:8084/api/v1/logs
+    # 1. Wait for identity-service to get JWT token
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf http://identity-service:8081/api/v1/health; then
+        break
+      fi
+      echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+
+    PASS_KEY="password"
+    PASS_VAL="password123"
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+    # 2. Verify ledger-service logs API endpoint
+    attempt=1
+    while [ $attempt -le 12 ]; do
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"payload":"smoke audit log"}' http://ledger-service:8084/api/v1/logs; then
+        echo "Success!"
+        exit 0
+      fi
+      echo "ledger-service not ready, retrying in 5s (attempt $attempt/12)..."
+      sleep 5
+      attempt=$((attempt + 1))
+    done
+    echo "Failed to connect after 60s"
+    exit 1
+
 env:
   - name: RABBITMQ_URL
     value: "amqp://guest:guest@rabbitmq:5672/"

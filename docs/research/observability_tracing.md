@@ -74,7 +74,7 @@ func InitTracer(serviceName, collectorAddr string) (*sdktrace.TracerProvider, er
 ```
 
 ### 2.2 Trace Context Propagation over Message Queues
-When the `transaction-manager` publishes a `TransactionFundedEvent` to RabbitMQ/Kafka, it must inject the trace context into the message metadata (headers). 
+When the `transaction-manager` publishes a `TransactionFundedEvent` to RabbitMQ/Kafka, it must inject the trace context into the message metadata (headers).
 
 The receiving `LedgerService` extracts this context from the message headers to start a child span. This ensures that the tracing span is not broken by asynchronous message queues.
 
