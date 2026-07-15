@@ -37,6 +37,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/app cmd/property-registry-service/main.go
 
+FROM builder-base AS build-feedback-service
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/app cmd/feedback-service/main.go
+
+
 
 # --- RUNTIME STAGES (DISTROLESS) ---
 # Using distroless/static-debian11:nonroot which runs as user 'nonroot' (uid 65532)
@@ -75,4 +81,10 @@ ENTRYPOINT ["/app"]
 FROM gcr.io/distroless/static-debian11:nonroot AS property-registry-service
 COPY --from=build-property-registry-service /bin/app /app
 EXPOSE 8085
+ENTRYPOINT ["/app"]
+
+# --- TARGET: Feedback Service ---
+FROM gcr.io/distroless/static-debian11:nonroot AS feedback-service
+COPY --from=build-feedback-service /bin/app /app
+EXPOSE 8086
 ENTRYPOINT ["/app"]

@@ -57,6 +57,16 @@ export interface LedgerBlock {
   hash: string;
 }
 
+export interface Feedback {
+  id: string;
+  userId: string;
+  message: string;
+  category: string;
+  rating: number;
+  createdAt?: string;
+}
+
+
 // Fallback Mock State
 const mockUsers: User[] = [
   { id: "usr-1", email: "investor@gmail.com", fullName: "John Doe", role: "BUYER", kycStatus: "APPROVED", documentType: "PASSPORT", documentReference: "P74928" },
@@ -86,6 +96,10 @@ const mockBlocks: LedgerBlock[] = [
   { index: 1, timestamp: "2026-07-12T05:05:00Z", payload: "Transaction Created: tx-1", previousHash: "8523ef33a921d7494e09f61b9a5286c4ad4b8efc8f38d38ca5d762957eef53ab", hash: "9a2f7c03ba88e7b1a20b08051a2d5dbd392fe8e90632ef3914a2a11b643a6d71" },
 ];
 
+const mockFeedback: Feedback[] = [
+  { id: "fb-1", userId: "usr-1", message: "Great application! Really easy to track real estate transactions.", category: "general", rating: 5, createdAt: "2026-07-14T12:00:00Z" }
+];
+
 const API_BASE = "http://localhost";
 const ports = {
   transactions: 8080,
@@ -93,8 +107,10 @@ const ports = {
   financing: 8082,
   tokenization: 8083,
   ledger: 8084,
-  properties: 8085
+  properties: 8085,
+  feedback: 8086
 };
+
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -300,5 +316,14 @@ export const api = {
   // 6. Property Registry API mappings
   getProperties: () => safeFetch<any[]>(`${API_BASE}:${ports.properties}/api/v1/properties`, { method: "GET" }, [
     { id: "prop-101", address: "123 Ocean View Dr, Malibu", description: "Luxury beachfront villa", value: 4500000, thumbnail: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", ownerId: "usr-priya.sharma@realestate.in" }
-  ])
+  ]),
+
+  // 7. Feedback Service API mappings
+  submitFeedback: (feedback: { message: string; category: string; rating: number }) => safeFetch<Feedback>(`${API_BASE}:${ports.feedback}/api/v1/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(feedback)
+  }, { id: "fb-" + Math.random().toString(36).substr(2, 5), userId: "usr-1", ...feedback, createdAt: new Date().toISOString() } as Feedback),
+
+  getFeedback: () => safeFetch<Feedback[]>(`${API_BASE}:${ports.feedback}/api/v1/feedback`, { method: "GET" }, mockFeedback)
 };

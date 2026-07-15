@@ -1,0 +1,43 @@
+image:
+  repository: ghcr.io/realestate-trust/monorepo/feedback-service
+service:
+  type: NodePort
+  port: 8086
+  targetPort: 8086
+  nodePort: 30086
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+smokeTest:
+  enabled: true
+  script: |
+    echo "Sleeping for pod startup..."
+    sleep 5
+    echo "Verifying feedback-service health check..."
+    curl -f http://feedback-service:8086/api/v1/health
+env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: feedback-service-db-secret
+        key: DATABASE_URL
+db:
+  migrations:
+    enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/feedback_db?sslmode=disable"
+    scripts:
+      000001_create_feedback.up.sql: |
+        CREATE TABLE feedback (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            rating INTEGER NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX idx_feedback_user_id ON feedback(user_id);

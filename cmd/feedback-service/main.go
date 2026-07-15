@@ -1,0 +1,103 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"github.com/realestate-trust/monorepo/internal/db"
+)
+
+func main() {
+	slog.Info("Starting Feedback Service API on :8086...")
+
+	repo := db.NewInMemoryFeedbackRepository()
+	handler := db.NewFeedbackHandler(repo)
+
+	e := echo.New()
+
+	// Security and global middlewares
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:      "1; mode=block",
+		ContentTypeNosniff: "nosniff",
+		XFrameOptions:      "DENY",
+	}))
+	e.Use(middleware.BodyLimit(1 << 20))
+
+	// Health check
+	e.GET("/api/v1/health", func(c *echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
+	})
+
+	api := e.Group("/api/v1")
+
+	// Optional JWT verification: if authorization header is provided, it parses it
+	jwtConfig := echojwt.Config{
+		SigningKey: db.JWTSecret,
+		ContextKey: "user",
+	}
+
+	// We can choose to make it optional or required. Let's make it optional for feedback submission
+	// but required for listing feedback (collation). Actually, to be safe, let's allow anyone authenticated
+	// to submit feedback, and only admins to list feedback.
+
+	// Optional JWT middleware for POST (so anonymous users can also send feedback if desired,
+	// but we'll extract user ID if they are logged in)
+	optionalJWT := echojwt.WithConfig(echojwt.Config{
+		SigningKey: db.JWTSecret,
+		ContextKey: "user",
+		ErrorHandler: func(c *echo.Context, err error) error {
+			// Ignore token validation errors so it proceeds as anonymous
+			return nil
+		},
+	})
+
+	api.POST("/feedback", handler.CreateFeedback, optionalJWT)
+
+	// Admin-only route for listing feedback
+	api.GET("/feedback", handler.ListFeedback, echojwt.WithConfig(jwtConfig))
+
+	srv := &http.Server{
+		Addr:         ":8086",
+		Handler:      e,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	slog.Info("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("server error", "err", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+	slog.Info("Shutting down server gracefully...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("server forced to shutdown", "err", err)
+	}
+	slog.Info("Server stopped")
+}

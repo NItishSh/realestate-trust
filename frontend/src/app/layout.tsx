@@ -17,6 +17,8 @@ import {
   LogOut
 } from 'lucide-react';
 import './globals.css';
+import FeedbackWidget from '../components/FeedbackWidget';
+
 
 export default function RootLayout({
   children,
@@ -151,6 +153,7 @@ export default function RootLayout({
             {children}
           </div>
         </main>
+        {!isAuthRoute && <FeedbackWidget />}
       </body>
     </html>
   );

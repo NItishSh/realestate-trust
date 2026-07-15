@@ -54,6 +54,16 @@ services:
       postgres:
         condition: service_healthy
 
+  feedback-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/feedback-service/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/feedback_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
   transaction-manager:
     build:
       context: .
@@ -112,6 +122,19 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  feedback-service:
+    build:
+      context: .
+      target: feedback-service
+    ports:
+      - "8086:8086"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/feedback_db?sslmode=disable
+    depends_on:
+      feedback-migrate:
+        condition: service_completed_successfully
+
+
   frontend:
     build:
       context: ./frontend
@@ -123,6 +146,7 @@ services:
       - financing-engine
       - tokenization-engine
       - ledger-service
+      - feedback-service
 
 volumes:
   pgdata:
