@@ -128,17 +128,7 @@ const mockProperties: Property[] = [
 
 
 
-const API_BASE = "http://localhost";
-const ports = {
-  transactions: 8080,
-  identity: 8081,
-  financing: 8082,
-  tokenization: 8083,
-  ledger: 8084,
-  properties: 8085,
-  feedback: 8086
-};
-
+const API_BASE = typeof window !== 'undefined' ? "" : "http://localhost:8080";
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -180,7 +170,7 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
       if (!isRefreshing) {
         isRefreshing = true;
         try {
-          const refreshRes = await fetch(`${API_BASE}:${ports.identity}/api/v1/refresh`, {
+          const refreshRes = await fetch(`${API_BASE}/api/v1/refresh`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refreshToken })
@@ -221,55 +211,38 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
         headers,
         signal: AbortSignal.timeout(1500)
       });
-
-      if (!res.ok) throw new Error("API error status");
-      return await res.json() as T;
     }
 
-    if (!res.ok) throw new Error("API error status");
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
     return await res.json() as T;
-  } catch (e) {
-    if (e instanceof Error && e.message === "Unauthorized") {
-      throw e;
-    }
+  } catch (error) {
+    console.error("API call failed, returning fallback mock data:", error);
     return fallback;
   }
 }
 
 export const api = {
-  // Auth
+  // auth endpoint overrides
   login: async (email: string, password?: string) => {
-    try {
-      const res = await fetch(`${API_BASE}:${ports.identity}/api/v1/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token && data.refreshToken && typeof window !== 'undefined') {
-          localStorage.setItem('jwt_token', data.token);
-          localStorage.setItem('refresh_token', data.refreshToken);
-        }
-        return data;
-      }
-    } catch (e) {
-      console.error("Login failed", e);
+    const res = await fetch(`${API_BASE}/api/v1/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      throw new Error("Login failed");
     }
+    return await res.json();
   },
 
   logout: async () => {
     try {
-      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
-      if (refreshToken) {
-        await fetch(`${API_BASE}:${ports.identity}/api/v1/logout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken })
-        });
-      }
-    } catch (e) {
-      console.error("Logout failed", e);
+      await fetch(`${API_BASE}/api/v1/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
     } finally {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jwt_token');
@@ -281,14 +254,14 @@ export const api = {
   },
 
   // 1. Identity Service API mappings
-  getUsers: () => safeFetch<User[]>(`${API_BASE}:${ports.identity}/api/v1/users`, { method: "GET" }, mockUsers),
-  registerUser: (user: Partial<User>) => safeFetch<User>(`${API_BASE}:${ports.identity}/api/v1/users`, {
+  getUsers: () => safeFetch<User[]>(`${API_BASE}/api/v1/users`, { method: "GET" }, mockUsers),
+  registerUser: (user: Partial<User>) => safeFetch<User>(`${API_BASE}/api/v1/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user)
   }, { id: "usr-" + Math.random().toString(36).substr(2, 5), ...user, kycStatus: "PENDING" } as User),
   submitKYC: (userId: string, kyc: { documentType: string, documentReference: string }) => safeFetch<{ status: string }>(
-    `${API_BASE}:${ports.identity}/api/v1/users/${userId}/kyc`,
+    `${API_BASE}/api/v1/users/${userId}/kyc`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -298,38 +271,38 @@ export const api = {
   ),
 
   // 2. Transaction Manager API mappings
-  getTransactions: () => safeFetch<Transaction[]>(`${API_BASE}:${ports.transactions}/api/v1/transactions`, { method: "GET" }, mockTransactions),
-  createTransaction: (tx: Partial<Transaction>) => safeFetch<Transaction>(`${API_BASE}:${ports.transactions}/api/v1/transactions`, {
+  getTransactions: () => safeFetch<Transaction[]>(`${API_BASE}/api/v1/transactions`, { method: "GET" }, mockTransactions),
+  createTransaction: (tx: Partial<Transaction>) => safeFetch<Transaction>(`${API_BASE}/api/v1/transactions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(tx)
   }, { id: "tx-" + Math.random().toString(36).substr(2, 5), status: "DRAFT", ...tx } as Transaction),
-  getEscrow: (txId: string) => safeFetch<EscrowAccount>(`${API_BASE}:${ports.transactions}/api/v1/transactions/${txId}/escrow`, { method: "GET" }, mockEscrow[0]),
-  fundEscrow: (txId: string, amount: number) => safeFetch<{ status: string }>(`${API_BASE}:${ports.transactions}/api/v1/transactions/${txId}/escrow/fund`, {
+  getEscrow: (txId: string) => safeFetch<EscrowAccount>(`${API_BASE}/api/v1/transactions/${txId}/escrow`, { method: "GET" }, mockEscrow[0]),
+  fundEscrow: (txId: string, amount: number) => safeFetch<{ status: string }>(`${API_BASE}/api/v1/transactions/${txId}/escrow/fund`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount })
   }, { status: "funding_received" }),
 
   // 3. Financing Engine API mappings
-  getLoans: () => safeFetch<Loan[]>(`${API_BASE}:${ports.financing}/api/v1/loans`, { method: "GET" }, mockLoans),
-  applyLoan: (loan: Partial<Loan>) => safeFetch<Loan>(`${API_BASE}:${ports.financing}/api/v1/loans`, {
+  getLoans: () => safeFetch<Loan[]>(`${API_BASE}/api/v1/loans`, { method: "GET" }, mockLoans),
+  applyLoan: (loan: Partial<Loan>) => safeFetch<Loan>(`${API_BASE}/api/v1/loans`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(loan)
   }, { id: "ln-" + Math.random().toString(36).substr(2, 5), status: "APPLIED", ...loan } as Loan),
 
   // 4. Tokenization Engine API mappings
-  getPools: () => safeFetch<FractionalPool[]>(`${API_BASE}:${ports.tokenization}/api/v1/pools`, { method: "GET" }, mockPools),
-  createPool: (pool: Partial<FractionalPool>) => safeFetch<FractionalPool>(`${API_BASE}:${ports.tokenization}/api/v1/pools`, {
+  getPools: () => safeFetch<FractionalPool[]>(`${API_BASE}/api/v1/pools`, { method: "GET" }, mockPools),
+  createPool: (pool: Partial<FractionalPool>) => safeFetch<FractionalPool>(`${API_BASE}/api/v1/pools`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(pool)
   }, { id: "pool-" + Math.random().toString(36).substr(2, 5), tokensSold: 0, ...pool } as FractionalPool),
 
   // 5. Ledger Service API mappings
-  getLedger: () => safeFetch<LedgerBlock[]>(`${API_BASE}:${ports.ledger}/api/v1/logs`, { method: "GET" }, mockBlocks),
-  writeLedgerLog: (log: string) => safeFetch<LedgerBlock>(`${API_BASE}:${ports.ledger}/api/v1/logs`, {
+  getLedger: () => safeFetch<LedgerBlock[]>(`${API_BASE}/api/v1/logs`, { method: "GET" }, mockBlocks),
+  writeLedgerLog: (log: string) => safeFetch<LedgerBlock>(`${API_BASE}/api/v1/logs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ payload: log })
@@ -342,15 +315,15 @@ export const api = {
   }),
 
   // 6. Property Registry API mappings
-  getProperties: () => safeFetch<Property[]>(`${API_BASE}:${ports.properties}/api/v1/properties`, { method: "GET" }, mockProperties),
-  getProperty: (id: string) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}`, { method: "GET" }, mockProperties[0]),
-  verifyTitleInsurance: (id: string, insurance: { company: string; policy: string }) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}/insurance/verify`, {
+  getProperties: () => safeFetch<Property[]>(`${API_BASE}/api/v1/properties`, { method: "GET" }, mockProperties),
+  getProperty: (id: string) => safeFetch<Property>(`${API_BASE}/api/v1/properties/${id}`, { method: "GET" }, mockProperties[0]),
+  verifyTitleInsurance: (id: string, insurance: { company: string; policy: string }) => safeFetch<Property>(`${API_BASE}/api/v1/properties/${id}/insurance/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(insurance)
   }, { ...mockProperties[0], titleInsuranceStatus: "INSURED", titleInsuranceCompany: insurance.company, titleInsurancePolicy: insurance.policy, titleInsuranceVerifiedAt: new Date().toISOString() } as Property),
 
-  updatePropertyDetails: (id: string, details: { sqft: number; bedrooms: number; bathrooms: number; yearBuilt: number; propertyType: string }) => safeFetch<Property>(`${API_BASE}:${ports.properties}/api/v1/properties/${id}/details`, {
+  updatePropertyDetails: (id: string, details: { sqft: number; bedrooms: number; bathrooms: number; yearBuilt: number; propertyType: string }) => safeFetch<Property>(`${API_BASE}/api/v1/properties/${id}/details`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(details)
@@ -358,11 +331,11 @@ export const api = {
 
 
   // 7. Feedback Service API mappings
-  submitFeedback: (feedback: { message: string; category: string; rating: number }) => safeFetch<Feedback>(`${API_BASE}:${ports.feedback}/api/v1/feedback`, {
+  submitFeedback: (feedback: { message: string; category: string; rating: number }) => safeFetch<Feedback>(`${API_BASE}/api/v1/feedback`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(feedback)
   }, { id: "fb-" + Math.random().toString(36).substr(2, 5), userId: "usr-1", ...feedback, createdAt: new Date().toISOString() } as Feedback),
 
-  getFeedback: () => safeFetch<Feedback[]>(`${API_BASE}:${ports.feedback}/api/v1/feedback`, { method: "GET" }, mockFeedback)
+  getFeedback: () => safeFetch<Feedback[]>(`${API_BASE}/api/v1/feedback`, { method: "GET" }, mockFeedback)
 };

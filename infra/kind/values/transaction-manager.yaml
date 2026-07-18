@@ -1,17 +1,10 @@
 image:
   repository: ghcr.io/realestate-trust/monorepo/transaction-manager
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
   targetPort: 8080
-  nodePort: 30080
-resources:
-  limits:
-    cpu: 1000m
-    memory: 512Mi
-  requests:
-    cpu: 500m
-    memory: 256Mi
+resources: {}
 ingress:
   enabled: true
   whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"

@@ -1,0 +1,128 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: api-gateway
+  namespace: realestate-trust
+spec:
+  selector:
+    istio: ingress
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: api-gateway
+  namespace: realestate-trust
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - api-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/v1/login
+        - uri:
+            prefix: /api/v1/logout
+        - uri:
+            prefix: /api/v1/refresh
+        - uri:
+            prefix: /api/v1/users
+      route:
+        - destination:
+            host: identity-service.realestate-trust.svc.cluster.local
+            port:
+              number: 8081
+    - match:
+        - uri:
+            prefix: /api/v1/transactions
+      route:
+        - destination:
+            host: transaction-manager.realestate-trust.svc.cluster.local
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: /api/v1/loans
+      route:
+        - destination:
+            host: financing-engine.realestate-trust.svc.cluster.local
+            port:
+              number: 8082
+    - match:
+        - uri:
+            prefix: /api/v1/pools
+      route:
+        - destination:
+            host: tokenization-engine.realestate-trust.svc.cluster.local
+            port:
+              number: 8083
+    - match:
+        - uri:
+            prefix: /api/v1/logs
+      route:
+        - destination:
+            host: ledger-service.realestate-trust.svc.cluster.local
+            port:
+              number: 8084
+    - match:
+        - uri:
+            prefix: /api/v1/properties
+      route:
+        - destination:
+            host: property-registry-service.realestate-trust.svc.cluster.local
+            port:
+              number: 8085
+    - match:
+        - uri:
+            prefix: /api/v1/feedback
+      route:
+        - destination:
+            host: feedback-service.realestate-trust.svc.cluster.local
+            port:
+              number: 8086
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: frontend.realestate-trust.svc.cluster.local
+            port:
+              number: 3000
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: realestate-trust
+spec:
+  mtls:
+    mode: PERMISSIVE
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: postgres-disable-mtls
+  namespace: realestate-trust
+spec:
+  host: postgres.realestate-trust.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: rabbitmq-disable-mtls
+  namespace: realestate-trust
+spec:
+  host: rabbitmq.realestate-trust.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE

@@ -1,17 +1,10 @@
 image:
   repository: ghcr.io/realestate-trust/monorepo/property-registry-service
 service:
-  type: NodePort
-  targetPort: 8085
-  nodePort: 30085
+  type: ClusterIP
   port: 8085
-resources:
-  limits:
-    cpu: 500m
-    memory: 256Mi
-  requests:
-    cpu: 250m
-    memory: 128Mi
+  targetPort: 8085
+resources: {}
 smokeTest:
   enabled: true
   script: |
