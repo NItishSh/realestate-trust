@@ -87,6 +87,7 @@ func main() {
 	protected.GET("/users/:id", handler.GetUser)
 	protected.POST("/users/:id/kyc", handler.SubmitKYC)
 	protected.GET("/users/:id/kyc/status", handler.GetKYCStatus)
+	protected.DELETE("/users/:id", handler.DeleteUser)
 
 	srv := &http.Server{
 		Addr:         ":8081",

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
@@ -182,5 +183,92 @@ func TestCorrelationIDMiddleware(t *testing.T) {
 	cidHeader := w.Header().Get("X-Correlation-ID")
 	if cidHeader != "custom-correlation-id" {
 		t.Errorf("expected response header custom-correlation-id; got %s", cidHeader)
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	e := echo.New()
+	repo := NewInMemoryUserRepository()
+	handler := NewUserHandler(repo)
+
+	// Seed a user
+	_, err := repo.CreateUser("user-to-delete@example.com", "hash", "Delete Me", core.Buyer)
+	if err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	// 1. Delete as a different user (Forbidden)
+	t.Run("Forbidden Delete", func(t *testing.T) {
+		tokenStr, _ := GenerateJWT("usr-other@example.com", core.Buyer)
+		token, _ := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			return JWTSecret, nil
+		})
+
+		req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/usr-user-to-delete@example.com", nil)
+		w := httptest.NewRecorder()
+		c := e.NewContext(req, w)
+		c.SetPathValues(echo.PathValues{
+			{Name: "id", Value: "usr-user-to-delete@example.com"},
+		})
+		c.Set("user", token)
+
+		err := handler.DeleteUser(c)
+		if err != nil {
+			t.Fatalf("handler returned error: %v", err)
+		}
+		if w.Code != http.StatusForbidden {
+			t.Errorf("expected 403 Forbidden; got %d", w.Code)
+		}
+	})
+
+	// 2. Delete own profile (Success)
+	t.Run("Delete Own Profile", func(t *testing.T) {
+		tokenStr, _ := GenerateJWT("usr-user-to-delete@example.com", core.Buyer)
+		token, _ := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			return JWTSecret, nil
+		})
+
+		req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/usr-user-to-delete@example.com", nil)
+		w := httptest.NewRecorder()
+		c := e.NewContext(req, w)
+		c.SetPathValues(echo.PathValues{
+			{Name: "id", Value: "usr-user-to-delete@example.com"},
+		})
+		c.Set("user", token)
+
+		err := handler.DeleteUser(c)
+		if err != nil {
+			t.Fatalf("handler returned error: %v", err)
+		}
+		if w.Code != http.StatusNoContent {
+			t.Errorf("expected 204 No Content; got %d", w.Code)
+		}
+
+		// Verify user is gone
+		_, err = repo.GetUser("usr-user-to-delete@example.com")
+		if err == nil {
+			t.Error("expected user to be deleted from repo")
+		}
+	})
+}
+
+func TestKYCEncryption(t *testing.T) {
+	original := "my-secret-passport-number-12345"
+	encrypted, err := EncryptKYC(original)
+	if err != nil {
+		t.Fatalf("failed to encrypt: %v", err)
+	}
+
+	if encrypted == original {
+		t.Error("encrypted value must not equal plaintext")
+	}
+
+	decrypted, err := DecryptKYC(encrypted)
+	if err != nil {
+		t.Fatalf("failed to decrypt: %v", err)
+	}
+
+	if decrypted != original {
+		t.Errorf("expected decrypted value %s; got %s", original, decrypted)
 	}
 }

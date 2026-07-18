@@ -1,37 +1,80 @@
-# Implementation Plan - Real Estate Escrow & Payment Platform Architecture
+# Implementation Plan — Regulatory Compliance Gaps
 
-Create a comprehensive architectural design document (`architecture_design.md`) in the workspace root. This document will outline the system architecture, API contracts, database schemas, escrow state machines, and fractional tokenization flows.
+This plan outlines the changes required to resolve the compliance gaps identified in the **Regulatory Compliance & Security Audit Report**:
+1. **Application-Level Encryption for KYC Data** (Gap 2.1)
+2. **Exposing account deletion endpoint for GDPR Right to be Forgotten** (Gap 2.2)
+
+---
 
 ## User Review Required
+
 > [!IMPORTANT]
-> Since we are building a trust-heavy real estate transaction system, we need to choose the integration model for escrow and banking:
-> 1. **Virtual Account / Custodial Ledger**: Creating virtual bank accounts per transaction/buyer and managing a local ledger synchronized with bank statements.
-> 2. **Multi-Signature Smart Contract / Escrow Service Provider**: Integrating with a specialized third-party escrow service provider (e.g., Castler, Escrow.com) or using a blockchain/ledger-based contract.
->
-> We will draft the architecture assuming a **Virtual Account & Ledger-based Escrow Microservice** approach unless you prefer a specific third-party provider.
+> - **Encryption Key**: We will retrieve the AES-256 key from the `KYC_ENCRYPTION_KEY` environment variable. For local development and testing simplicity, a default 32-byte fallback key (`"dev-key-must-be-32-bytes-long!!!"`) will be defined. In production, this key must be set to a secure, randomly generated 32-byte value.
+> - **Account Deletion Scope**: The `DELETE /api/v1/users/:id` route will purge the user from the `users` table. Because of `ON DELETE CASCADE` foreign keys, this automatically deletes all active sessions (`refresh_token_sessions`) and KYC submissions (`kyc_verifications`) associated with the user, satisfying GDPR data erasure mandates. Financial logs in `ledger-service` are preserved under their hashed signatures for financial compliance.
+
+---
 
 ## Open Questions
-> [!NOTE]
-> 1. Do you have a preferred tech stack for the backend (e.g., Node.js/TypeScript, Python/FastAPI, Go) that we should specify in the architecture document?
-> 2. Are there specific banking APIs (e.g., Yes Bank, ICICI Bank, Razorpay Route/X) or NBFC APIs you intend to target for escrow/financing?
-> 3. For Fractional Tokenization, do you want to design a blockchain-based ledger (e.g., ERC-3643 or ERC-20 on EVM) or a high-performance database-driven ledger?
+*No open questions at this stage.*
+
+---
 
 ## Proposed Changes
 
-### Documentation
+### Private Shared Library (`internal/`)
 
-#### [NEW] [architecture_design.md](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/architecture_design.md)
-Create a detailed architectural blueprint containing:
-1. **System & Microservices Architecture**: High-level component diagram (Transaction Manager, Escrow Service, Embedded Financing, Tokenization Engine).
-2. **Escrow State Machine**: State transition diagram and validations for the transaction lifecycle.
-3. **Database Schema Design**: Relational schema (PostgreSQL) for accounts, escrow details, fractional holdings, and loans.
-4. **API Design / Specifications**: Detailed REST API specifications for critical operations.
-5. **Trust and Security Architecture**: Verification, compliance, and auditing procedures.
+---
+
+#### [NEW] [crypto.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/crypto.go)
+Create a new file containing AES-256-GCM encryption/decryption utilities for sensitive string fields.
+- Retrieve key from `os.Getenv("KYC_ENCRYPTION_KEY")`.
+- Default to `"dev-key-must-be-32-bytes-long!!!"` if unset.
+
+#### [MODIFY] [user_repository.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/user_repository.go)
+- Add `DeleteUser(id string) error` method to the `UserRepository` interface.
+- Implement `DeleteUser` in `InMemoryUserRepository`.
+
+#### [MODIFY] [user_repository_sql.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/user_repository_sql.go)
+- Implement `DeleteUser(id string) error` in `SQLUserRepository` executing:
+  ```sql
+  DELETE FROM users WHERE id = $1
+  ```
+- Update `SubmitKYC` to:
+  1. Encrypt the raw document reference (`docRef`) before executing the database write.
+  2. Decrypt the returned encrypted value scan so the returned `*KYCVerification` struct remains populated with the plaintext value for the API response.
+
+#### [MODIFY] [user_handlers.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/user_handlers.go)
+- Implement the `DeleteUser(c *echo.Context) error` handler:
+  1. Extract the authenticated user ID from JWT claims (`sub`).
+  2. Check if the authenticated user matches the target `:id` or has the role `ADMIN`. If not, return `403 Forbidden`.
+  3. Call `h.Repo.DeleteUser(userID)`.
+  4. Return `204 No Content` on success.
+
+---
+
+### microservices (`cmd/`)
+
+---
+
+#### [MODIFY] [main.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/cmd/identity-service/main.go)
+- Register `protected.DELETE("/users/:id", handler.DeleteUser)` route.
+
+---
 
 ## Verification Plan
 
 ### Automated Tests
-- N/A for architectural documentation.
+- Create a unit test `TestDeleteUser` in `internal/db/handlers_test.go` asserting:
+  - Deletion succeeds when the authenticated user deletes their own profile.
+  - Deletion fails with `403 Forbidden` if a different user attempts it.
+  - Deletion succeeds if an `ADMIN` requests it.
+- Create a unit test `TestKYCEncryption` verifying that:
+  - Document references are stored encrypted in the database (or verifying the encrypt/decrypt output).
+  - Retrieving / submitting returns the correct plaintext value.
+
+```bash
+go test -v ./internal/db/...
+```
 
 ### Manual Verification
-- Review the generated `architecture_design.md` document for completeness, correctness, and adherence to the user's architectural vision.
+- Deploy to the cluster, register a user, submit KYC, verify the values in the postgres DB are encrypted, delete the user, and verify all records (sessions, KYC) are purged from database tables.

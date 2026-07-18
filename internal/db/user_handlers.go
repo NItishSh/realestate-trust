@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 	"golang.org/x/crypto/bcrypt"
@@ -213,4 +214,38 @@ func (h *UserHandler) GetUsers(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, users)
+}
+
+// DeleteUser handles DELETE /users/{id}
+func (h *UserHandler) DeleteUser(c *echo.Context) error {
+	userID := c.Param("id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
+	}
+
+	userToken, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: missing or invalid token"})
+	}
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: invalid claims"})
+	}
+	tokenUserID, ok := claims["sub"].(string)
+	tokenRole, _ := claims["role"].(string)
+
+	if tokenUserID != userID && tokenRole != "ADMIN" {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: you can only delete your own account"})
+	}
+
+	err := h.Repo.DeleteUser(userID)
+	if err != nil {
+		if err.Error() == "user not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "DeleteUser error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }

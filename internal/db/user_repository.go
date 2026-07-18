@@ -45,6 +45,7 @@ type UserRepository interface {
 	CreateSession(userID string) (string, error)
 	ValidateSession(token string) (string, error)
 	RevokeSession(token string) error
+	DeleteUser(id string) error
 }
 
 // InMemoryUserRepository implements UserRepository using memory stores.
@@ -178,5 +179,25 @@ func (r *InMemoryUserRepository) RevokeSession(token string) error {
 	defer r.mu.Unlock()
 
 	delete(r.sessions, token)
+	return nil
+}
+
+func (r *InMemoryUserRepository) DeleteUser(id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.users[id]; !ok {
+		return errors.New("user not found")
+	}
+
+	delete(r.users, id)
+	delete(r.verifications, "kyc-"+id)
+
+	for token, sess := range r.sessions {
+		if sess.UserID == id {
+			delete(r.sessions, token)
+		}
+	}
+
 	return nil
 }

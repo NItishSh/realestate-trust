@@ -91,13 +91,18 @@ func (r *SQLUserRepository) SubmitKYC(userID, docType, docRef string) (*KYCVerif
 		return nil, err
 	}
 
+	encDocRef, err := EncryptKYC(docRef)
+	if err != nil {
+		return nil, err
+	}
+
 	id := "kyc-" + userID
 	query := `INSERT INTO kyc_verifications (id, user_id, document_type, document_reference, status)
 	          VALUES ($1, $2, $3, $4, $5)
 	          RETURNING id, user_id, document_type, document_reference, status, verified_at, created_at`
 
 	kyc := &KYCVerification{}
-	err = r.db.QueryRow(query, id, userID, docType, docRef, "PENDING").Scan(
+	err = r.db.QueryRow(query, id, userID, docType, encDocRef, "PENDING").Scan(
 		&kyc.ID,
 		&kyc.UserID,
 		&kyc.DocumentType,
@@ -109,6 +114,13 @@ func (r *SQLUserRepository) SubmitKYC(userID, docType, docRef string) (*KYCVerif
 	if err != nil {
 		return nil, err
 	}
+
+	decDocRef, err := DecryptKYC(kyc.DocumentReference)
+	if err != nil {
+		return nil, err
+	}
+	kyc.DocumentReference = decDocRef
+
 	return kyc, nil
 }
 
@@ -191,4 +203,20 @@ func (r *SQLUserRepository) RevokeSession(token string) error {
 	query := `DELETE FROM refresh_token_sessions WHERE token = $1`
 	_, err := r.db.Exec(query, token)
 	return err
+}
+
+func (r *SQLUserRepository) DeleteUser(id string) error {
+	query := `DELETE FROM users WHERE id = $1`
+	res, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("user not found")
+	}
+	return nil
 }

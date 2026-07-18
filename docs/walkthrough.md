@@ -1,39 +1,79 @@
-# Walkthrough - Real Estate Trust & Escrow Architecture Design
+# Walkthrough — Reliability, Persistence, Istio Gateway, Log Correlation, CORS & Regulatory Compliance
 
-We have created and updated the comprehensive system design document for the real estate marketplace's escrow, payment, and tokenization features, and completed deep-research documentation on integrations, infrastructure, and observability.
+We have successfully completed all core architectural and regulatory requirements to make the `realestate-trust` platform production-ready, including Phase 4: Request Tracing & Log Correlation, CORS resolutions, and Phase 5 compliance controls for GDPR & SOC 2.
 
-## System Architecture Diagram
+---
 
-![Real Estate Escrow System Architecture](./realestate_escrow_architecture.png)
+## 🛠️ Changes Implemented
 
-## Changes Made
-- Created and updated [architecture_design.md](./architecture_design.md) containing the full architectural blueprint of the platform.
-- Created [best_practices.md](./best_practices.md) documenting engineering guidelines for observability, security, and cost-effectiveness.
-- Created [microservices.md](./microservices.md) detailing the functional scopes and databases of the Go-based services.
-- Created and updated [project_structure.md](./project_structure.md) specifying the Monorepo design, multi-stage Docker build files, Kubernetes mapping tables, Infrastructure as Code (IaC) layouts, and UI Frontend specifications.
+### 1. Database-Level Persistence & Migrations
+- **SQL Repositories**: Wrote Postgres-backed repository implementations for all domains (users, transactions, escrow, financing, ledger, properties, tokenization, and feedback).
+- **Idempotence**: Refactored seed logic to be idempotent, preventing duplicate key errors on database container restarts.
 
-### Deep Research & Context Documents
-We have established a dedicated research directory `docs/research/` containing detailed context analyses:
-1. **Banking & KYC Integrations**: [docs/research/banking_kyc_integrations.md](./research/banking_kyc_integrations.md) mapping sandbox setups, verification endpoints, and Go signature verification algorithms.
-2. **Kubernetes Infrastructure**: [docs/research/infra_kubernetes.md](./research/infra_kubernetes.md) mapping Cilium CNI, Karpenter auto-scalers, Ingress IP whitelists, and database connection pooling.
-3. **Observability & Tracing**: [docs/research/observability_tracing.md](./research/observability_tracing.md) mapping OpenTelemetry in Go, Prometheus metrics mapping tables, and pg_locks database telemetry.
-4. **Loki Logging & Audit**: [docs/research/loki_logging_spec.md](./research/loki_logging_spec.md) detailing standardized JSON schemas, Promtail parser configurations, and concrete LogQL queries.
+### 2. Queue Reliability & Resiliency
+- **Dead Letter Queue (DLQ)**: Declared DLX (`transaction-events-dlx`) and DLQ (`transaction-events-dlq`) for processing resilience.
+- **Publisher Confirms**: Implemented publisher confirms waiting for broker receipt via `ch.NotifyPublish()`.
+- **Consumer Idempotency**: Gracefully handled unique constraint violations inside `ledger-service` to safely prune duplicate events.
 
-### What Was Designed
-1. **System & Microservices Architecture**: An event-driven architecture mapping the client gateway, microservices, PostgreSQL database, transaction ledgers, event brokers, and a multi-bank adapter factory layer.
-2. **Go (Golang) Codebase Selection**:
-   - Specified Go as the primary programming language for all microservices.
-   - Refactored the core **Banking Service Adapter Interface** (`IBankingAdapter`) to Go struct/interface syntax.
-3. **Containerization & Kubernetes Specifications**:
-   - Added a multi-stage Docker build pipeline (`Dockerfile`) for minimal, secure Go containers.
-   - Designed Kubernetes YAML manifests for the microservices including a `Deployment` setup, `Service` configuration, and `HorizontalPodAutoscaler` (HPA) resource profiles.
-4. **Multi-Banking Partner Support**:
-   - Configured dynamic, slug-based webhook endpoints: `/api/v1/webhooks/bank/{provider_slug}/deposit`.
-   - Setup provider routing rules.
-5. **Escrow State Machine**: A strict transactional state machine representing the lifecycle of real estate escrow from draft and financing through deposit validation, due diligence checks, registration status verification, and completed release or refund state.
-6. **Database Schema Design**: Fully formatted PostgreSQL schema detailing relational tables including `bank_partners` config table.
-7. **API Specifications**: Rest API specs detailing endpoint routes, parameters, structures, and payload JSON for key workflows, updated to accept optional preferred banking partner IDs.
-8. **Trust and Security Layer**: Specifications for cryptographic transaction state chaining, multi-signature approvals, and provider-specific HMAC validation for webhooks.
+### 3. Edge Routing with Istio Service Mesh (API Gateway)
+- **Unified Ingress Gateway**: Consolidated separate service ports (8080-8086) to route via the Istio Ingress Gateway (`istio-ingress`) on port `8080` (NodePort `30080`).
+- **Namespace Injection**: Labeled the `realestate-trust` namespace for automatic Envoy sidecar proxy injection.
+- **Permissive mTLS & Plaintext Destinations**: Configured PeerAuthentication `mode: PERMISSIVE` and created `DestinationRules` to disable TLS for database (`postgres`) and broker (`rabbitmq`) pods.
 
-## Verification
-- Reviewed the generated markdown files to ensure syntax correctness of all SQL queries, JSON payloads, Go codes, and Mermaid diagrams.
+### 4. End-to-End Tracing & Log Correlation
+- **Frontend Client**: Updated `frontend/src/lib/api.ts` to automatically generate a unique request Correlation ID using the browser's crypto API (`crypto.randomUUID()`) and inject it as a header: `X-Correlation-ID`.
+- **Go Middlewares**: Created `CorrelationIDMiddleware()` and `RequestLoggerMiddleware()` inside `internal/db/middleware.go` to automatically extract the request header, inject it into the request context, set the response header, and output structured JSON request logs.
+- **Structured slog Integration**: Implemented a custom `SlogCorrelationHandler` that automatically retrieves the correlation ID from context values and adds it as a first-class structured log attribute (`"correlation_id"`).
+- **RabbitMQ Context Propagation**: Modified events `Publish` and `Consume` to pass correlation IDs via message headers (`"correlation_id"`), ensuring end-to-end tracing context carries across asynchronous message boundaries.
+
+### 5. Access Control (CORS) Fixes
+- **Unified Origin Support**: Updated all 7 microservices' `main.go` entrypoints to allow `http://localhost:8080` (the unified Istio Edge port) in addition to `http://localhost:3000`.
+- **CORS Allowed Headers**: Added the custom `"X-Correlation-ID"` header to each service's `AllowHeaders` config so that the browser does not block preflight precheck requests.
+
+### 6. Regulatory Compliance Controls (GDPR & SOC 2)
+- **Application-Level Encryption**: Implemented AES-256-GCM encryption/decryption utilities in [crypto.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/crypto.go).
+- **KYC Safeguards**: Updated `SubmitKYC` inside [user_repository_sql.go](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/user_repository_sql.go) to automatically encrypt government document references using the AES-256-GCM wrapper prior to persisting them. Decryption is performed upon retrieval so that API outputs remain transparent.
+- **GDPR Right to be Forgotten**:
+  - Implemented `DeleteUser` database methods inside `SQLUserRepository` executing a cascade deletion of the target user ID.
+  - Exposed a `DELETE /api/v1/users/:id` route inside `identity-service` that validates authenticated JWT token claims. The route restricts deletion exclusively to the owning user or an administrator.
+
+---
+
+## 🧪 Verification Results
+
+### 1. Unit & Integration Tests
+All tests compile and pass successfully, including a new `TestDeleteUser` integration test validating JWT owner authentication and `TestKYCEncryption` verifying encryption and decryption of string references:
+```bash
+go test -v ./internal/db/...
+```
+**Output:**
+```
+=== RUN   TestUserHandlersIntegration
+--- PASS: TestUserHandlersIntegration (0.06s)
+=== RUN   TestDeleteUser
+=== RUN   TestDeleteUser/Forbidden_Delete
+=== RUN   TestDeleteUser/Delete_Own_Profile
+--- PASS: TestDeleteUser (0.00s)
+    --- PASS: TestDeleteUser/Forbidden_Delete (0.00s)
+    --- PASS: TestDeleteUser/Delete_Own_Profile (0.00s)
+=== RUN   TestKYCEncryption
+--- PASS: TestKYCEncryption (0.00s)
+PASS
+ok  	github.com/realestate-trust/monorepo/internal/db	1.074s
+```
+
+### 2. Live Database Encryption Verification
+Submitting a KYC verification through the API gateway (`POST /api/v1/users/{id}/kyc`) with reference value `"PASSPORT-98765-SECRET"` yields a base64 encrypted string inside Postgres:
+```sql
+SELECT document_reference FROM kyc_verifications WHERE user_id = 'usr-delete-me-test@example.com';
+```
+**Database Value:**
+`WCg07cbmGC2JAqV0ws1HrNnA49OyVvUdmCtG6HvcfkzesOb1o4Iokt0esz0vpNIOhA==`
+
+### 3. GDPR Purge Verification (Right to Erasure)
+Executing `DELETE /api/v1/users/usr-delete-me-test@example.com` successfully purged the records from both the `users` and `kyc_verifications` tables (under foreign key cascade settings):
+```sql
+SELECT count(*) FROM users WHERE id = 'usr-delete-me-test@example.com'; -- Returns 0
+SELECT count(*) FROM kyc_verifications WHERE user_id = 'usr-delete-me-test@example.com'; -- Returns 0
+```
+All checks passed successfully!
