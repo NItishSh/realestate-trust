@@ -116,8 +116,8 @@ deploy_helm_local_and_postgres() {
 	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
 	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
-	# Create Secrets
-	"${SCRIPT_DIR}/create-secrets.sh"
+	# Deploy Vault & External Secrets Operator (replacing create-secrets.sh)
+	"${SCRIPT_DIR}/deploy-vault-eso.sh"
 
 	# Deploy PostgreSQL & RabbitMQ
 	kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"

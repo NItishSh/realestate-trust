@@ -1,0 +1,32 @@
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: vault-backend
+  namespace: realestate-trust
+spec:
+  provider:
+    vault:
+      server: "http://vault.vault.svc.cluster.local:8200"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "realestate-trust-role"
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: postgres-credentials-sync
+  namespace: realestate-trust
+spec:
+  refreshInterval: "10s"
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: postgres-credentials
+    creationPolicy: "Owner"
+  dataFrom:
+    - extract:
+        key: realestate-trust/database
