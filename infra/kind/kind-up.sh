@@ -105,35 +105,41 @@ deploy_argocd_and_postgres() {
 }
 
 deploy_helm_local_and_postgres() {
-    step "Deploying Local Helm Charts and PostgreSQL"
+	step "Deploying Local Helm Charts, PostgreSQL, and Istio Service Mesh"
 
-    # Create target namespace
-    kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
+	# Create target namespace
+	kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
 
-    # Create Secrets
-    "${SCRIPT_DIR}/create-secrets.sh"
+	# Deploy Istio Service Mesh
+	"${SCRIPT_DIR}/deploy-istio.sh"
 
-    # Deploy PostgreSQL & RabbitMQ
-    kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
-    kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
+	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
+	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
-    log "Waiting for PostgreSQL to be ready..."
-    sleep 5
-    kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
+	# Create Secrets
+	"${SCRIPT_DIR}/create-secrets.sh"
 
-    log "Waiting for RabbitMQ to be ready..."
-    kubectl wait --for=condition=Ready pods -l app=rabbitmq -n realestate-trust --timeout=300s
+	# Deploy PostgreSQL & RabbitMQ
+	kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
+	kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
 
-    step "Installing Microservices via Helm"
-    local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")
-    for svc in "${services[@]}"; do
-        log "Installing ${svc}..."
-        helm upgrade --install "${svc}" "${PROJECT_ROOT}/infra/helm/charts/microservice" \
-            --namespace realestate-trust \
-            --values "${SCRIPT_DIR}/values/${svc}.yaml" \
-            --set image.pullPolicy=Never
-    done
-    log "All Helm charts deployed locally."
+	log "Waiting for PostgreSQL to be ready..."
+	sleep 5
+	kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
+
+	log "Waiting for RabbitMQ to be ready..."
+	kubectl wait --for=condition=Ready pods -l app=rabbitmq -n realestate-trust --timeout=300s
+
+	step "Installing Microservices via Helm"
+	local services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")
+	for svc in "${services[@]}"; do
+		log "Installing ${svc}..."
+		helm upgrade --install "${svc}" "${PROJECT_ROOT}/infra/helm/charts/microservice" \
+			--namespace realestate-trust \
+			--values "${SCRIPT_DIR}/values/${svc}.yaml" \
+			--set image.pullPolicy=Never
+	done
+	log "All Helm charts deployed locally with automatic Istio sidecar injection."
 }
 
 print_status() {
