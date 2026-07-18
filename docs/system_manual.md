@@ -109,8 +109,11 @@ Any direct database modification invalidates the downstream hash chain, instantl
 ### 5.2 Banking Webhook Signatures
 Incoming deposit notifications from bank APIs (e.g., `/api/v1/webhooks/bank/{provider_slug}/deposit`) are authenticated using an HMAC SHA-256 signature calculated against a securely stored webhook secret.
 
-### 5.3 Kubernetes IAM Isolation
-By running each microservice in its own isolated Deployment Pod, we apply **IAM Roles for Service Accounts (IRSA)**. The `identity-service` accesses KYC vault secrets, while the `transaction-manager` accesses banking API secrets, strictly enforcing the principle of least privilege.
+### 5.3 Secrets Management & Kubernetes IAM Isolation
+We secure application credentials by storing them in a dedicated **HashiCorp Vault** instance deployed in the cluster.
+- **Dynamic Sync**: The **External Secrets Operator (ESO)** automatically synchronizes secrets from Vault (`secret/data/realestate-trust/database`) into native Kubernetes `Secret` resources (`postgres-credentials`) inside the `realestate-trust` namespace.
+- **Pod Isolation**: Microservice Pods reference these synced secrets directly as environment variables, isolating them from container image builds and Git repositories.
+- **Service Account Binding**: Vault authenticates the operator and microservices using Kubernetes Service Account tokens bound to specific access policies, strictly enforcing the principle of least privilege.
 
 ---
 
@@ -166,9 +169,8 @@ Before deploying this platform to a public cloud production environment (e.g. AW
 - **Database & Queue Infrastructure**: Replace the local custom minimalist Kubernetes manifests (`manifests/postgres.yaml` and `manifests/rabbitmq.yaml`) with official **Bitnami Helm Charts** (or Cloud-native managed services like AWS RDS for Postgres and Amazon MQ for RabbitMQ).
 - **High Availability & Clustering**: Deploy RabbitMQ in a clustered multi-node configuration with quorum queues, and deploy PostgreSQL with PgBouncer connection pooling and active replication (Primary/Standby).
 
-### 8.2 Secret Management & Hardening
-- **Decouple Secrets**: Migrate raw connection string environment variables (like `RABBITMQ_URL` and `DATABASE_URL`) out of Helm values and configuration maps.
-- **Vault/KMS Integrations**: Store database credentials and queue authentication tokens inside a secure secrets manager (like HashiCorp Vault, AWS Secrets Manager, or Google Secret Manager) and inject them dynamically via **Kubernetes external-secrets** or AWS IAM Roles for Service Accounts (IRSA).
+### 8.2 Secret Management & Hardening (COMPLETED)
+- **Vault & ESO Integration**: Successfully integrated HashiCorp Vault (dev mode) and External Secrets Operator (ESO). The bootstrap scripts now automate Helm deployments, configure Vault Kubernetes Auth, seed secrets from local `.env` files into Vault's KV engine, and sync credentials using custom `SecretStore` and `ExternalSecret` resources. No raw credentials reside in our Git repository or Helm chart templates.
 
 ### 8.3 SSL/TLS Ingress & Network Policies
 - Enforce strict HTTPS/WSS communication globally by implementing a production-grade ingress controller (like NGINX Ingress or Traefik) bound to cert-manager for automatic Let's Encrypt SSL certificate provisioning.

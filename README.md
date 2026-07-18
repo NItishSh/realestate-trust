@@ -93,10 +93,13 @@ This environment is perfect for rapid development and automatically seeds non-pr
 * **Ledger Service**: `:8084`
 * **Database**: `:5432`
 
-### 2. Kind Cluster (Local Kubernetes & GitOps Testing)
+### 2. Kind Cluster (Local Kubernetes, GitOps, and Secrets Integration)
 If you need to validate Kubernetes manifests, Helm charts, or the ArgoCD pipeline locally, we provide a complete bootstrap script for [Kind (Kubernetes in Docker)](https://kind.sigs.k8s.io/).
 
-To provision a local cluster, install ArgoCD, and deploy all services exactly as they run in production via GitOps:
+The bootstrap sequence provisions **Istio Service Mesh**, **HashiCorp Vault**, and the **External Secrets Operator (ESO)** to manage and sync credentials dynamically.
+
+To provision the local cluster, configure Vault, seed database secrets from your `.env`, and deploy all services exactly as they run in production:
+```,StartLine:96,TargetContent:
 ```bash
 ./infra/kind/kind-up.sh
 ```
