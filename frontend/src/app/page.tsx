@@ -89,7 +89,7 @@ export default function Dashboard() {
             <p className="text-xs text-slate-400">Step-by-step walkthroughs to test the integrated microservices.</p>
           </div>
           <Link
-            href="file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/user_journeys.md"
+            href="/docs/user_journeys.md"
             target="_blank"
             className="flex items-center gap-1.5 text-xs text-accent-gold hover:underline font-mono"
           >
