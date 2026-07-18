@@ -143,22 +143,22 @@ deploy_helm_local_and_postgres() {
 }
 
 print_status() {
-    step "Cluster Status"
-    echo ""
-    kubectl get pods -n realestate-trust -o wide
-    echo ""
-    log "Access your application:"
-    echo "  Frontend:            http://localhost:3000"
-    echo "  Transaction Manager: http://localhost:8080/api/v1/health"
-    echo "  Identity Service:    http://localhost:8081/api/v1/health"
-    echo "  Financing Engine:    http://localhost:8082/api/v1/health"
-    echo "  Tokenization Engine: http://localhost:8083/api/v1/health"
-    echo "  Ledger Service:      http://localhost:8084/api/v1/health"
-    echo "  Property Registry:   http://localhost:8085/api/v1/health"
-    echo ""
-    log "Useful commands:"
-    echo "  kubectl get pods -n realestate-trust         # List pods"
-    echo "  ./infra/kind/kind-up.sh --down               # Tear down"
+	step "Cluster Status"
+	echo ""
+	kubectl get pods -n realestate-trust -o wide
+	echo ""
+	log "Access your application via the Istio Ingress Gateway:"
+	echo "  Unified Portal (Frontend):  http://localhost:8080"
+	echo "  Identity Service:           http://localhost:8080/api/v1/users"
+	echo "  Transaction Manager:        http://localhost:8080/api/v1/transactions"
+	echo "  Financing Engine:           http://localhost:8080/api/v1/loans"
+	echo "  Tokenization Engine:        http://localhost:8080/api/v1/pools"
+	echo "  Ledger Service:             http://localhost:8080/api/v1/logs"
+	echo "  Property Registry:          http://localhost:8080/api/v1/properties"
+	echo ""
+	log "Useful commands:"
+	echo "  kubectl get pods -n realestate-trust         # List pods"
+	echo "  ./infra/kind/kind-up.sh --down               # Tear down"
 }
 
 main() {
