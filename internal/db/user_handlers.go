@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -25,7 +25,7 @@ func (h *UserHandler) RegisterUser(c *echo.Context) error {
 	}
 
 	if err := core.ValidateRegistration(req); err != nil {
-		log.Printf("ValidateRegistration error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "ValidateRegistration error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid registration data: " + err.Error()})
 	}
 
@@ -69,7 +69,7 @@ func (h *UserHandler) Login(c *echo.Context) error {
 
 	token, err := GenerateJWT(user.ID, user.Role)
 	if err != nil {
-		log.Printf("GenerateJWT error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "GenerateJWT error", "err", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
 
@@ -154,7 +154,7 @@ func (h *UserHandler) GetUser(c *echo.Context) error {
 
 	user, err := h.Repo.GetUser(userID)
 	if err != nil {
-		log.Printf("GetUser error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "GetUser error", "err", err)
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 	}
 
@@ -174,7 +174,7 @@ func (h *UserHandler) SubmitKYC(c *echo.Context) error {
 	}
 
 	if err := core.ValidateKYC(req); err != nil {
-		log.Printf("ValidateKYC error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "ValidateKYC error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid KYC data"})
 	}
 

@@ -31,7 +31,8 @@ smokeTest:
     # 2. Verify transaction-manager transactions API endpoint
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager:8080/api/v1/transactions; then
+      PROP_ID="prop-smoke-${RANDOM}"
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"buyerId\":\"usr-123\",\"sellerId\":\"usr-456\",\"totalAmount\":500000.00}" http://transaction-manager:8080/api/v1/transactions; then
         echo "Success!"
         exit 0
       fi

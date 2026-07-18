@@ -142,6 +142,13 @@ function onRefreshed(token: string) {
   refreshSubscribers = [];
 }
 
+function getCorrelationID(): string {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15);
+}
+
 async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Promise<T> {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
@@ -149,6 +156,7 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
+    headers.set('X-Correlation-ID', getCorrelationID());
 
     let res = await fetch(url, {
       ...options,
@@ -170,9 +178,13 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
       if (!isRefreshing) {
         isRefreshing = true;
         try {
+          const refreshHeaders = new Headers();
+          refreshHeaders.set('Content-Type', 'application/json');
+          refreshHeaders.set('X-Correlation-ID', getCorrelationID());
+
           const refreshRes = await fetch(`${API_BASE}/api/v1/refresh`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: refreshHeaders,
             body: JSON.stringify({ refreshToken })
           });
 
@@ -226,9 +238,13 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
 export const api = {
   // auth endpoint overrides
   login: async (email: string, password?: string) => {
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-Correlation-ID', getCorrelationID());
+
     const res = await fetch(`${API_BASE}/api/v1/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ email, password })
     });
     if (!res.ok) {
@@ -239,9 +255,13 @@ export const api = {
 
   logout: async () => {
     try {
+      const headers = new Headers();
+      headers.set('Content-Type', 'application/json');
+      headers.set('X-Correlation-ID', getCorrelationID());
+
       await fetch(`${API_BASE}/api/v1/logout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers
       });
     } finally {
       if (typeof window !== 'undefined') {

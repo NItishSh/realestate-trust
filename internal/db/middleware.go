@@ -1,10 +1,13 @@
 package db
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
@@ -52,4 +55,77 @@ func RBACMiddleware(allowedRoles ...core.UserRole) echo.MiddlewareFunc {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: insufficient permissions"})
 		}
 	}
+}
+
+const CorrelationIDHeader = "X-Correlation-ID"
+const CorrelationIDContextKey = "correlation_id"
+
+// CorrelationIDMiddleware extracts or generates a Request/Correlation ID
+func CorrelationIDMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			req := c.Request()
+			cid := req.Header.Get(CorrelationIDHeader)
+			if cid == "" {
+				cid = uuid.New().String()
+			}
+
+			// Store in Echo context
+			c.Set(CorrelationIDContextKey, cid)
+
+			// Propagate into Request Context
+			ctx := context.WithValue(req.Context(), CorrelationIDContextKey, cid)
+			c.SetRequest(req.WithContext(ctx))
+
+			// Add to response header
+			c.Response().Header().Set(CorrelationIDHeader, cid)
+
+			return next(c)
+		}
+	}
+}
+
+// RequestLoggerMiddleware logs HTTP requests with correlation context
+func RequestLoggerMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			start := time.Now()
+			err := next(c)
+
+			req := c.Request()
+			status := 0
+			if res, unwrapErr := echo.UnwrapResponse(c.Response()); unwrapErr == nil {
+				status = res.Status
+			}
+			if status == 0 && err != nil {
+				if he, ok := err.(*echo.HTTPError); ok {
+					status = he.Code
+				} else {
+					status = http.StatusInternalServerError
+				}
+			}
+
+			slog.InfoContext(req.Context(), "HTTP request",
+				"method", req.Method,
+				"uri", req.URL.Path,
+				"status", status,
+				"duration_ms", time.Since(start).Milliseconds(),
+			)
+			return err
+		}
+	}
+}
+
+// SlogCorrelationHandler integrates context-based Correlation ID to structured slog logs
+type SlogCorrelationHandler struct {
+	slog.Handler
+}
+
+func (h *SlogCorrelationHandler) Handle(ctx context.Context, r slog.Record) error {
+	if ctx != nil {
+		if cid, ok := ctx.Value(CorrelationIDContextKey).(string); ok {
+			r.AddAttrs(slog.String("correlation_id", cid))
+		}
+	}
+	return h.Handler.Handle(ctx, r)
 }

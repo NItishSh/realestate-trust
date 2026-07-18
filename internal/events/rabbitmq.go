@@ -91,7 +91,7 @@ func setupQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
 }
 
 // Publish sends a message to the specified queue with Publisher Confirms enabled
-func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) error {
+func Publish(ctx context.Context, conn *amqp.Connection, queueName string, event TransactionEvent) error {
 	ch, err := conn.Channel()
 	if err != nil {
 		return fmt.Errorf("failed to open channel: %w", err)
@@ -116,10 +116,17 @@ func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) er
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	pubCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err = ch.PublishWithContext(ctx,
+	cid := ""
+	if ctx != nil {
+		if val, ok := ctx.Value("correlation_id").(string); ok {
+			cid = val
+		}
+	}
+
+	err = ch.PublishWithContext(pubCtx,
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
@@ -127,6 +134,9 @@ func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) er
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
+			Headers: amqp.Table{
+				"correlation_id": cid,
+			},
 		})
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
@@ -138,16 +148,16 @@ func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) er
 		if !confirm.Ack {
 			return fmt.Errorf("message not acknowledged by RabbitMQ broker")
 		}
-	case <-ctx.Done():
+	case <-pubCtx.Done():
 		return fmt.Errorf("publish confirmation timed out")
 	}
 
-	slog.Info("Event published to RabbitMQ with confirmation", "queue", queueName, "action", event.Action, "id", event.ID)
+	slog.InfoContext(ctx, "Event published to RabbitMQ with confirmation", "queue", queueName, "action", event.Action, "id", event.ID)
 	return nil
 }
 
 // Consume runs a background loop to process messages from a queue with manual acknowledgements
-func Consume(conn *amqp.Connection, queueName string, handler func(TransactionEvent) error) error {
+func Consume(conn *amqp.Connection, queueName string, handler func(context.Context, TransactionEvent) error) error {
 	ch, err := conn.Channel()
 	if err != nil {
 		return fmt.Errorf("failed to open channel: %w", err)
@@ -186,9 +196,19 @@ func Consume(conn *amqp.Connection, queueName string, handler func(TransactionEv
 				continue
 			}
 
-			slog.Info("Event received from RabbitMQ", "queue", queueName, "action", event.Action, "id", event.ID)
-			if err := handler(event); err != nil {
-				slog.Error("failed to handle message", "err", err)
+			// Extract correlation_id from message headers
+			cid := ""
+			if val, ok := d.Headers["correlation_id"].(string); ok {
+				cid = val
+			} else if valBytes, ok := d.Headers["correlation_id"].([]byte); ok {
+				cid = string(valBytes)
+			}
+
+			ctx := context.WithValue(context.Background(), "correlation_id", cid)
+
+			slog.InfoContext(ctx, "Event received from RabbitMQ", "queue", queueName, "action", event.Action, "id", event.ID)
+			if err := handler(ctx, event); err != nil {
+				slog.ErrorContext(ctx, "failed to handle message", "err", err)
 				// Negative acknowledge without requeuing (routes to DLQ)
 				_ = d.Nack(false, false)
 			} else {

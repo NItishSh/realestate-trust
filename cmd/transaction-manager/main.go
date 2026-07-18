@@ -19,6 +19,10 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(&db.SlogCorrelationHandler{
+		Handler: slog.NewJSONHandler(os.Stdout, nil),
+	}))
+
 	slog.Info("Starting Transaction & Escrow Manager API on :8080...")
 
 	var rabbitConn *amqp.Connection
@@ -63,11 +67,13 @@ func main() {
 
 	e := echo.New()
 	// Security and global middlewares
+	e.Use(db.CorrelationIDMiddleware())
+	e.Use(db.RequestLoggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
 	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
 		XSSProtection:      "1; mode=block",

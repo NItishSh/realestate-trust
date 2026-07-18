@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,7 +46,7 @@ func (h *TransactionHandler) CreateTransaction(c *echo.Context) error {
 	}
 
 	if h.RabbitConn != nil {
-		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+		_ = events.Publish(c.Request().Context(), h.RabbitConn, "transaction-events", events.TransactionEvent{
 			ID:        uuid.NewString(),
 			Action:    "created",
 			Payload:   "Transaction Created: " + tx.ID + " - " + strconv.FormatFloat(tx.TotalAmount, 'f', 2, 64) + " INR",
@@ -66,7 +66,7 @@ func (h *TransactionHandler) GetTransaction(c *echo.Context) error {
 
 	tx, err := h.Repo.GetTransaction(txID)
 	if err != nil {
-		log.Printf("GetTransaction error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "GetTransaction error", "err", err)
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction not found"})
 	}
 
@@ -88,12 +88,12 @@ func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 	}
 
 	if err := h.Repo.UpdateTransactionStatus(txID, req.NewState); err != nil {
-		log.Printf("UpdateTransactionStatus error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "UpdateTransactionStatus error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to update transaction status"})
 	}
 
 	if h.RabbitConn != nil {
-		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+		_ = events.Publish(c.Request().Context(), h.RabbitConn, "transaction-events", events.TransactionEvent{
 			ID:        uuid.NewString(),
 			Action:    "updated",
 			Payload:   "Transaction " + txID + " State Updated to " + string(req.NewState),
@@ -123,12 +123,12 @@ func (h *TransactionHandler) FundEscrow(c *echo.Context) error {
 	}
 
 	if err := h.Repo.FundEscrow(txID, req.Amount); err != nil {
-		log.Printf("FundEscrow error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "FundEscrow error", "err", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fund escrow"})
 	}
 
 	if h.RabbitConn != nil {
-		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+		_ = events.Publish(c.Request().Context(), h.RabbitConn, "transaction-events", events.TransactionEvent{
 			ID:        uuid.NewString(),
 			Action:    "funded",
 			Payload:   "Escrow Funded: " + strconv.FormatFloat(req.Amount, 'f', 2, 64) + " INR for Transaction " + txID,

@@ -13,7 +13,8 @@ smokeTest:
     while [ $attempt -le 12 ]; do
       PASS_KEY="password"
       PASS_VAL="SecurePassword123!"
-      if curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"smoke@test.com\",\"${PASS_KEY}\":\"${PASS_VAL}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service:8081/api/v1/users; then
+      EMAIL="smoke-${RANDOM}@test.com"
+      if curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"${PASS_KEY}\":\"${PASS_VAL}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service:8081/api/v1/users; then
         echo "Success!"
         exit 0
       fi

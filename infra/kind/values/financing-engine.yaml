@@ -26,7 +26,8 @@ smokeTest:
     # 2. Verify financing-engine loans API endpoint
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00,"propertyValue":1000000.00}' http://financing-engine:8082/api/v1/loans; then
+      TX_ID="tx-smoke-${RANDOM}"
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"transactionId\":\"${TX_ID}\",\"userId\":\"usr-123\",\"requestedAmount\":400000.00,\"propertyValue\":1000000.00}" http://financing-engine:8082/api/v1/loans; then
         echo "Success!"
         exit 0
       fi

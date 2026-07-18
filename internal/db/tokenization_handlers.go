@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -59,7 +59,7 @@ func (h *TokenizationHandler) BuyShares(c *echo.Context) error {
 
 	holding, err := h.Repo.BuyTokens(poolID, req.InvestorID, req.TokenCount)
 	if err != nil {
-		log.Printf("BuyTokens error: %v\n", err)
+		slog.ErrorContext(c.Request().Context(), "BuyTokens error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to buy shares"})
 	}
 

@@ -151,3 +151,36 @@ func TestLedgerHandlersIntegration(t *testing.T) {
 		t.Errorf("expected status 201 Created; got %d", w.Code)
 	}
 }
+
+func TestCorrelationIDMiddleware(t *testing.T) {
+	e := echo.New()
+	e.Use(CorrelationIDMiddleware())
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("X-Correlation-ID", "custom-correlation-id")
+	w := httptest.NewRecorder()
+
+	e.GET("/test", func(c *echo.Context) error {
+		cid := c.Get(CorrelationIDContextKey).(string)
+		if cid != "custom-correlation-id" {
+			t.Errorf("expected correlation id custom-correlation-id; got %s", cid)
+		}
+		// check request context
+		cidCtx := c.Request().Context().Value(CorrelationIDContextKey).(string)
+		if cidCtx != "custom-correlation-id" {
+			t.Errorf("expected context correlation id custom-correlation-id; got %s", cidCtx)
+		}
+		return c.String(http.StatusOK, "OK")
+	})
+
+	e.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status 200 OK; got %d", w.Code)
+	}
+
+	cidHeader := w.Header().Get("X-Correlation-ID")
+	if cidHeader != "custom-correlation-id" {
+		t.Errorf("expected response header custom-correlation-id; got %s", cidHeader)
+	}
+}

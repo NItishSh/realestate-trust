@@ -21,6 +21,10 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(&db.SlogCorrelationHandler{
+		Handler: slog.NewJSONHandler(os.Stdout, nil),
+	}))
+
 	slog.Info("Starting Immutable Audit Ledger API on :8084...")
 
 	var repo db.LedgerRepository
@@ -58,18 +62,18 @@ func main() {
 			defer rabbitConn.Close()
 
 			// Start RabbitMQ background consumer
-			err = events.Consume(rabbitConn, "transaction-events", func(event events.TransactionEvent) error {
-				slog.Info("Writing consumed event to immutable ledger", "payload", event.Payload, "id", event.ID)
+			err = events.Consume(rabbitConn, "transaction-events", func(ctx context.Context, event events.TransactionEvent) error {
+				slog.InfoContext(ctx, "Writing consumed event to immutable ledger", "payload", event.Payload, "id", event.ID)
 				_, err := repo.WriteLog(event.ID, event.Payload)
 				if err != nil {
 					// Handle duplicate event gracefully (database unique constraint or in-memory error)
 					var pqErr *pq.Error
 					if errors.As(err, &pqErr) && pqErr.Code == "23505" { // unique_violation
-						slog.Warn("Duplicate event detected (DB constraint), acknowledging to RabbitMQ", "id", event.ID)
+						slog.WarnContext(ctx, "Duplicate event detected (DB constraint), acknowledging to RabbitMQ", "id", event.ID)
 						return nil
 					}
 					if strings.Contains(err.Error(), "duplicate event") {
-						slog.Warn("Duplicate event detected (InMemory check), acknowledging to RabbitMQ", "id", event.ID)
+						slog.WarnContext(ctx, "Duplicate event detected (InMemory check), acknowledging to RabbitMQ", "id", event.ID)
 						return nil
 					}
 					return err
@@ -88,11 +92,13 @@ func main() {
 
 	e := echo.New()
 	// Security and global middlewares
+	e.Use(db.CorrelationIDMiddleware())
+	e.Use(db.RequestLoggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
 	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
 		XSSProtection:      "1; mode=block",

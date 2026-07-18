@@ -27,7 +27,8 @@ smokeTest:
     # 2. Verify tokenization-engine pools API endpoint
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"propertyId":"prop-123","totalTokens":1000,"tokenPrice":500.0}' http://tokenization-engine:8083/api/v1/pools; then
+      PROP_ID="prop-smoke-${RANDOM}"
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"totalTokens\":1000,\"tokenPrice\":500.0}" http://tokenization-engine:8083/api/v1/pools; then
         echo "Success!"
         exit 0
       fi

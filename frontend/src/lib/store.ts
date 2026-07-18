@@ -133,6 +133,10 @@ export const useStore = create<State>((set, get) => ({
     const data = await api.login(email, password);
     if (data && data.token) {
       if (typeof window !== 'undefined') {
+        localStorage.setItem('jwt_token', data.token);
+        if (data.refreshToken) {
+          localStorage.setItem('refresh_token', data.refreshToken);
+        }
         localStorage.setItem('user_email', email);
       }
       const users = await api.getUsers();
