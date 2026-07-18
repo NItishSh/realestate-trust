@@ -30,7 +30,7 @@ func (h *LedgerHandler) WriteLog(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Payload content cannot be empty"})
 	}
 
-	entry, err := h.Repo.WriteLog(req.Payload)
+	entry, err := h.Repo.WriteLog("", req.Payload)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit log to audit ledger"})
 	}

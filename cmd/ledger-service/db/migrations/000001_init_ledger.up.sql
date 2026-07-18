@@ -3,5 +3,6 @@ CREATE TABLE ledger_entries (
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     payload TEXT NOT NULL,
     previous_hash VARCHAR(255) NOT NULL,
-    hash VARCHAR(255) NOT NULL
+    hash VARCHAR(255) NOT NULL,
+    event_id VARCHAR(255) UNIQUE
 );

@@ -10,7 +10,7 @@ import (
 
 // LedgerRepository defines storage actions for auditing.
 type LedgerRepository interface {
-	WriteLog(payload string) (*core.AuditEntry, error)
+	WriteLog(eventID, payload string) (*core.AuditEntry, error)
 	GetLog(index int64) (*core.AuditEntry, error)
 	GetChainLength() int64
 	ListLogs() ([]*core.AuditEntry, error)
@@ -28,9 +28,18 @@ func NewInMemoryLedgerRepository() *InMemoryLedgerRepository {
 	}
 }
 
-func (r *InMemoryLedgerRepository) WriteLog(payload string) (*core.AuditEntry, error) {
+func (r *InMemoryLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntry, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	// Idempotency check for non-empty eventID
+	if eventID != "" {
+		for _, entry := range r.chain {
+			if entry.EventID == eventID {
+				return nil, errors.New("duplicate event: already processed")
+			}
+		}
+	}
 
 	var prevHash string
 	index := int64(len(r.chain))
@@ -43,6 +52,7 @@ func (r *InMemoryLedgerRepository) WriteLog(payload string) (*core.AuditEntry, e
 		Timestamp:    time.Now(),
 		Payload:      payload,
 		PreviousHash: prevHash,
+		EventID:      eventID,
 	}
 	entry.Hash = entry.CalculateHash()
 

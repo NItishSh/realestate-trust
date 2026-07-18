@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -46,6 +47,7 @@ func (h *TransactionHandler) CreateTransaction(c *echo.Context) error {
 
 	if h.RabbitConn != nil {
 		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			ID:        uuid.NewString(),
 			Action:    "created",
 			Payload:   "Transaction Created: " + tx.ID + " - " + strconv.FormatFloat(tx.TotalAmount, 'f', 2, 64) + " INR",
 			Timestamp: time.Now(),
@@ -92,6 +94,7 @@ func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 
 	if h.RabbitConn != nil {
 		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			ID:        uuid.NewString(),
 			Action:    "updated",
 			Payload:   "Transaction " + txID + " State Updated to " + string(req.NewState),
 			Timestamp: time.Now(),
@@ -126,6 +129,7 @@ func (h *TransactionHandler) FundEscrow(c *echo.Context) error {
 
 	if h.RabbitConn != nil {
 		_ = events.Publish(h.RabbitConn, "transaction-events", events.TransactionEvent{
+			ID:        uuid.NewString(),
 			Action:    "funded",
 			Payload:   "Escrow Funded: " + strconv.FormatFloat(req.Amount, 'f', 2, 64) + " INR for Transaction " + txID,
 			Timestamp: time.Now(),

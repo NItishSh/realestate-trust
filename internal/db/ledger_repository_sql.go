@@ -18,7 +18,7 @@ func NewSQLLedgerRepository(db *sql.DB) *SQLLedgerRepository {
 	return &SQLLedgerRepository{db: db}
 }
 
-func (r *SQLLedgerRepository) WriteLog(payload string) (*core.AuditEntry, error) {
+func (r *SQLLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntry, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -49,14 +49,20 @@ func (r *SQLLedgerRepository) WriteLog(payload string) (*core.AuditEntry, error)
 		Timestamp:    time.Now(),
 		Payload:      payload,
 		PreviousHash: prevHash,
+		EventID:      eventID,
 	}
 	entry.Hash = entry.CalculateHash()
 
-	insertQuery := `INSERT INTO ledger_entries (log_index, timestamp, payload, previous_hash, hash)
-	                VALUES ($1, $2, $3, $4, $5)
+	var eventIDVal sql.NullString
+	if eventID != "" {
+		eventIDVal = sql.NullString{String: eventID, Valid: true}
+	}
+
+	insertQuery := `INSERT INTO ledger_entries (log_index, timestamp, payload, previous_hash, hash, event_id)
+	                VALUES ($1, $2, $3, $4, $5, $6)
 	                RETURNING timestamp`
 
-	err = r.db.QueryRow(insertQuery, entry.Index, entry.Timestamp, entry.Payload, entry.PreviousHash, entry.Hash).Scan(&entry.Timestamp)
+	err = r.db.QueryRow(insertQuery, entry.Index, entry.Timestamp, entry.Payload, entry.PreviousHash, entry.Hash, eventIDVal).Scan(&entry.Timestamp)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +71,7 @@ func (r *SQLLedgerRepository) WriteLog(payload string) (*core.AuditEntry, error)
 }
 
 func (r *SQLLedgerRepository) GetLog(index int64) (*core.AuditEntry, error) {
-	query := `SELECT log_index, timestamp, payload, previous_hash, hash FROM ledger_entries WHERE log_index = $1`
+	query := `SELECT log_index, timestamp, payload, previous_hash, hash, COALESCE(event_id, '') FROM ledger_entries WHERE log_index = $1`
 	entry := &core.AuditEntry{}
 	err := r.db.QueryRow(query, index).Scan(
 		&entry.Index,
@@ -73,6 +79,7 @@ func (r *SQLLedgerRepository) GetLog(index int64) (*core.AuditEntry, error) {
 		&entry.Payload,
 		&entry.PreviousHash,
 		&entry.Hash,
+		&entry.EventID,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -94,7 +101,7 @@ func (r *SQLLedgerRepository) GetChainLength() int64 {
 }
 
 func (r *SQLLedgerRepository) ListLogs() ([]*core.AuditEntry, error) {
-	query := `SELECT log_index, timestamp, payload, previous_hash, hash FROM ledger_entries ORDER BY log_index ASC`
+	query := `SELECT log_index, timestamp, payload, previous_hash, hash, COALESCE(event_id, '') FROM ledger_entries ORDER BY log_index ASC`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -110,6 +117,7 @@ func (r *SQLLedgerRepository) ListLogs() ([]*core.AuditEntry, error) {
 			&entry.Payload,
 			&entry.PreviousHash,
 			&entry.Hash,
+			&entry.EventID,
 		)
 		if err != nil {
 			return nil, err

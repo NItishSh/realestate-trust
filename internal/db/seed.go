@@ -206,7 +206,7 @@ func SeedLedger(repo LedgerRepository) {
 	}
 
 	for _, payload := range entries {
-		if _, err := repo.WriteLog(payload); err != nil {
+		if _, err := repo.WriteLog("", payload); err != nil {
 			slog.Error("failed to write ledger log", "err", err)
 		}
 	}

@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
+	"github.com/lib/pq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/db"
 	"github.com/realestate-trust/monorepo/internal/events"
@@ -57,9 +59,22 @@ func main() {
 
 			// Start RabbitMQ background consumer
 			err = events.Consume(rabbitConn, "transaction-events", func(event events.TransactionEvent) error {
-				slog.Info("Writing consumed event to immutable ledger", "payload", event.Payload)
-				_, err := repo.WriteLog(event.Payload)
-				return err
+				slog.Info("Writing consumed event to immutable ledger", "payload", event.Payload, "id", event.ID)
+				_, err := repo.WriteLog(event.ID, event.Payload)
+				if err != nil {
+					// Handle duplicate event gracefully (database unique constraint or in-memory error)
+					var pqErr *pq.Error
+					if errors.As(err, &pqErr) && pqErr.Code == "23505" { // unique_violation
+						slog.Warn("Duplicate event detected (DB constraint), acknowledging to RabbitMQ", "id", event.ID)
+						return nil
+					}
+					if strings.Contains(err.Error(), "duplicate event") {
+						slog.Warn("Duplicate event detected (InMemory check), acknowledging to RabbitMQ", "id", event.ID)
+						return nil
+					}
+					return err
+				}
+				return nil
 			})
 			if err != nil {
 				slog.Error("Failed to start RabbitMQ consumer", "err", err)

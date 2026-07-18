@@ -82,3 +82,39 @@ func TestLiveDatabaseMigrations(t *testing.T) {
 		}
 	}
 }
+
+func TestSQLLedgerRepository_Idempotency(t *testing.T) {
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		t.Skip("DATABASE_URL is not set; skipping live integration tests")
+	}
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		t.Fatalf("failed to connect: %v", err)
+	}
+	defer db.Close()
+
+	repo := NewSQLLedgerRepository(db)
+
+	// Clean up table first to avoid any leftovers from other tests
+	_, err = db.Exec("DELETE FROM ledger_entries")
+	if err != nil {
+		t.Fatalf("failed to clean up table: %v", err)
+	}
+
+	// 1. First write should succeed
+	entry1, err := repo.WriteLog("event-123", "Payload 1")
+	if err != nil {
+		t.Fatalf("failed to write log: %v", err)
+	}
+	if entry1.EventID != "event-123" {
+		t.Errorf("expected eventID to be event-123, got %s", entry1.EventID)
+	}
+
+	// 2. Second write with the same event_id should fail
+	_, err = repo.WriteLog("event-123", "Payload 2")
+	if err == nil {
+		t.Fatalf("expected unique constraint failure, got nil error")
+	}
+}

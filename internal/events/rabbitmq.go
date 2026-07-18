@@ -11,6 +11,7 @@ import (
 )
 
 type TransactionEvent struct {
+	ID        string    `json:"id"`
 	Action    string    `json:"action"`
 	Payload   string    `json:"payload"`
 	Timestamp time.Time `json:"timestamp"`
@@ -28,7 +29,68 @@ func Connect(url string) (*amqp.Connection, error) {
 	return conn, nil
 }
 
-// Publish sends a message to the specified queue
+// setupQueue declares a Dead Letter Exchange (DLX), a Dead Letter Queue (DLQ),
+// binds them, and then declares the main queue configured with the DLX.
+func setupQueue(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
+	dlxName := queueName + "-dlx"
+	dlqName := queueName + "-dlq"
+
+	// 1. Declare DLX Exchange
+	err := ch.ExchangeDeclare(
+		dlxName,
+		"direct",
+		true,  // durable
+		false, // auto-delete
+		false, // internal
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return amqp.Queue{}, fmt.Errorf("failed to declare DLX exchange: %w", err)
+	}
+
+	// 2. Declare DLQ Queue
+	_, err = ch.QueueDeclare(
+		dlqName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return amqp.Queue{}, fmt.Errorf("failed to declare DLQ: %w", err)
+	}
+
+	// 3. Bind DLQ to DLX
+	err = ch.QueueBind(
+		dlqName,
+		"dead-letter", // routing key
+		dlxName,
+		false,
+		nil,
+	)
+	if err != nil {
+		return amqp.Queue{}, fmt.Errorf("failed to bind DLQ to DLX: %w", err)
+	}
+
+	// 4. Declare main queue with DLX args
+	args := amqp.Table{
+		"x-dead-letter-exchange":    dlxName,
+		"x-dead-letter-routing-key": "dead-letter",
+	}
+
+	return ch.QueueDeclare(
+		queueName,
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		args,  // arguments
+	)
+}
+
+// Publish sends a message to the specified queue with Publisher Confirms enabled
 func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) error {
 	ch, err := conn.Channel()
 	if err != nil {
@@ -36,17 +98,18 @@ func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) er
 	}
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
+	// Setup queue with DLX/DLQ
+	q, err := setupQueue(ch, queueName)
 	if err != nil {
-		return fmt.Errorf("failed to declare queue: %w", err)
+		return fmt.Errorf("failed to setup queue: %w", err)
 	}
+
+	// Enable Publisher Confirms
+	if err := ch.Confirm(false); err != nil {
+		return fmt.Errorf("failed to enable publisher confirms: %w", err)
+	}
+
+	confirmChan := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
 
 	body, err := json.Marshal(event)
 	if err != nil {
@@ -69,34 +132,38 @@ func Publish(conn *amqp.Connection, queueName string, event TransactionEvent) er
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	slog.Info("Event published to RabbitMQ", "queue", queueName, "action", event.Action)
+	// Wait for publisher confirmation
+	select {
+	case confirm := <-confirmChan:
+		if !confirm.Ack {
+			return fmt.Errorf("message not acknowledged by RabbitMQ broker")
+		}
+	case <-ctx.Done():
+		return fmt.Errorf("publish confirmation timed out")
+	}
+
+	slog.Info("Event published to RabbitMQ with confirmation", "queue", queueName, "action", event.Action, "id", event.ID)
 	return nil
 }
 
-// Consume runs a background loop to process messages from a queue
+// Consume runs a background loop to process messages from a queue with manual acknowledgements
 func Consume(conn *amqp.Connection, queueName string, handler func(TransactionEvent) error) error {
 	ch, err := conn.Channel()
 	if err != nil {
 		return fmt.Errorf("failed to open channel: %w", err)
 	}
 
-	q, err := ch.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
+	// Setup queue with DLX/DLQ
+	q, err := setupQueue(ch, queueName)
 	if err != nil {
 		ch.Close()
-		return fmt.Errorf("failed to declare queue: %w", err)
+		return fmt.Errorf("failed to setup queue: %w", err)
 	}
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack (manual confirmation enabled)
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -114,12 +181,19 @@ func Consume(conn *amqp.Connection, queueName string, handler func(TransactionEv
 			var event TransactionEvent
 			if err := json.Unmarshal(d.Body, &event); err != nil {
 				slog.Error("failed to unmarshal message payload", "err", err)
+				// Negative acknowledge without requeuing (routes to DLQ)
+				_ = d.Nack(false, false)
 				continue
 			}
 
-			slog.Info("Event received from RabbitMQ", "queue", queueName, "action", event.Action)
+			slog.Info("Event received from RabbitMQ", "queue", queueName, "action", event.Action, "id", event.ID)
 			if err := handler(event); err != nil {
 				slog.Error("failed to handle message", "err", err)
+				// Negative acknowledge without requeuing (routes to DLQ)
+				_ = d.Nack(false, false)
+			} else {
+				// Manually acknowledge successfully processed message
+				_ = d.Ack(false)
 			}
 		}
 	}()
