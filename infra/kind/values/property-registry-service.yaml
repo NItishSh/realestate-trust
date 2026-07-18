@@ -28,3 +28,33 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
+env:
+  - name: DATABASE_URL
+    value: "postgres://postgres:postgres@postgres:5432/properties_db?sslmode=disable"
+db:
+  migrations:
+    enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/properties_db?sslmode=disable"
+    scripts:
+      000001_init_property.up.sql: |
+        CREATE TABLE properties (
+            id VARCHAR(255) PRIMARY KEY,
+            address VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            value DECIMAL(15, 2) NOT NULL,
+            thumbnail TEXT NOT NULL,
+            owner_id VARCHAR(255) NOT NULL,
+            documents TEXT[] NOT NULL,
+            title_insurance_status VARCHAR(50) NOT NULL,
+            title_insurance_policy VARCHAR(100) NOT NULL,
+            title_insurance_company VARCHAR(100) NOT NULL,
+            title_insurance_verified_at VARCHAR(100) NOT NULL,
+            sqft INTEGER NOT NULL,
+            bedrooms INTEGER NOT NULL,
+            bathrooms INTEGER NOT NULL,
+            year_built INTEGER NOT NULL,
+            property_type VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );

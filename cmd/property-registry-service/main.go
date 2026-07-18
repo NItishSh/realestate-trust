@@ -19,7 +19,21 @@ import (
 func main() {
 	slog.Info("Starting Property Registry Service API on :8085...")
 
-	repo := db.NewInMemoryPropertyRepository()
+	var repo db.PropertyRepository
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		slog.Info("Connecting to database...", "url", dbURL)
+		dbPool, err := db.Connect()
+		if err != nil {
+			slog.Error("Database connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer dbPool.Close()
+		repo = db.NewSQLPropertyRepository(dbPool.SQL)
+	} else {
+		slog.Info("DATABASE_URL is empty. Falling back to InMemoryPropertyRepository.")
+		repo = db.NewInMemoryPropertyRepository()
+	}
 
 	if db.ShouldSeed() {
 		slog.Info("🌱 Seeding demo properties (APP_ENV != production)...")

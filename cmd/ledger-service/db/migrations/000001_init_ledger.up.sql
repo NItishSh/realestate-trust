@@ -1,0 +1,7 @@
+CREATE TABLE ledger_entries (
+    log_index BIGINT PRIMARY KEY,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payload TEXT NOT NULL,
+    previous_hash VARCHAR(255) NOT NULL,
+    hash VARCHAR(255) NOT NULL
+);

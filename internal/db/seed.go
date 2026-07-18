@@ -30,14 +30,27 @@ func SeedProperties(repo PropertyRepository) {
 		{"789 Alpine Way, Aspen", "Ski-in/ski-out cabin", 12500000, "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800", "usr-priya.sharma@realestate.in"},
 	}
 
+	// Since we generate unique IDs, let's just make sure we check for existing properties by address to avoid duplicates in seed.
+	existing, err := repo.ListProperties()
+	if err == nil && len(existing) > 0 {
+		slog.Info("🌱 Properties already seeded, skipping.")
+		return
+	}
+
 	for _, p := range properties {
-		prop, _ := repo.CreateProperty(p.Address, p.Description, p.Value, p.Thumbnail, p.OwnerID)
-		fmt.Printf("  [seed] Property: %s — ₹%.0f (ID: %s)\n", prop.Address, prop.Value, prop.ID)
+		prop, err := repo.CreateProperty(p.Address, p.Description, p.Value, p.Thumbnail, p.OwnerID)
+		if err != nil {
+			slog.Error("failed to seed property", "address", p.Address, "err", err)
+			continue
+		}
+		if prop != nil {
+			fmt.Printf("  [seed] Property: %s — ₹%.0f (ID: %s)\n", prop.Address, prop.Value, prop.ID)
+		}
 	}
 }
 
 // SeedUsers populates the identity store with demo accounts and KYC submissions.
-func SeedUsers(repo *InMemoryUserRepository) {
+func SeedUsers(repo UserRepository) {
 	users := []struct {
 		Email    string
 		FullName string
@@ -50,17 +63,28 @@ func SeedUsers(repo *InMemoryUserRepository) {
 
 	for _, u := range users {
 		hash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-		user, _ := repo.CreateUser(u.Email, string(hash), u.FullName, u.Role)
-		// Submit KYC for seed users
-		if _, err := repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID); err != nil {
-			slog.Error("failed to submit KYC", "err", err)
+		user, err := repo.CreateUser(u.Email, string(hash), u.FullName, u.Role)
+		if err != nil {
+			// Try to retrieve existing user to avoid panic
+			user, err = repo.GetUserByEmail(u.Email)
+			if err != nil {
+				slog.Error("failed to create or retrieve user", "email", u.Email, "err", err)
+				continue
+			}
 		}
-		fmt.Printf("  [seed] User: %s (%s) — KYC SUBMITTED\n", user.FullName, user.ID)
+
+		if user != nil {
+			// Submit KYC for seed users
+			if _, err := repo.SubmitKYC(user.ID, "PASSPORT", "SEED-"+user.ID); err != nil {
+				slog.Error("failed to submit KYC", "err", err)
+			}
+			fmt.Printf("  [seed] User: %s (%s) — KYC SUBMITTED\n", user.FullName, user.ID)
+		}
 	}
 }
 
 // SeedTransactions populates the transaction store with demo escrow deals.
-func SeedTransactions(repo *InMemoryTransactionRepository) {
+func SeedTransactions(repo TransactionRepository) {
 	txs := []struct {
 		PropertyID  string
 		BuyerID     string
@@ -74,19 +98,29 @@ func SeedTransactions(repo *InMemoryTransactionRepository) {
 	}
 
 	for _, t := range txs {
-		tx, _ := repo.CreateTransaction(t.PropertyID, t.BuyerID, t.SellerID, t.TotalAmount)
-		if t.Advance {
-			// Advance from DRAFT → ESCROW
-			if err := repo.UpdateTransactionStatus(tx.ID, core.Escrow); err != nil {
-				slog.Error("failed to update tx status", "err", err)
+		tx, err := repo.CreateTransaction(t.PropertyID, t.BuyerID, t.SellerID, t.TotalAmount)
+		if err != nil {
+			tx, err = repo.GetTransaction("tx-" + t.PropertyID)
+			if err != nil {
+				slog.Error("failed to create or retrieve transaction", "err", err)
+				continue
 			}
 		}
-		fmt.Printf("  [seed] Transaction: %s — ₹%.0f (%s)\n", tx.ID, tx.TotalAmount, tx.Status)
+
+		if tx != nil {
+			if t.Advance {
+				// Advance from DRAFT → ESCROW
+				if err := repo.UpdateTransactionStatus(tx.ID, core.Escrow); err != nil {
+					slog.Error("failed to update tx status", "err", err)
+				}
+			}
+			fmt.Printf("  [seed] Transaction: %s — ₹%.0f (%s)\n", tx.ID, tx.TotalAmount, tx.Status)
+		}
 	}
 }
 
 // SeedLoans populates the financing store with demo mortgage applications.
-func SeedLoans(repo *InMemoryFinancingRepository) {
+func SeedLoans(repo FinancingRepository) {
 	loans := []struct {
 		TxID      string
 		UserID    string
@@ -99,18 +133,28 @@ func SeedLoans(repo *InMemoryFinancingRepository) {
 	}
 
 	for _, l := range loans {
-		loan, _ := repo.CreateLoan(l.TxID, l.UserID, l.ReqAmount)
-		if l.Approved {
-			if err := repo.ApproveLoan(loan.ID, l.AppAmount); err != nil {
-				slog.Error("failed to approve loan", "err", err)
+		loan, err := repo.CreateLoan(l.TxID, l.UserID, l.ReqAmount)
+		if err != nil {
+			loan, err = repo.GetLoan("loan-" + l.TxID)
+			if err != nil {
+				slog.Error("failed to create or retrieve loan", "err", err)
+				continue
 			}
 		}
-		fmt.Printf("  [seed] Loan: %s — ₹%.0f (status: %s)\n", loan.ID, loan.RequestedAmount, loan.Status)
+
+		if loan != nil {
+			if l.Approved {
+				if err := repo.ApproveLoan(loan.ID, l.AppAmount); err != nil {
+					slog.Error("failed to approve loan", "err", err)
+				}
+			}
+			fmt.Printf("  [seed] Loan: %s — ₹%.0f (status: %s)\n", loan.ID, loan.RequestedAmount, loan.Status)
+		}
 	}
 }
 
 // SeedPools populates the tokenization store with demo fractional property pools.
-func SeedPools(repo *InMemoryTokenizationRepository) {
+func SeedPools(repo TokenizationRepository) {
 	pools := []struct {
 		PropertyID  string
 		TotalTokens int64
@@ -122,25 +166,41 @@ func SeedPools(repo *InMemoryTokenizationRepository) {
 	}
 
 	for _, p := range pools {
-		pool, _ := repo.CreatePool(p.PropertyID, p.TotalTokens, p.TokenPrice)
-		if p.SoldTokens > 0 {
-			if _, err := repo.BuyTokens(pool.ID, "usr-aryan.dev@realestate.in", p.SoldTokens); err != nil {
-				slog.Error("failed to buy tokens", "err", err)
+		pool, err := repo.CreatePool(p.PropertyID, p.TotalTokens, p.TokenPrice)
+		if err != nil {
+			pool, err = repo.GetPool("pool-" + p.PropertyID)
+			if err != nil {
+				slog.Error("failed to create or retrieve pool", "err", err)
+				continue
 			}
 		}
-		fmt.Printf("  [seed] Pool: %s — ₹%.0f/share (%d/%d sold)\n", pool.PropertyID, pool.TokenPrice, p.SoldTokens, p.TotalTokens)
+
+		if pool != nil {
+			if p.SoldTokens > 0 {
+				if _, err := repo.BuyTokens(pool.ID, "usr-aryan.dev@realestate.in", p.SoldTokens); err != nil {
+					slog.Error("failed to buy tokens", "err", err)
+				}
+			}
+			fmt.Printf("  [seed] Pool: %s — ₹%.0f/share (%d/%d sold)\n", pool.PropertyID, pool.TokenPrice, p.SoldTokens, pool.TotalTokens)
+		}
 	}
 }
 
 // SeedLedger populates the ledger store with a genesis block and sample audit entries.
-func SeedLedger(repo *InMemoryLedgerRepository) {
+func SeedLedger(repo LedgerRepository) {
+	// Only seed genesis and logs if the ledger is currently empty
+	if repo.GetChainLength() > 0 {
+		slog.Info("🌱 Ledger already seeded, skipping.")
+		return
+	}
+
 	entries := []string{
 		"Genesis Block — RealEstate Trust Ledger Initialized",
 		"User Registered: aryan.dev@realestate.in (BUYER)",
 		"User Registered: priya.sharma@realestate.in (SELLER)",
 		"Transaction Created: tx-prop-101 — ₹4,50,000 INR",
 		"Escrow Funded: tx-prop-101 — Status advanced to ESCROW",
-		"Loan Approved: loan-tx-prop-101 — ₹32,00,000 INR",
+		"Loan Approved: loan-tx-prop-101 — ₹32,0,000 INR",
 		"Pool Created: pool-prop-101 — 1000 shares @ ₹450/share",
 		"Shares Purchased: 320 shares of pool-prop-101 by aryan.dev@realestate.in",
 	}

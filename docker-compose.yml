@@ -103,12 +103,44 @@ services:
       financing-migrate:
         condition: service_completed_successfully
 
+  tokenization-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/tokenization-engine/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/tokenization_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ledger-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/ledger-service/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/ledger_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  properties-migrate:
+    image: migrate/migrate:v4.15.2
+    volumes:
+      - ./cmd/property-registry-service/db/migrations:/migrations
+    command: -path=/migrations -database=postgres://postgres:postgres@postgres:5432/properties_db?sslmode=disable up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   tokenization-engine:
     build:
       context: .
       target: tokenization-engine
     ports:
       - "8083:8083"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/tokenization_db?sslmode=disable
+    depends_on:
+      tokenization-migrate:
+        condition: service_completed_successfully
 
   ledger-service:
     build:
@@ -118,9 +150,24 @@ services:
       - "8084:8084"
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/ledger_db?sslmode=disable
     depends_on:
+      ledger-migrate:
+        condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
+
+  property-registry-service:
+    build:
+      context: .
+      target: property-registry-service
+    ports:
+      - "8085:8085"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/properties_db?sslmode=disable
+    depends_on:
+      properties-migrate:
+        condition: service_completed_successfully
 
   feedback-service:
     build:
@@ -147,6 +194,7 @@ services:
       - tokenization-engine
       - ledger-service
       - feedback-service
+      - property-registry-service
 
 volumes:
   pgdata:

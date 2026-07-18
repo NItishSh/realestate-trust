@@ -37,7 +37,21 @@ func main() {
 		slog.Warn("RABBITMQ_URL is empty. Running without event publishing.")
 	}
 
-	repo := db.NewInMemoryTransactionRepository()
+	var repo db.TransactionRepository
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		slog.Info("Connecting to database...", "url", dbURL)
+		dbPool, err := db.Connect()
+		if err != nil {
+			slog.Error("Database connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer dbPool.Close()
+		repo = db.NewSQLTransactionRepository(dbPool.SQL)
+	} else {
+		slog.Info("DATABASE_URL is empty. Falling back to InMemoryTransactionRepository.")
+		repo = db.NewInMemoryTransactionRepository()
+	}
 
 	// Seed demo data in non-production environments
 	if db.ShouldSeed() {

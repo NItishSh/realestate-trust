@@ -21,7 +21,21 @@ import (
 func main() {
 	slog.Info("Starting Immutable Audit Ledger API on :8084...")
 
-	repo := db.NewInMemoryLedgerRepository()
+	var repo db.LedgerRepository
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		slog.Info("Connecting to database...", "url", dbURL)
+		dbPool, err := db.Connect()
+		if err != nil {
+			slog.Error("Database connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer dbPool.Close()
+		repo = db.NewSQLLedgerRepository(dbPool.SQL)
+	} else {
+		slog.Info("DATABASE_URL is empty. Falling back to InMemoryLedgerRepository.")
+		repo = db.NewInMemoryLedgerRepository()
+	}
 
 	// Seed demo data in non-production environments
 	if db.ShouldSeed() {

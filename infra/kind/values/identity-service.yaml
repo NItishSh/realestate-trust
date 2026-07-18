@@ -47,16 +47,17 @@ db:
         CREATE TYPE user_role AS ENUM ('BUYER', 'SELLER', 'BROKER', 'OFFICER', 'ADMIN');
         CREATE TYPE kyc_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
         CREATE TABLE users (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            id VARCHAR(255) PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
             full_name VARCHAR(150) NOT NULL,
             role user_role NOT NULL,
+            password_hash VARCHAR(255) NOT NULL DEFAULT '',
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE kyc_verifications (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            id VARCHAR(255) PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             document_type VARCHAR(50) NOT NULL,
             document_reference VARCHAR(100) NOT NULL,
             status kyc_status NOT NULL DEFAULT 'PENDING',
@@ -64,7 +65,10 @@ db:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE refresh_token_sessions (
+            token VARCHAR(255) PRIMARY KEY,
+            user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+        );
         CREATE INDEX idx_users_email ON users(email);
         CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);
-      000002_add_password.up.sql: |
-        ALTER TABLE users ADD COLUMN password_hash VARCHAR(255) NOT NULL DEFAULT '';

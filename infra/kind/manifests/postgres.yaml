@@ -12,6 +12,10 @@ data:
         CREATE DATABASE identity_db;
         CREATE DATABASE transactions_db;
         CREATE DATABASE financing_db;
+        CREATE DATABASE feedback_db;
+        CREATE DATABASE ledger_db;
+        CREATE DATABASE properties_db;
+        CREATE DATABASE tokenization_db;
     EOSQL
 ---
 # PostgreSQL Service (headless for StatefulSet)

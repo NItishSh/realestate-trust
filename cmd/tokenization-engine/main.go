@@ -17,9 +17,21 @@ import (
 )
 
 func main() {
-	slog.Info("Starting Fractional Tokenization Engine API on :8083...")
-
-	repo := db.NewInMemoryTokenizationRepository()
+	var repo db.TokenizationRepository
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		slog.Info("Connecting to database...", "url", dbURL)
+		dbPool, err := db.Connect()
+		if err != nil {
+			slog.Error("Database connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer dbPool.Close()
+		repo = db.NewSQLTokenizationRepository(dbPool.SQL)
+	} else {
+		slog.Info("DATABASE_URL is empty. Falling back to InMemoryTokenizationRepository.")
+		repo = db.NewInMemoryTokenizationRepository()
+	}
 
 	// Seed demo data in non-production environments
 	if db.ShouldSeed() {

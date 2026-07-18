@@ -39,6 +39,9 @@ func TestLiveDatabaseMigrations(t *testing.T) {
 		"../../cmd/transaction-manager/db/migrations/000001_init_escrow.up.sql",
 		"../../cmd/financing-engine/db/migrations/000001_init_financing.up.sql",
 		"../../cmd/feedback-service/db/migrations/000001_create_feedback.up.sql",
+		"../../cmd/ledger-service/db/migrations/000001_init_ledger.up.sql",
+		"../../cmd/property-registry-service/db/migrations/000001_init_property.up.sql",
+		"../../cmd/tokenization-engine/db/migrations/000001_init_tokenization.up.sql",
 	}
 
 	for _, path := range migrationPaths {
@@ -62,7 +65,12 @@ func TestLiveDatabaseMigrations(t *testing.T) {
 	}
 
 	// Verify tables were created by running queries
-	tables := []string{"users", "kyc_verifications", "transactions", "escrow_accounts", "loans", "disbursements", "feedback"}
+	tables := []string{
+		"users", "kyc_verifications", "refresh_token_sessions",
+		"transactions", "escrow_accounts",
+		"loans", "disbursements", "feedback",
+		"ledger_entries", "properties", "fractional_pools", "fractional_holdings",
+	}
 	for _, table := range tables {
 		query := "SELECT count(*) FROM " + table
 		var count int

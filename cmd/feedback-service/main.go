@@ -19,7 +19,22 @@ import (
 func main() {
 	slog.Info("Starting Feedback Service API on :8086...")
 
-	repo := db.NewInMemoryFeedbackRepository()
+	var repo db.FeedbackRepository
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL != "" {
+		slog.Info("Connecting to database...", "url", dbURL)
+		dbPool, err := db.Connect()
+		if err != nil {
+			slog.Error("Database connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer dbPool.Close()
+		repo = db.NewSQLFeedbackRepository(dbPool.SQL)
+	} else {
+		slog.Info("DATABASE_URL is empty. Falling back to InMemoryFeedbackRepository.")
+		repo = db.NewInMemoryFeedbackRepository()
+	}
+
 	handler := db.NewFeedbackHandler(repo)
 
 	e := echo.New()

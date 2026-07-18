@@ -41,3 +41,19 @@ smokeTest:
 env:
   - name: RABBITMQ_URL
     value: "amqp://guest:guest@rabbitmq:5672/"
+  - name: DATABASE_URL
+    value: "postgres://postgres:postgres@postgres:5432/ledger_db?sslmode=disable"
+db:
+  migrations:
+    enabled: true
+    databaseUrlEnv: "DATABASE_URL"
+    databaseUrl: "postgres://postgres:postgres@postgres:5432/ledger_db?sslmode=disable"
+    scripts:
+      000001_init_ledger.up.sql: |
+        CREATE TABLE ledger_entries (
+            log_index BIGINT PRIMARY KEY,
+            timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            payload TEXT NOT NULL,
+            previous_hash VARCHAR(255) NOT NULL,
+            hash VARCHAR(255) NOT NULL
+        );

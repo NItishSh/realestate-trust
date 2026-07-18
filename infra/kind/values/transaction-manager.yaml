@@ -66,18 +66,18 @@ db:
       000001_init_escrow.up.sql: |
         CREATE TYPE transaction_status AS ENUM ('DRAFT', 'ESCROW', 'FUNDED', 'CLOSED', 'CANCELLED');
         CREATE TABLE transactions (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            property_id UUID NOT NULL,
-            buyer_id UUID NOT NULL,
-            seller_id UUID NOT NULL,
+            id VARCHAR(255) PRIMARY KEY,
+            property_id VARCHAR(255) NOT NULL,
+            buyer_id VARCHAR(255) NOT NULL,
+            seller_id VARCHAR(255) NOT NULL,
             total_amount DECIMAL(15, 2) NOT NULL,
             status transaction_status NOT NULL DEFAULT 'DRAFT',
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE escrow_accounts (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+            id VARCHAR(255) PRIMARY KEY,
+            transaction_id VARCHAR(255) NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
             virtual_account_number VARCHAR(50) UNIQUE NOT NULL,
             bank_partner VARCHAR(100) NOT NULL,
             balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
