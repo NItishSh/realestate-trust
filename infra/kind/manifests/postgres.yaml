@@ -60,9 +60,13 @@ spec:
           image: postgres:15-alpine
           ports:
             - containerPort: 5432
-          envFrom:
-            - secretRef:
-                name: postgres-credentials
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data

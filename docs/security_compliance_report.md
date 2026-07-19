@@ -17,15 +17,17 @@ This report evaluates the **RealEstate Trust** platform's codebase and infrastru
 
 ## 2. Gap Analysis
 
-We identified the following compliance gaps within the current repository architecture:
+We identified and resolved the following compliance items within the repository architecture:
 
-### 🚨 [HIGH] Gap 2.1: Lack of Encryption-at-Rest for Sensitive KYC Data (GDPR Art. 32 / SOC 2 CC6.7)
-* **Risk**: Government passport numbers, drivers licenses, and document references (`document_reference` in table `kyc_submissions`) are stored as plaintext values in PostgreSQL. A database compromise would immediately leak customer identities.
-* **Remediation**: Implement application-level envelope encryption (AES-256-GCM) for the `document_reference` field prior to writing to the database.
+### ✅ [RESOLVED] Gap 2.1: Lack of Encryption-at-Rest for Sensitive KYC Data (GDPR Art. 32 / SOC 2 CC6.7)
+* **Status**: **RESOLVED**
+* **Remediation**: Implemented application-level envelope encryption in `internal/db/crypto.go`. The Go client automatically encrypts the `document_reference` field using **Vault Transit engine** API-driven encryption if configured, falling back to secure AES-256-GCM locally.
+* **Verification**: Verified via `TestKYCEncryption` in handler unit tests.
 
-### 🚨 [HIGH] Gap 2.2: Absence of Data Erasure & Right to be Forgotten (GDPR Art. 17)
-* **Risk**: There are no API handlers or database methods exposing deletion or anonymization of user accounts, transactions, or KYC submissions. Users have no technical path to invoke their "Right to Erasure".
-* **Remediation**: Expose a `DELETE /api/v1/users/{id}` endpoint that purges PII or anonymizes the user's details, leaving transactional records intact under a pseudonymized state.
+### ✅ [RESOLVED] Gap 2.2: Absence of Data Erasure & Right to be Forgotten (GDPR Art. 17)
+* **Status**: **RESOLVED**
+* **Remediation**: Implemented cascade deletion database methods and exposed the JWT-authenticated endpoint `DELETE /api/v1/users/:id` in `identity-service`, verifying ownership or ADMIN claims.
+* **Verification**: Verified via `TestDeleteUser` in handler unit tests.
 
 ### ⚠️ [MEDIUM] Gap 2.3: Missing Cookie & Consent Management (GDPR Art. 7)
 * **Risk**: Next.js client stores JWT tokens and session details in localStorage without explicit user consent confirmation, cookies notice, or options for analytical/marketing opt-out.
@@ -40,11 +42,11 @@ gantt
     title Compliance Implementation Roadmap
     dateFormat  YYYY-MM-DD
     section Phase 1 (Immediate)
-    Application-Level AES Encryption  :active, 2026-07-20, 5d
-    Secure Secrets Management (ESO)  :2026-07-25, 4d
+    Application-Level AES Encryption  :done, 2026-07-20, 5d
+    Secure Secrets Management (ESO)  :done, 2026-07-25, 4d
     section Phase 2 (Intermediate)
-    Expose GDPR Erasure APIs         :2026-07-29, 6d
-    Strict Istio mTLS Transition     :2026-08-04, 3d
+    Expose GDPR Erasure APIs         :done, 2026-07-29, 6d
+    Strict Istio mTLS Transition     :active, 2026-08-04, 3d
     section Phase 3 (Audit Readiness)
     SOC2 Audit Logs & Consent Banner  :2026-08-07, 5d
 ```

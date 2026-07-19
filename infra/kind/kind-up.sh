@@ -85,8 +85,8 @@ deploy_argocd_and_postgres() {
     # Create target namespace
     kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
 
-    # Create Secrets
-    "${SCRIPT_DIR}/create-secrets.sh"
+    # Deploy Vault & External Secrets Operator (replacing create-secrets.sh)
+    "${SCRIPT_DIR}/deploy-vault-eso.sh"
 
     # Deploy PostgreSQL (Dependency for ArgoCD apps)
     kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
@@ -116,18 +116,14 @@ deploy_helm_local_and_postgres() {
 	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
 	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
-	# Deploy Vault & External Secrets Operator (replacing create-secrets.sh)
+	# Deploy Vault, ESO, and PostgreSQL
 	"${SCRIPT_DIR}/deploy-vault-eso.sh"
 
-	# Deploy PostgreSQL & RabbitMQ
-	kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
+	# Deploy RabbitMQ
 	kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
 
-	log "Waiting for PostgreSQL to be ready..."
-	sleep 5
-	kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
-
 	log "Waiting for RabbitMQ to be ready..."
+	sleep 5
 	kubectl wait --for=condition=Ready pods -l app=rabbitmq -n realestate-trust --timeout=300s
 
 	step "Installing Microservices via Helm"

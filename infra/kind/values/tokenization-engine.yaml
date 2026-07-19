@@ -40,7 +40,10 @@ smokeTest:
     exit 1
 env:
   - name: DATABASE_URL
-    value: "postgres://postgres:postgres@postgres:5432/tokenization_db?sslmode=disable"
+    valueFrom:
+      secretKeyRef:
+        name: tokenization-engine-db-secret
+        key: DATABASE_URL
 db:
   migrations:
     enabled: true

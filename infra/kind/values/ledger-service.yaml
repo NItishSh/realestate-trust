@@ -41,7 +41,10 @@ env:
   - name: RABBITMQ_URL
     value: "amqp://guest:guest@rabbitmq:5672/"
   - name: DATABASE_URL
-    value: "postgres://postgres:postgres@postgres:5432/ledger_db?sslmode=disable"
+    valueFrom:
+      secretKeyRef:
+        name: ledger-service-db-secret
+        key: DATABASE_URL
 db:
   migrations:
     enabled: true
