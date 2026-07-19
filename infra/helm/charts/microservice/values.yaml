@@ -18,7 +18,7 @@ healthCheck:
   periodSeconds: 10
 
 hpa:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 75

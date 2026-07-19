@@ -113,6 +113,9 @@ deploy_helm_local_and_postgres() {
 	# Deploy Istio Service Mesh
 	"${SCRIPT_DIR}/deploy-istio.sh"
 
+	# Deploy Istio Observability Addons (Prometheus, Grafana, Jaeger, Kiali)
+	"${SCRIPT_DIR}/deploy-addons.sh"
+
 	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
 	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
@@ -151,6 +154,12 @@ print_status() {
 	echo "  Tokenization Engine:        http://localhost:8080/api/v1/pools"
 	echo "  Ledger Service:             http://localhost:8080/api/v1/logs"
 	echo "  Property Registry:          http://localhost:8080/api/v1/properties"
+	echo ""
+	log "Access Observability Dashboards (Unified Gateway):"
+	echo "  Kiali (Mesh Visualizer):    http://localhost:8080/kiali"
+	echo "  Grafana (Performance):      http://localhost:8080/grafana/"
+	echo "  Jaeger (Distributed Traces):http://localhost:8080/jaeger/"
+	echo "  Prometheus (Raw Metrics):   http://localhost:8080/prometheus/"
 	echo ""
 	log "Useful commands:"
 	echo "  kubectl get pods -n realestate-trust         # List pods"

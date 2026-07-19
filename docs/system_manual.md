@@ -170,7 +170,8 @@ Before deploying this platform to a public cloud production environment (e.g. AW
 - **High Availability & Clustering**: Deploy RabbitMQ in a clustered multi-node configuration with quorum queues, and deploy PostgreSQL with PgBouncer connection pooling and active replication (Primary/Standby).
 
 ### 8.2 Secret Management & Hardening (COMPLETED)
-- **Vault & ESO Integration**: Successfully integrated HashiCorp Vault (dev mode) and External Secrets Operator (ESO). The bootstrap scripts now automate Helm deployments, configure Vault Kubernetes Auth, seed secrets from local `.env` files into Vault's KV engine, and sync credentials using custom `SecretStore` and `ExternalSecret` resources. No raw credentials reside in our Git repository or Helm chart templates.
+- **Vault & ESO Integration**: Integrated HashiCorp Vault and External Secrets Operator (ESO). The setup configures dynamic database credentials (30-day lease duration with individual rotated PostgreSQL logins) and utilizes Vault's **Transit secrets engine** to perform envelope encryption (AES-256-GCM) on sensitive PII/KYC fields at the application layer.
+- **Lease Stability & Atomic Synced Secrets**: ESO is configured with Vault Token authentication to prevent lease revocations, and utilizes `dataFrom.extract` to guarantee both username and password connection variables belong to the same generated credentials lease.
 
 ### 8.3 SSL/TLS Ingress & Network Policies
 - Enforce strict HTTPS/WSS communication globally by implementing a production-grade ingress controller (like NGINX Ingress or Traefik) bound to cert-manager for automatic Let's Encrypt SSL certificate provisioning.
@@ -180,3 +181,8 @@ Before deploying this platform to a public cloud production environment (e.g. AW
 - **Terraform Cluster Provisioning**: Implement declarative Infrastructure as Code (IaC) using Terraform to spin up GKE, EKS, or IKS clusters with secure networking (VPCs, private endpoints) and IAM role configurations.
 - **Just-in-Time Node Scaling (Karpenter)**: Install **Karpenter** to replace standard Kubernetes Cluster Autoscalers. Karpenter will dynamically provision right-sized compute nodes based on pod pending resource requests, prioritizing low-cost **Spot instances** for worker nodes to optimize cloud spending.
 - **Event-Driven Pod Autoscaling (KEDA)**: Deploy **KEDA** (Kubernetes Event-driven Autoscaler) to scale microservice pod replicas (especially `ledger-service` and `transaction-manager`) dynamically based on event-broker load (e.g. RabbitMQ queue depth/message backlog) rather than relying solely on traditional CPU and memory metrics.
+
+### 8.5 Cloud Transition Checklist
+- **Vault High Availability (HA)**: Transition Vault to a multi-node Raft deployment and enable **Auto-Unseal** utilizing a Cloud Key Management Service (AWS KMS, GCP Cloud KMS, or Azure Key Vault). Connect pods utilizing native cloud IAM integrations (AWS IRSA or GCP Workload Identity).
+- **Managed Event Queues**: Provision Amazon MQ / GCP Managed RabbitMQ with clustered mirroring for high availability and zero data loss.
+- **Centralized Log Correlation**: Run centralized log management (Promtail/Loki or Filebeat/Elastic) to index microservice json logs and trace execution histories utilizing request correlation IDs (`X-Correlation-ID`).

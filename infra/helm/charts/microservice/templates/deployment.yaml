@@ -42,9 +42,11 @@ spec:
             port: {{ .Values.service.targetPort }}
           initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
           periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+          timeoutSeconds: 5
         livenessProbe:
           httpGet:
             path: {{ .Values.healthCheck.path }}
             port: {{ .Values.service.targetPort }}
           initialDelaySeconds: {{ mul .Values.healthCheck.initialDelaySeconds 3 }}
           periodSeconds: {{ mul .Values.healthCheck.periodSeconds 2 }}
+          timeoutSeconds: 5
