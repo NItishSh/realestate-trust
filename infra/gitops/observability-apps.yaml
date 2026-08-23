@@ -1,0 +1,207 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 5.41.4
+    chart: loki
+    helm:
+      values: |
+        loki:
+          auth_enabled: false
+          commonConfig:
+            replication_factor: 1
+          storage:
+            type: filesystem
+        singleBinary:
+          replicas: 1
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 6.15.3
+    chart: promtail
+    helm:
+      values: |
+        config:
+          clients:
+            - url: http://loki:3100/loki/api/v1/push
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tempo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 1.7.1
+    chart: tempo
+    helm:
+      values: |
+        tempo:
+          storage:
+            trace:
+              backend: local
+              local:
+                path: /var/tempo/traces
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 7.0.8
+    chart: grafana
+    helm:
+      values: |
+        adminPassword: admin
+        env:
+          GF_SERVER_ROOT_URL: "http://localhost:8080/grafana/"
+          GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+        datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+            - name: Loki
+              type: loki
+              url: http://loki:3100
+              access: proxy
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo:3100
+              access: proxy
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus.istio-system.svc.cluster.local:9090
+              access: proxy
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+            - name: 'default'
+              orgId: 1
+              folder: ''
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+        dashboards:
+          default:
+            escrow-ops:
+              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/escrow_operations.json
+            banking-integrations:
+              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/banking_integrations.json
+            postgres-health:
+              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/postgres_health.json
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://prometheus-community.github.io/helm-charts'
+    targetRevision: 25.21.0
+    chart: prometheus
+    helm:
+      values: |
+        server:
+          baseURL: "http://localhost:8080/prometheus/"
+          prefixURL: "/prometheus"
+        alertmanager:
+          enabled: false
+        pushgateway:
+          enabled: false
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kiali
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://kiali.org/helm-charts'
+    targetRevision: 1.84.0
+    chart: kiali-server
+    helm:
+      values: |
+        auth:
+          strategy: anonymous
+        server:
+          web_root: /kiali
+        external_services:
+          prometheus:
+            url: "http://prometheus-server.istio-system.svc.cluster.local:80/prometheus"
+          grafana:
+            enabled: true
+            in_cluster_url: "http://grafana.observability.svc.cluster.local:80/grafana"
+            url: "http://localhost:8080/grafana"
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

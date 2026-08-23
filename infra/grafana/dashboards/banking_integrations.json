@@ -1,0 +1,20 @@
+{
+  "title": "Banking Integrations",
+  "uid": "banking-integrations",
+  "tags": ["realestate-trust", "banking"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "panels": [
+    {
+      "title": "Bank Webhook Latency (Seconds)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(bank_webhook_latency_seconds_bucket[5m])) by (le, provider_slug))",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

@@ -42,6 +42,13 @@ paths:
   /transactions/{id}/status:
     put:
       summary: Update transaction state
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -58,6 +65,13 @@ paths:
   /transactions/{id}/escrow/fund:
     post:
       summary: Webhook for banking partner to confirm VA funding
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:

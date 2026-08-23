@@ -1,0 +1,31 @@
+{
+  "title": "Escrow Operations",
+  "uid": "escrow-ops",
+  "tags": ["realestate-trust", "escrow"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "panels": [
+    {
+      "title": "Active Volume INR",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(escrow_active_volume_inr)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Transaction State Changes",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(escrow_transaction_state_changes[5m])",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

@@ -145,3 +145,30 @@ Deployments are handled automatically using a pull-based CD model:
 1. Custom shared templates live in `infra/helm/charts/microservice`.
 2. Declarative definitions live in [infra/gitops/service-apps.yaml](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/infra/gitops/service-apps.yaml), overwriting ports, replicas, limits, and IP whitelist ingress rules.
 3. **ArgoCD** reconciles the Git status with your Kubernetes cluster, providing automated drift detection and self-healing.
+
+---
+
+## 7. Troubleshooting & RCA Utilities
+
+To ease the support phase and accelerate Root Cause Analysis (RCA), the platform includes a dedicated support CLI and an automated observability stack.
+
+### Support CLI (`re-cli`)
+The `re-cli` utility is located in `cmd/re-cli` and provides L2/L3 engineers direct access to system state and the immutable ledger without needing to write SQL queries.
+
+```bash
+# Build the CLI
+go build -o re-cli ./cmd/re-cli
+
+# Fetch transaction status
+./re-cli transaction inspect <txn_id>
+
+# Check underwriting financing status
+./re-cli finance check <loan_id>
+
+# Verify cryptographic ledger integrity
+./re-cli ledger verify
+```
+
+### LGTM Observability Stack
+The platform automates the deployment of the Grafana LGTM stack (Loki, Promtail, Tempo, Grafana) via the `infra/gitops/observability-apps.yaml` ArgoCD manifest.
+Pre-built Grafana dashboards for Escrow Operations, Banking Integrations, and Postgres Health are automatically loaded on cluster initialization.

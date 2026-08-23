@@ -22,15 +22,7 @@ spec:
             prefix: /grafana
       route:
         - destination:
-            host: grafana.istio-system.svc.cluster.local
-            port:
-              number: 3000
-    - match:
-        - uri:
-            prefix: /jaeger
-      route:
-        - destination:
-            host: tracing.istio-system.svc.cluster.local
+            host: grafana.observability.svc.cluster.local
             port:
               number: 80
     - match:
@@ -38,6 +30,6 @@ spec:
             prefix: /prometheus
       route:
         - destination:
-            host: prometheus.istio-system.svc.cluster.local
+            host: prometheus-server.istio-system.svc.cluster.local
             port:
-              number: 9090
+              number: 80

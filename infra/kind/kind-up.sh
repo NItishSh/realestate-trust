@@ -113,8 +113,16 @@ deploy_helm_local_and_postgres() {
 	# Deploy Istio Service Mesh
 	"${SCRIPT_DIR}/deploy-istio.sh"
 
-	# Deploy Istio Observability Addons (Prometheus, Grafana, Jaeger, Kiali)
-	"${SCRIPT_DIR}/deploy-addons.sh"
+	# Apply Observability Routing Gateway
+	kubectl apply -f "${MANIFESTS_DIR}/observability-gateway.yaml"
+
+	# Deploy ArgoCD and GitOps Observability Stack
+	step "Deploying ArgoCD for Observability Stack"
+	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side --force-conflicts
+	log "Waiting for ArgoCD Server to be ready..."
+	kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=300s
+	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/observability-apps.yaml"
 
 	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
 	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
