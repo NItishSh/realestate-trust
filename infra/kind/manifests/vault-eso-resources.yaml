@@ -147,3 +147,50 @@ spec:
   dataFrom:
     - extract:
         key: "database/creds/realestate-trust-role"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-token
+  namespace: observability
+type: Opaque
+stringData:
+  token: "root"
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: vault-backend-observability
+  namespace: observability
+spec:
+  provider:
+    vault:
+      server: "http://vault.vault.svc.cluster.local:8200"
+      version: "v2"
+      auth:
+        tokenSecretRef:
+          name: vault-token
+          key: token
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-admin-secret-sync
+  namespace: observability
+spec:
+  refreshInterval: "24h"
+  secretStoreRef:
+    name: vault-backend-observability
+    kind: SecretStore
+  target:
+    name: grafana-admin-secret
+    creationPolicy: "Owner"
+    template:
+      data:
+        admin-user: admin
+        admin-password: "{{ .admin_password }}"
+  data:
+    - secretKey: admin_password
+      remoteRef:
+        key: secret/realestate-trust/grafana
+        property: admin-password

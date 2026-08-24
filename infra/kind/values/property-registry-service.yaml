@@ -54,3 +54,13 @@ db:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+
+keda:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  triggers:
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "75"

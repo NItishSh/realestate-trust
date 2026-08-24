@@ -32,6 +32,7 @@ type EscrowAccount struct {
 type TransactionRepository interface {
 	CreateTransaction(propertyID, buyerID, sellerID string, totalAmount float64) (*Transaction, error)
 	GetTransaction(id string) (*Transaction, error)
+	GetEscrow(txID string) (*EscrowAccount, error)
 	UpdateTransactionStatus(id string, status core.TransactionState) error
 	FundEscrow(id string, amount float64) error
 	ListTransactions() ([]*Transaction, error)
@@ -91,6 +92,17 @@ func (r *InMemoryTransactionRepository) GetTransaction(id string) (*Transaction,
 		return nil, errors.New("transaction not found")
 	}
 	return tx, nil
+}
+
+func (r *InMemoryTransactionRepository) GetEscrow(txID string) (*EscrowAccount, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	acc, ok := r.accounts[txID]
+	if !ok {
+		return nil, errors.New("escrow account not found")
+	}
+	return acc, nil
 }
 
 func (r *InMemoryTransactionRepository) UpdateTransactionStatus(id string, status core.TransactionState) error {

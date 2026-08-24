@@ -72,30 +72,30 @@ export default function Portfolio() {
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold tracking-tight mb-2">Fractional Portfolios</h2>
-        <p className="text-slate-400 text-sm">Monitor property fractionalization pools, execute share acquisitions, and track yield dividends.</p>
+        <p className="text-slate-600 text-sm">Monitor property fractionalization pools, execute share acquisitions, and track yield dividends.</p>
       </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl flex items-center gap-4">
           <div className="p-3 rounded-xl bg-accent-cyan/10">
-            <Briefcase className="w-6 h-6 text-accent-cyan" />
+            <Briefcase className="w-6 h-6 text-primary" />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">Holdings Portfolio Value</span>
             <h4 className="text-xl font-bold font-mono mt-0.5">₹{totalValueInvested.toLocaleString('en-IN')}</h4>
           </div>
         </div>
-        <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-accent-emerald/10">
-            <TrendingUp className="w-6 h-6 text-accent-emerald" />
+        <div className="bg-white p-6 rounded-2xl flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-green-50">
+            <TrendingUp className="w-6 h-6 text-success" />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">Est. Annualized Dividends (8.2%)</span>
-            <h4 className="text-xl font-bold font-mono mt-0.5 text-accent-emerald">₹{estimatedYield.toLocaleString('en-IN')}</h4>
+            <h4 className="text-xl font-bold font-mono mt-0.5 text-success">₹{estimatedYield.toLocaleString('en-IN')}</h4>
           </div>
         </div>
-        <div className="glass-panel p-6 rounded-2xl flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl flex items-center gap-4">
           <div className="p-3 rounded-xl bg-accent-blue/10">
             <Coins className="w-6 h-6 text-accent-blue" />
           </div>
@@ -110,9 +110,9 @@ export default function Portfolio() {
         {/* Left Side: Pool Creation & Selector */}
         <div className="flex flex-col gap-8 lg:col-span-1">
           {/* Create Pool Form */}
-          <div className="glass-panel p-6 rounded-2xl">
+          <div className="bg-white p-6 rounded-2xl">
             <h3 className="text-md font-bold mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-accent-cyan" />
+              <Plus className="w-5 h-5 text-primary" />
               Configure Property Pool
             </h3>
             <form onSubmit={handleCreatePool} className="flex flex-col gap-4">
@@ -122,7 +122,7 @@ export default function Portfolio() {
                   type="text"
                   value={propertyId}
                   onChange={e => setPropertyId(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -133,7 +133,7 @@ export default function Portfolio() {
                     type="number"
                     value={totalTokens}
                     onChange={e => setTotalTokens(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -143,7 +143,7 @@ export default function Portfolio() {
                     type="text"
                     value={tokenPrice}
                     onChange={e => setTokenPrice(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -152,7 +152,7 @@ export default function Portfolio() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full btn-primary text-white font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? 'Creating…' : 'Initialize Pool'}
               </button>
@@ -160,7 +160,7 @@ export default function Portfolio() {
           </div>
 
           {/* List of Pools */}
-          <div className="glass-panel p-6 rounded-2xl flex-1">
+          <div className="bg-white p-6 rounded-2xl flex-1">
             <h3 className="text-md font-bold mb-4">Investable Pools</h3>
             <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
               {pools.map((pool) => {
@@ -171,18 +171,18 @@ export default function Portfolio() {
                     onClick={() => setSelectedPoolId(pool.id)}
                     className={`w-full p-3 rounded-xl text-left border transition-colors transition-transform transition-opacity flex items-center justify-between ${
                       selectedPool?.id === pool.id
-                        ? 'bg-slate-800/40 border-accent-cyan/40'
-                        : 'bg-transparent border-card-border hover:bg-slate-900/40'
+                        ? 'bg-slate-100/40 border-accent-cyan/40'
+                        : 'bg-transparent border-slate-200 hover:bg-white shadow-sm'
                     }`}
                   >
                     <div>
-                      <h4 className="text-xs font-bold text-slate-200 font-mono flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-accent-cyan" />
+                      <h4 className="text-xs font-bold text-slate-800 font-mono flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-primary" />
                         {pool.propertyId}
                       </h4>
                       <span className="text-[9px] text-slate-500 font-mono mt-1 block">Sold: {percentSold.toFixed(0)}%</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-accent-cyan">₹{pool.tokenPrice.toLocaleString('en-IN')}</span>
+                    <span className="text-xs font-mono font-bold text-primary">₹{pool.tokenPrice.toLocaleString('en-IN')}</span>
                   </button>
                 );
               })}
@@ -193,26 +193,26 @@ export default function Portfolio() {
         {/* Right Side: Purchase Form and Details */}
         <div className="lg:col-span-2">
           {selectedPool ? (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col justify-between">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-start border-b border-card-border pb-6 mb-6">
+                <div className="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
                   <div>
-                    <span className="text-[10px] font-mono text-accent-cyan uppercase">Fractional Real Estate Pool</span>
+                    <span className="text-[10px] font-mono text-primary uppercase">Fractional Real Estate Pool</span>
                     <h3 className="text-xl font-bold font-mono mt-1">{selectedPool.propertyId}</h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400 block">Unit Cost</span>
-                    <span className="text-xl font-bold font-mono text-slate-200">₹{selectedPool.tokenPrice.toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-slate-600 block">Unit Cost</span>
+                    <span className="text-xl font-bold font-mono text-slate-800">₹{selectedPool.tokenPrice.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 <div className="mb-8">
-                  <div className="flex justify-between text-xs text-slate-400 font-semibold mb-2">
+                  <div className="flex justify-between text-xs text-slate-600 font-semibold mb-2">
                     <span>Pool Allocation Status</span>
                     <span>{((selectedPool.tokensSold / selectedPool.totalTokens) * 100).toFixed(1)}% Subscribed</span>
                   </div>
-                  <div className="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-card-border">
+                  <div className="w-full bg-white h-3 rounded-full overflow-hidden border border-slate-200">
                     <div
                       className="bg-gradient-to-r from-accent-cyan to-accent-blue h-full transition-colors transition-transform transition-opacity duration-500"
                       style={{ width: `${(selectedPool.tokensSold / selectedPool.totalTokens) * 100}%` }}
@@ -226,8 +226,8 @@ export default function Portfolio() {
               </div>
 
               {/* Purchase interface */}
-              <div className="border-t border-card-border pt-6 mt-6">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Invest in Asset shares</h4>
+              <div className="border-t border-slate-200 pt-6 mt-6">
+                <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-4">Invest in Asset shares</h4>
 
                 {currentUser && currentUser.kycStatus !== 'APPROVED' && (
                   <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500 text-xs flex items-center gap-3 mb-4 leading-tight font-mono">
@@ -244,7 +244,7 @@ export default function Portfolio() {
                       value={shareCount}
                       onChange={e => setShareCount(e.target.value)}
                       disabled={currentUser?.kycStatus !== 'APPROVED'}
-                      className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                       required
                     />
                   </div>
@@ -255,8 +255,8 @@ export default function Portfolio() {
                       disabled={buyLoading || currentUser?.kycStatus !== 'APPROVED'}
                       className={`w-full font-bold text-xs py-3 rounded-xl transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer ${
                         currentUser?.kycStatus !== 'APPROVED'
-                          ? 'bg-slate-800 text-slate-600 border border-card-border cursor-not-allowed'
-                          : 'bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary hover:opacity-90 active:scale-95'
+                          ? 'bg-slate-100 text-slate-600 border border-slate-200 cursor-not-allowed'
+                          : 'btn-primary text-white hover:opacity-90 active:scale-95'
                       }`}
                     >
                       {buyLoading ? 'Processing…' : `Purchase shares for ₹${(parseInt(shareCount || '0') * selectedPool.tokenPrice).toLocaleString('en-IN')}`}
@@ -266,7 +266,7 @@ export default function Portfolio() {
               </div>
             </div>
           ) : (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
               <AlertCircle className="w-8 h-8 text-slate-600" />
               <p className="text-sm font-mono">No active investment pools. Initialize a property pool first.</p>
             </div>

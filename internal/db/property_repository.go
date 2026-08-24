@@ -32,6 +32,7 @@ type PropertyRepository interface {
 	ListProperties() ([]*Property, error)
 	GetProperty(id string) (*Property, error)
 	CreateProperty(address, description string, value float64, thumbnail, ownerId string) (*Property, error)
+	CreatePropertyWithID(id, address, description string, value float64, thumbnail, ownerId string) (*Property, error)
 	UpdateTitleInsurance(id, status, company, policy string) (*Property, error)
 	UpdatePropertyDetails(id string, sqft, bedrooms, bathrooms, yearBuilt int, propType string) (*Property, error)
 }
@@ -74,6 +75,35 @@ func (r *InMemoryPropertyRepository) CreateProperty(address, description string,
 	defer r.mu.Unlock()
 
 	id := "prop-" + uuid.New().String()[:8]
+
+	p := &Property{
+		ID:                   id,
+		Address:              address,
+		Description:          description,
+		Value:                value,
+		Thumbnail:            thumbnail,
+		OwnerID:              ownerId,
+		Documents:            []string{"Deed of Trust", "Property Inspection Report", "Title Insurance"},
+		CreatedAt:            time.Now(),
+		TitleInsuranceStatus: "UNINSURED",
+		SqFt:                 1800,
+		Bedrooms:             3,
+		Bathrooms:            2,
+		YearBuilt:            2018,
+		PropertyType:         "Residential",
+	}
+
+	r.properties[p.ID] = p
+	return p, nil
+}
+
+func (r *InMemoryPropertyRepository) CreatePropertyWithID(id, address, description string, value float64, thumbnail, ownerId string) (*Property, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if id == "" {
+		id = "prop-" + uuid.New().String()[:8]
+	}
 
 	p := &Property{
 		ID:                   id,

@@ -1,0 +1,11 @@
+{{- if and .Values.keda.enabled .Values.keda.triggerAuth.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ .Release.Name }}-trigger-auth
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  secretTargetRef:
+{{ toYaml .Values.keda.triggerAuth.secretTargetRef | indent 4 }}
+{{- end }}

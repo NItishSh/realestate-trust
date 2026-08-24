@@ -91,6 +91,28 @@ func (r *SQLTransactionRepository) GetTransaction(id string) (*Transaction, erro
 	return transaction, nil
 }
 
+func (r *SQLTransactionRepository) GetEscrow(txID string) (*EscrowAccount, error) {
+	query := `SELECT id, transaction_id, virtual_account_number, bank_partner, balance
+	          FROM escrow_accounts
+	          WHERE transaction_id = $1`
+
+	acc := &EscrowAccount{}
+	err := r.db.QueryRow(query, txID).Scan(
+		&acc.ID,
+		&acc.TransactionID,
+		&acc.VirtualAccountNumber,
+		&acc.BankPartner,
+		&acc.Balance,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("escrow account not found")
+		}
+		return nil, err
+	}
+	return acc, nil
+}
+
 func (r *SQLTransactionRepository) UpdateTransactionStatus(id string, status core.TransactionState) error {
 	query := `UPDATE transactions SET status = $1, updated_at = NOW() WHERE id = $2`
 	res, err := r.db.Exec(query, string(status), id)

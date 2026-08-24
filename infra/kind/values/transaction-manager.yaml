@@ -50,7 +50,7 @@ env:
         name: transaction-manager-db-secret
         key: DATABASE_URL
   - name: RABBITMQ_URL
-    value: "amqp://guest:guest@rabbitmq:5672/"
+    value: "amqp://guest:guest@rabbitmq.realestate-trust.svc.cluster.local:5672/"
 db:
   migrations:
     enabled: true
@@ -80,3 +80,13 @@ db:
         );
         CREATE INDEX idx_transactions_status ON transactions(status);
         CREATE INDEX idx_escrow_accounts_va ON escrow_accounts(virtual_account_number);
+
+keda:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  triggers:
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "75"

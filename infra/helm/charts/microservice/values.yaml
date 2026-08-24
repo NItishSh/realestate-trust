@@ -10,7 +10,13 @@ service:
   port: 80
   targetPort: 8080
 
-resources: {}
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
 
 healthCheck:
   path: /api/v1/health
@@ -22,6 +28,15 @@ hpa:
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 75
+
+keda:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  triggerAuth:
+    enabled: false
+    secretTargetRef: []
+  triggers: []
 
 ingress:
   enabled: false

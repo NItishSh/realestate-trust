@@ -70,3 +70,13 @@ db:
         );
         CREATE INDEX idx_users_email ON users(email);
         CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);
+
+keda:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  triggers:
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "75"

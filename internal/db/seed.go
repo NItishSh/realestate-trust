@@ -19,15 +19,16 @@ func ShouldSeed() bool {
 // SeedProperties populates the property registry with demo properties.
 func SeedProperties(repo PropertyRepository) {
 	properties := []struct {
+		ID          string
 		Address     string
 		Description string
 		Value       float64
 		Thumbnail   string
 		OwnerID     string
 	}{
-		{"123 Ocean View Dr, Malibu", "Luxury beachfront villa", 4500000, "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", "usr-priya.sharma@realestate.in"},
-		{"456 Silicon Ave, San Jose", "Modern tech hub office space", 7800000, "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800", "usr-priya.sharma@realestate.in"},
-		{"789 Alpine Way, Aspen", "Ski-in/ski-out cabin", 12500000, "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800", "usr-priya.sharma@realestate.in"},
+		{"prop-101", "123 Ocean View Dr, Malibu", "Luxury beachfront villa", 4500000, "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800", "usr-priya.sharma@realestate.in"},
+		{"prop-202", "456 Silicon Ave, San Jose", "Modern tech hub office space", 7800000, "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800", "usr-priya.sharma@realestate.in"},
+		{"prop-303", "789 Alpine Way, Aspen", "Ski-in/ski-out cabin", 12500000, "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800", "usr-priya.sharma@realestate.in"},
 	}
 
 	// Since we generate unique IDs, let's just make sure we check for existing properties by address to avoid duplicates in seed.
@@ -38,7 +39,7 @@ func SeedProperties(repo PropertyRepository) {
 	}
 
 	for _, p := range properties {
-		prop, err := repo.CreateProperty(p.Address, p.Description, p.Value, p.Thumbnail, p.OwnerID)
+		prop, err := repo.CreatePropertyWithID(p.ID, p.Address, p.Description, p.Value, p.Thumbnail, p.OwnerID)
 		if err != nil {
 			slog.Error("failed to seed property", "address", p.Address, "err", err)
 			continue

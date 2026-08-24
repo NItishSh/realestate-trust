@@ -93,10 +93,19 @@ spec:
     chart: grafana
     helm:
       values: |
-        adminPassword: admin
+        admin:
+          existingSecret: grafana-admin-secret
         env:
           GF_SERVER_ROOT_URL: "http://localhost:8080/grafana/"
           GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+        readinessProbe:
+          httpGet:
+            path: /grafana/api/health
+            port: 3000
+        livenessProbe:
+          httpGet:
+            path: /grafana/api/health
+            port: 3000
         datasources:
           datasources.yaml:
             apiVersion: 1
@@ -126,14 +135,6 @@ spec:
               editable: true
               options:
                 path: /var/lib/grafana/dashboards/default
-        dashboards:
-          default:
-            escrow-ops:
-              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/escrow_operations.json
-            banking-integrations:
-              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/banking_integrations.json
-            postgres-health:
-              url: https://raw.githubusercontent.com/realestate-trust/monorepo/main/infra/grafana/dashboards/postgres_health.json
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: observability
@@ -199,6 +200,29 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keda
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: "https://kedacore.github.io/charts"
+    targetRevision: "2.14.2"
+    chart: keda
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: keda
   syncPolicy:
     automated:
       prune: true

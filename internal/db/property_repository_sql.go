@@ -137,6 +137,46 @@ func (r *SQLPropertyRepository) CreateProperty(address, description string, valu
 	return p, nil
 }
 
+func (r *SQLPropertyRepository) CreatePropertyWithID(id, address, description string, value float64, thumbnail, ownerId string) (*Property, error) {
+	if id == "" {
+		id = "prop-" + uuid.New().String()[:8]
+	}
+	docs := []string{"Deed of Trust", "Property Inspection Report"}
+
+	query := `INSERT INTO properties (
+	              id, address, description, value, thumbnail, owner_id, documents,
+	              title_insurance_status, title_insurance_policy, title_insurance_company,
+	              title_insurance_verified_at, sqft, bedrooms, bathrooms, year_built,
+	              property_type
+	          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+	          RETURNING created_at`
+
+	p := &Property{
+		ID:                       id,
+		Address:                  address,
+		Description:              description,
+		Value:                    value,
+		Thumbnail:                thumbnail,
+		OwnerID:                  ownerId,
+		Documents:                docs,
+		TitleInsuranceStatus:     "UNINSURED",
+		TitleInsuranceCompany:    "",
+		TitleInsurancePolicy:     "",
+		TitleInsuranceVerifiedAt: "",
+	}
+
+	err := r.db.QueryRow(query,
+		id, address, description, value, thumbnail, ownerId, pq.Array(docs),
+		p.TitleInsuranceStatus, p.TitleInsurancePolicy, p.TitleInsuranceCompany,
+		p.TitleInsuranceVerifiedAt, p.SqFt, p.Bedrooms, p.Bathrooms, p.YearBuilt,
+		p.PropertyType,
+	).Scan(&p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
 func (r *SQLPropertyRepository) UpdateTitleInsurance(id, status, company, policy string) (*Property, error) {
 	query := `UPDATE properties
 	          SET title_insurance_status = $1, title_insurance_company = $2,

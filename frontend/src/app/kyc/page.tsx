@@ -69,16 +69,16 @@ export default function KYCPage() {
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold tracking-tight mb-2">Compliance & Onboarding</h2>
-        <p className="text-slate-400 text-sm">Register user identities and submit document verifications to fulfill compliance rules.</p>
+        <p className="text-slate-600 text-sm">Register user identities and submit document verifications to fulfill compliance rules.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Grid: Forms */}
         <div className="flex flex-col gap-8 lg:col-span-1">
           {/* User Registration Form */}
-          <div className="glass-panel p-6 rounded-2xl">
+          <div className="bg-white p-6 rounded-2xl">
             <h3 className="text-md font-bold mb-4 flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-accent-cyan" />
+              <UserPlus className="w-5 h-5 text-primary" />
               Register User Account
             </h3>
             <form onSubmit={handleRegister} className="flex flex-col gap-4">
@@ -88,7 +88,7 @@ export default function KYCPage() {
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-sans"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-sans"
                   placeholder="e.g. John Doe"
                   required
                 />
@@ -99,7 +99,7 @@ export default function KYCPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   placeholder="name@domain.com"
                   required
                 />
@@ -109,7 +109,7 @@ export default function KYCPage() {
                 <select
                   value={role}
                   onChange={e => setRole(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                 >
                   <option value="BUYER">BUYER (Investor / Homeowner)</option>
                   <option value="SELLER">SELLER (Builder / Owner)</option>
@@ -120,7 +120,7 @@ export default function KYCPage() {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full btn-primary text-white font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
                 {regLoading ? 'Registering…' : 'Register Account'}
               </button>
@@ -129,9 +129,9 @@ export default function KYCPage() {
 
           {/* KYC Upload Form */}
           {currentUser && (
-            <div className="glass-panel p-6 rounded-2xl">
+            <div className="bg-white p-6 rounded-2xl">
               <h3 className="text-md font-bold mb-4 flex items-center gap-2">
-                <Upload className="w-5 h-5 text-accent-cyan" />
+                <Upload className="w-5 h-5 text-primary" />
                 Submit KYC Document
               </h3>
               <form onSubmit={handleKYC} className="flex flex-col gap-4">
@@ -140,7 +140,7 @@ export default function KYCPage() {
                   <select
                     value={docType}
                     onChange={e => setDocType(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                   >
                     <option value="PASSPORT">PASSPORT</option>
                     <option value="DRIVERS_LICENSE">DRIVER'S LICENSE</option>
@@ -153,7 +153,7 @@ export default function KYCPage() {
                     type="text"
                     value={docRef}
                     onChange={e => setDocRef(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     placeholder="e.g. P120389A"
                     required
                   />
@@ -164,8 +164,8 @@ export default function KYCPage() {
                   disabled={kycLoading || !!currentUser.documentReference}
                   className={`w-full font-bold text-xs py-3 rounded-xl transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer ${
                     currentUser.documentReference
-                      ? 'bg-slate-800 text-slate-500 border border-card-border cursor-not-allowed'
-                      : 'bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary hover:opacity-90 active:scale-95'
+                      ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed'
+                      : 'btn-primary text-white hover:opacity-90 active:scale-95'
                   }`}
                 >
                   {kycLoading ? 'Submitting…' : currentUser.documentReference ? 'KYC Already Submitted' : 'Submit Verification'}
@@ -178,12 +178,12 @@ export default function KYCPage() {
         {/* Right Grid: Verification Checklist */}
         <div className="lg:col-span-2">
           {currentUser ? (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col justify-between">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-start border-b border-card-border pb-6 mb-6">
+                <div className="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-850 flex items-center justify-center border border-card-border">
-                      <Fingerprint className="w-5 h-5 text-accent-cyan" />
+                    <div className="w-10 h-10 rounded-xl bg-slate-850 flex items-center justify-center border border-slate-200">
+                      <Fingerprint className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <span className="text-[10px] font-mono text-slate-500 uppercase">Verification Check</span>
@@ -193,7 +193,7 @@ export default function KYCPage() {
                   <div>
                     <span className="text-[10px] text-slate-500 font-mono block text-right">KYC STATUS</span>
                     <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full inline-block mt-1 ${
-                      currentUser.kycStatus === 'APPROVED' ? 'bg-accent-emerald/10 text-accent-emerald' :
+                      currentUser.kycStatus === 'APPROVED' ? 'bg-green-50 text-success' :
                       currentUser.kycStatus === 'PENDING' ? 'bg-accent-blue/10 text-accent-blue' :
                       'bg-rose-500/10 text-rose-500'
                     }`}>
@@ -202,21 +202,21 @@ export default function KYCPage() {
                   </div>
                 </div>
 
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-6">Onboarding Checkpoint Checklist</h4>
+                <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-6">Onboarding Checkpoint Checklist</h4>
 
                 <div className="flex flex-col gap-6">
                   {checklistItems.map((item, idx) => (
                     <div key={item.name} className="flex gap-4 items-start">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border mt-0.5 ${
                         item.done
-                          ? 'bg-accent-emerald/20 border-accent-emerald text-accent-emerald'
-                          : 'bg-slate-900 border-card-border text-slate-600'
+                          ? 'bg-green-500/20 border-accent-emerald text-success'
+                          : 'bg-white border-slate-200 text-slate-600'
                       }`}>
-                        {item.done ? <CheckCircle2 className="w-4 h-4 text-accent-emerald" /> : idx + 1}
+                        {item.done ? <CheckCircle2 className="w-4 h-4 text-success" /> : idx + 1}
                       </div>
                       <div>
                         <p className={`text-sm font-bold ${
-                          item.done ? 'text-slate-200' : 'text-slate-500'
+                          item.done ? 'text-slate-800' : 'text-slate-500'
                         }`}>{item.name}</p>
                         <span className="text-xs text-slate-500 leading-tight mt-0.5 block">{item.desc}</span>
                       </div>
@@ -226,7 +226,7 @@ export default function KYCPage() {
               </div>
 
               {currentUser.kycStatus === 'PENDING' && (
-                <div className="border-t border-card-border pt-6 mt-6 flex justify-between items-center gap-4">
+                <div className="border-t border-slate-200 pt-6 mt-6 flex justify-between items-center gap-4">
                   <div className="flex items-center gap-2 text-accent-blue text-xs font-mono">
                     <Clock className="w-5 h-5 animate-pulse shrink-0" />
                     Review Pending: Compliance Officer verification check in progress.
@@ -240,7 +240,7 @@ export default function KYCPage() {
                           { ...state.currentUser, kycStatus: 'APPROVED' } : state.currentUser
                       }));
                     }}
-                    className="px-4 py-2 rounded-lg bg-accent-emerald/10 border border-accent-emerald/20 text-accent-emerald text-[11px] font-bold hover:bg-accent-emerald/20 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-green-50 border border-accent-emerald/20 text-success text-[11px] font-bold hover:bg-green-500/20 transition-colors cursor-pointer"
                   >
                     Simulate Approve
                   </button>
@@ -248,14 +248,14 @@ export default function KYCPage() {
               )}
 
               {currentUser.kycStatus === 'APPROVED' && (
-                <div className="border-t border-card-border pt-6 mt-6 flex items-center gap-2 text-accent-emerald text-xs font-mono">
+                <div className="border-t border-slate-200 pt-6 mt-6 flex items-center gap-2 text-success text-xs font-mono">
                   <UserCheck className="w-5 h-5 shrink-0" />
                   KYC Verified: Virtual ledger operations unlocked.
                 </div>
               )}
             </div>
           ) : (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
               <Clock className="w-8 h-8 text-slate-600" />
               <p className="text-sm font-mono">Please register or switch to an active user profile.</p>
             </div>

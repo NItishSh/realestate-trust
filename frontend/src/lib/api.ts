@@ -236,6 +236,18 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
 }
 
 export const api = {
+  getCurrentUser: async (): Promise<User | null> => {
+    if (typeof window === 'undefined') return null;
+    const email = localStorage.getItem('user_email');
+    if (!email) return null;
+    try {
+      const users = await api.getUsers();
+      return users.find(u => u.email === email) || null;
+    } catch {
+      return null;
+    }
+  },
+
   // auth endpoint overrides
   login: async (email: string, password?: string) => {
     const headers = new Headers();

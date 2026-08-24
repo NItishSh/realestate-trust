@@ -94,6 +94,7 @@ func main() {
 	api.POST("/transactions", handler.CreateTransaction)
 	api.GET("/transactions", handler.GetTransactions)
 	api.GET("/transactions/:id", handler.GetTransaction)
+	api.GET("/transactions/:id/escrow", handler.GetEscrow)
 	api.PUT("/transactions/:id/status", handler.UpdateStatus)
 	api.POST("/transactions/:id/escrow/fund", handler.FundEscrow)
 

@@ -77,3 +77,13 @@ db:
         );
         CREATE INDEX idx_loans_transaction ON loans(transaction_id);
         CREATE INDEX idx_disbursements_loan ON disbursements(loan_id);
+
+keda:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  triggers:
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "75"

@@ -1,46 +1,20 @@
 #!/usr/bin/env bash
-# =============================================================================
-# Vault & ESO Deployment Script — RealEstate Trust Platform
-# =============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-MANIFESTS_DIR="${SCRIPT_DIR}/manifests"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}" && pwd)"
+MANIFESTS_DIR="${SCRIPT_DIR}/infra/kind/manifests"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 log() { echo -e "${GREEN}[✓]${NC} $1"; }
 err() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
+step() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
-# 1. Add Helm repos
-log "Adding Helm repositories..."
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo add external-secrets https://charts.external-secrets.io
-helm repo update
-
-# 2. Deploy HashiCorp Vault in dev mode
-log "Deploying HashiCorp Vault (Dev Mode)..."
-helm upgrade --install vault hashicorp/vault \
-  --namespace vault \
-  --create-namespace \
-  --set "server.dev.enabled=true" \
-  --set "injector.enabled=false" \
-  --wait \
-  --timeout 10m0s
-
-# 3. Deploy External Secrets Operator (ESO)
-log "Deploying External Secrets Operator..."
-helm upgrade --install external-secrets external-secrets/external-secrets \
-  --namespace external-secrets \
-  --create-namespace \
-  --set installCRDs=true \
-  --wait \
-  --timeout 10m0s
-
-# 4. Wait for Vault pod to be Ready
+# 4. Wait for Vault pod to be Ready (it should be)
 log "Waiting for vault-0 pod to be ready..."
 kubectl wait --for=condition=Ready pod/vault-0 -n vault --timeout=120s
 
@@ -102,7 +76,7 @@ kubectl exec -i vault-0 -n vault -- vault write database/roles/realestate-trust-
 
 log "Enabling and configuring Vault Transit Secrets Engine..."
 kubectl exec -i vault-0 -n vault -- vault secrets enable transit || true
-kubectl exec -i vault-0 -n vault -- vault write -f transit/keys/kyc-key
+kubectl exec -i vault-0 -n vault -- vault write -f transit/keys/kyc-key || true
 
 # 8. Seed Secrets from .env into Vault KV (Fallback for static values)
 log "Parsing local .env file and seeding secrets into Vault KV..."
@@ -112,7 +86,6 @@ fi
 
 args=()
 while IFS= read -r line || [ -n "$line" ]; do
-  # Skip comments and empty lines
   [[ "$line" =~ ^# ]] && continue
   [[ -z "$line" ]] && continue
   args+=("$line")
@@ -142,3 +115,47 @@ for es in "${ext_secrets[@]}"; do
 done
 
 log "Vault and External Secrets Operator successfully configured!"
+
+
+# RESUME kind-up.sh from line 133
+
+# Deploy RabbitMQ
+kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
+
+log "Waiting for RabbitMQ to be ready..."
+sleep 5
+kubectl wait --for=condition=Ready pods -l app=rabbitmq -n realestate-trust --timeout=300s
+
+step "Installing Microservices via Helm"
+services=("identity-service" "transaction-manager" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "frontend")
+for svc in "${services[@]}"; do
+    log "Installing ${svc}..."
+    helm upgrade --install "${svc}" "${PROJECT_ROOT}/infra/helm/charts/microservice" \
+        --namespace realestate-trust \
+        --values "${SCRIPT_DIR}/infra/kind/values/${svc}.yaml" \
+        --set image.pullPolicy=Never
+done
+log "All Helm charts deployed locally with automatic Istio sidecar injection."
+
+step "Cluster Status"
+echo ""
+kubectl get pods -n realestate-trust -o wide
+echo ""
+log "Access your application via the Istio Ingress Gateway:"
+echo "  Unified Portal (Frontend):  http://localhost:8080"
+echo "  Identity Service:           http://localhost:8080/api/v1/users"
+echo "  Transaction Manager:        http://localhost:8080/api/v1/transactions"
+echo "  Financing Engine:           http://localhost:8080/api/v1/loans"
+echo "  Tokenization Engine:        http://localhost:8080/api/v1/pools"
+echo "  Ledger Service:             http://localhost:8080/api/v1/logs"
+echo "  Property Registry:          http://localhost:8080/api/v1/properties"
+echo ""
+log "Access Observability Dashboards (Unified Gateway):"
+echo "  Kiali (Mesh Visualizer):    http://localhost:8080/kiali"
+echo "  Grafana (Metrics & Traces): http://localhost:8080/grafana/ (Explore tab for Tempo)"
+echo "  Prometheus (Raw Metrics):   http://localhost:8080/prometheus/"
+echo ""
+log "Starting ArgoCD Port-Forward..."
+kubectl port-forward svc/argocd-server -n argocd 8081:443 > /dev/null 2>&1 &
+echo "  ArgoCD UI:                  https://localhost:8081 (admin / admin)"
+echo ""

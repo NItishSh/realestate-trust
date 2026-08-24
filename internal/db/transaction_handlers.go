@@ -73,6 +73,22 @@ func (h *TransactionHandler) GetTransaction(c *echo.Context) error {
 	return c.JSON(http.StatusOK, tx)
 }
 
+// GetEscrow handles GET /transactions/{id}/escrow
+func (h *TransactionHandler) GetEscrow(c *echo.Context) error {
+	txID := c.Param("id")
+	if txID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing transaction ID"})
+	}
+
+	acc, err := h.Repo.GetEscrow(txID)
+	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "GetEscrow error", "err", err)
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Escrow account not found"})
+	}
+
+	return c.JSON(http.StatusOK, acc)
+}
+
 // UpdateStatus handles PUT /transactions/{id}/status
 func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 	txID := c.Param("id")

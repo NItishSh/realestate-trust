@@ -109,7 +109,7 @@ export default function Transactions() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight mb-2">Escrow Transactions</h2>
-          <p className="text-slate-400 text-sm">Create virtual accounts, track escrow states, and execute payouts.</p>
+          <p className="text-slate-600 text-sm">Create virtual accounts, track escrow states, and execute payouts.</p>
         </div>
       </div>
 
@@ -117,9 +117,9 @@ export default function Transactions() {
         {/* Left Side: Create & List */}
         <div className="flex flex-col gap-8 lg:col-span-1">
           {/* New Transaction Form */}
-          <div className="glass-panel p-6 rounded-2xl">
+          <div className="bg-white p-6 rounded-2xl">
             <h3 className="text-md font-bold mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-accent-cyan" />
+              <Plus className="w-5 h-5 text-primary" />
               Configure Escrow
             </h3>
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
@@ -129,7 +129,7 @@ export default function Transactions() {
                   type="text"
                   value={propertyId}
                   onChange={e => setPropertyId(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -140,7 +140,7 @@ export default function Transactions() {
                     type="text"
                     value={buyerId}
                     onChange={e => setBuyerId(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -150,7 +150,7 @@ export default function Transactions() {
                     type="text"
                     value={sellerId}
                     onChange={e => setSellerId(e.target.value)}
-                    className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                     required
                   />
                 </div>
@@ -161,7 +161,7 @@ export default function Transactions() {
                   type="number"
                   value={totalAmount}
                   onChange={e => setTotalAmount(e.target.value)}
-                  className="w-full bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan font-mono"
                   required
                 />
               </div>
@@ -169,7 +169,7 @@ export default function Transactions() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-blue text-bg-primary font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full btn-primary text-white font-bold text-xs py-3 rounded-xl hover:opacity-90 active:scale-95 transition-colors transition-transform transition-opacity flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? 'Creating…' : 'Initialize Escrow'}
                 <ChevronRight className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function Transactions() {
           </div>
 
           {/* List of Escrows */}
-          <div className="glass-panel p-6 rounded-2xl flex-1">
+          <div className="bg-white p-6 rounded-2xl flex-1">
             <h3 className="text-md font-bold mb-4">Active Escrow Accounts</h3>
             <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
               {transactions.map((tx) => (
@@ -187,19 +187,19 @@ export default function Transactions() {
                   onClick={() => setSelectedTxId(tx.id)}
                   className={`w-full p-3 rounded-xl text-left border transition-colors transition-transform transition-opacity flex items-center justify-between ${
                     selectedTx?.id === tx.id
-                      ? 'bg-slate-800/40 border-accent-cyan/40'
-                      : 'bg-transparent border-card-border hover:bg-slate-900/40'
+                      ? 'bg-slate-100/40 border-accent-cyan/40'
+                      : 'bg-transparent border-slate-200 hover:bg-white shadow-sm'
                   }`}
                 >
                   <div>
-                    <h4 className="text-xs font-bold text-slate-200 font-mono">{tx.id}</h4>
+                    <h4 className="text-xs font-bold text-slate-800 font-mono">{tx.id}</h4>
                     <span className="text-[9px] text-slate-500 font-mono">Amt: ₹{tx.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                   <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                    tx.status === 'CLOSED' ? 'bg-accent-emerald/10 text-accent-emerald' :
+                    tx.status === 'CLOSED' ? 'bg-green-50 text-success' :
                     tx.status === 'FUNDED' ? 'bg-accent-blue/10 text-accent-blue' :
-                    tx.status === 'ESCROW' ? 'bg-accent-cyan/10 text-accent-cyan' :
-                    'bg-slate-800 text-slate-400'
+                    tx.status === 'ESCROW' ? 'bg-accent-cyan/10 text-primary' :
+                    'bg-slate-100 text-slate-600'
                   }`}>
                     {tx.status}
                   </span>
@@ -212,22 +212,22 @@ export default function Transactions() {
         {/* Right Side: Timeline & Details */}
         <div className="lg:col-span-2">
           {selectedTx ? (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col justify-between">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col justify-between">
               {/* Top details */}
               <div>
-                <div className="flex justify-between items-start border-b border-card-border pb-6 mb-6">
+                <div className="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
                   <div>
-                    <span className="text-[10px] font-mono text-accent-cyan uppercase tracking-wider">Escrow Deal Sheet</span>
+                    <span className="text-[10px] font-mono text-primary uppercase tracking-wider">Escrow Deal Sheet</span>
                     <h3 className="text-xl font-extrabold font-mono mt-1">{selectedTx.id}</h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400 font-sans block">Total Purchase Value</span>
-                    <span className="text-xl font-bold font-mono text-slate-200">₹{selectedTx.totalAmount.toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-slate-600 font-sans block">Total Purchase Value</span>
+                    <span className="text-xl font-bold font-mono text-slate-800">₹{selectedTx.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
                 {/* Progress bar timeline */}
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-6">Escrow Progression Stage</h4>
+                <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-6">Escrow Progression Stage</h4>
 
                 <div className="grid grid-cols-4 gap-4 relative mb-12">
                   {getTimelineSteps(selectedTx.status).map((step, idx) => {
@@ -237,22 +237,22 @@ export default function Transactions() {
                         {/* Circle and Line */}
                         <div className="flex items-center mb-3">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-bold text-xs font-mono shrink-0 transition-colors duration-300 ${
-                            step.state === 'completed' ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan' :
-                            step.state === 'active' ? 'bg-accent-cyan text-bg-primary border-accent-cyan shadow-lg shadow-accent-cyan/25' :
-                            'bg-slate-900 border-card-border text-slate-500'
+                            step.state === 'completed' ? 'bg-accent-cyan/20 border-accent-cyan text-primary' :
+                            step.state === 'active' ? 'bg-accent-cyan text-white border-accent-cyan shadow-lg shadow-accent-cyan/25' :
+                            'bg-white border-slate-200 text-slate-500'
                           }`}>
-                            {step.state === 'completed' ? <CheckCircle2 className="w-4 h-4 text-accent-cyan" /> : idx + 1}
+                            {step.state === 'completed' ? <CheckCircle2 className="w-4 h-4 text-primary" /> : idx + 1}
                           </div>
                           {!isLast && (
                             <div className={`h-[2px] w-full mx-2 transition-colors duration-500 ${
-                              step.state === 'completed' ? 'bg-accent-cyan' : 'bg-slate-800'
+                              step.state === 'completed' ? 'bg-accent-cyan' : 'bg-slate-100'
                             }`} />
                           )}
                         </div>
 
                         {/* Labels */}
                         <span className={`text-xs font-bold ${
-                          step.state === 'active' ? 'text-accent-cyan' : 'text-slate-300'
+                          step.state === 'active' ? 'text-primary' : 'text-slate-700'
                         }`}>{step.name}</span>
                         <span className="text-[10px] text-slate-500 mt-1 leading-tight">{step.desc}</span>
                       </div>
@@ -262,14 +262,14 @@ export default function Transactions() {
               </div>
 
               {/* Action buttons */}
-              <div className="border-t border-card-border pt-6 mt-6">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Execute Escrow Actions</h4>
+              <div className="border-t border-slate-200 pt-6 mt-6">
+                <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-4">Execute Escrow Actions</h4>
 
                 <div className="flex gap-4">
                   {selectedTx.status === 'DRAFT' && (
                     <button
                       onClick={() => handleTransition('ESCROW')}
-                      className="px-6 py-3 rounded-xl bg-accent-cyan text-bg-primary text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
+                      className="px-6 py-3 rounded-xl bg-accent-cyan text-white text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       Initialize Escrow Account
@@ -282,7 +282,7 @@ export default function Transactions() {
                         value={fundAmount}
                         onChange={(e) => setFundAmount(e.target.value)}
                         placeholder="Amount to deposit"
-                        className="bg-slate-900 border border-card-border rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus:border-accent-blue font-mono w-40"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus:border-accent-blue font-mono w-40"
                         required
                       />
                       <button
@@ -298,7 +298,7 @@ export default function Transactions() {
                   {selectedTx.status === 'FUNDED' && (
                     <button
                       onClick={() => handleTransition('CLOSED')}
-                      className="px-6 py-3 rounded-xl bg-accent-emerald text-bg-primary text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
+                      className="px-6 py-3 rounded-xl bg-green-500 text-white text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       Release Payouts & Close
@@ -316,7 +316,7 @@ export default function Transactions() {
                   )}
 
                   {selectedTx.status === 'CLOSED' && (
-                    <div className="p-4 rounded-xl bg-accent-emerald/5 border border-accent-emerald/10 text-accent-emerald text-xs flex items-center gap-2 w-full font-mono">
+                    <div className="p-4 rounded-xl bg-green-500/5 border border-accent-emerald/10 text-success text-xs flex items-center gap-2 w-full font-mono">
                       <CheckCircle2 className="w-5 h-5 shrink-0" />
                       This escrow transaction has been closed and payouts are settled. The cryptographic block hashes are sealed in the ledger.
                     </div>
@@ -332,7 +332,7 @@ export default function Transactions() {
               </div>
             </div>
           ) : (
-            <div className="glass-panel p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+            <div className="bg-white p-8 rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-2">
               <HelpCircle className="w-8 h-8 text-slate-600" />
               <p className="text-sm font-mono">No active transactions found. Initialize an escrow first.</p>
             </div>
