@@ -196,11 +196,11 @@ export default function AdminDashboard() {
                     </td>
                     <td className="p-4 text-right">
                       {tx.status === 'ESCROW' ? (
-                        <button className="bg-primary text-white text-xs font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
+                        <button onClick={() => alert("Feature coming soon!")} className="bg-primary text-white text-xs font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
                           Release Funds
                         </button>
                       ) : (
-                        <button className="bg-white border border-outline-variant text-on-surface text-xs font-semibold py-2 px-4 rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
+                        <button onClick={() => alert("Feature coming soon!")} className="bg-white border border-outline-variant text-on-surface text-xs font-semibold py-2 px-4 rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
                           View Details
                         </button>
                       )}

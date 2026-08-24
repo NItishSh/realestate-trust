@@ -66,7 +66,7 @@ export default function SellerDashboard() {
           <h1 className="text-3xl font-headline font-bold text-on-surface">Seller Dashboard</h1>
           <p className="text-on-surface-variant mt-1">Manage your property listings and incoming escrow funds.</p>
         </div>
-        <button className="flex items-center gap-2 bg-primary text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
+        <button onClick={() => alert("Feature coming soon!")} className="flex items-center gap-2 bg-primary text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
           <Plus className="w-4 h-4" /> List New Property
         </button>
       </div>
@@ -255,7 +255,7 @@ export default function SellerDashboard() {
               )}
             </div>
             <div className="p-4 border-t border-outline-variant bg-surface">
-              <button className="w-full py-2.5 bg-white border border-outline-variant rounded-lg text-sm font-medium text-on-surface hover:bg-surface-variant transition-colors shadow-sm">
+              <button onClick={() => alert("Feature coming soon!")} className="w-full py-2.5 bg-white border border-outline-variant rounded-lg text-sm font-medium text-on-surface hover:bg-surface-variant transition-colors shadow-sm">
                 View Complete History
               </button>
             </div>

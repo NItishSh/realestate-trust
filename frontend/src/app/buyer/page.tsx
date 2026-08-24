@@ -25,6 +25,11 @@ export default function BuyerDashboard() {
   const [escrows, setEscrows] = useState<Record<string, EscrowAccount>>({});
   const [loading, setLoading] = useState(true);
 
+  // Modal states
+  const [isStatementOpen, setIsStatementOpen] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -89,7 +94,7 @@ export default function BuyerDashboard() {
           <h2 className="text-3xl font-headline font-bold text-on-surface">Buyer Dashboard</h2>
           <p className="text-on-surface-variant mt-1">Welcome back, your escrow vault is secure.</p>
         </div>
-        <button className="flex items-center gap-2 bg-primary-container text-primary font-medium px-4 py-2 rounded-lg hover:bg-opacity-80 transition-opacity">
+        <button onClick={() => setIsStatementOpen(true)} className="flex items-center gap-2 bg-primary-container text-primary font-medium px-4 py-2 rounded-lg hover:bg-opacity-80 transition-opacity">
           <Download className="w-4 h-4" />
           Statement
         </button>
@@ -146,7 +151,7 @@ export default function BuyerDashboard() {
                     <p className="text-sm text-on-error-container opacity-90 mt-1">Initial deposit of ${actionTx.totalAmount.toLocaleString()} due.</p>
                   </div>
                 </div>
-                <button className="bg-on-error-container text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity w-full sm:w-auto">
+                <button onClick={() => setIsTransferOpen(true)} className="bg-on-error-container text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity w-full sm:w-auto">
                   Transfer Funds
                 </button>
               </div>
@@ -168,7 +173,7 @@ export default function BuyerDashboard() {
                     <p className="text-sm text-on-surface-variant mt-1">Review and sign the preliminary title report.</p>
                   </div>
                 </div>
-                <button className="bg-white border border-outline-variant text-on-surface px-5 py-2 rounded-lg font-medium hover:bg-surface-variant transition-colors w-full sm:w-auto">
+                <button onClick={() => setIsReviewOpen(true)} className="bg-white border border-outline-variant text-on-surface px-5 py-2 rounded-lg font-medium hover:bg-surface-variant transition-colors w-full sm:w-auto">
                   Review Document
                 </button>
               </div>
@@ -317,6 +322,179 @@ export default function BuyerDashboard() {
           </div>
         </div>
       </div>
+      {/* Modals */}
+      {isStatementOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" id="statement-modal">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setIsStatementOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-2xl rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface">
+              <h3 className="text-xl font-headline font-bold text-on-surface">Escrow Account Statement</h3>
+              <button onClick={() => setIsStatementOpen(false)} className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors">
+                <AlertCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-primary-container rounded-lg">
+                  <p className="text-xs text-on-primary-container font-medium uppercase tracking-wider mb-1">Total Balance</p>
+                  <p className="text-xl font-bold text-on-primary-container">${Math.floor(totalEscrowValue).toLocaleString()}.00</p>
+                </div>
+                <div className="p-4 bg-success-container rounded-lg">
+                  <p className="text-xs text-on-success-container font-medium uppercase tracking-wider mb-1">Deposits (30d)</p>
+                  <p className="text-xl font-bold text-on-success-container">+${(totalEscrowValue * 0.1).toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-surface-container-high rounded-lg">
+                  <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mb-1">Withdrawals (30d)</p>
+                  <p className="text-xl font-bold text-on-surface">-$0.00</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-headline font-semibold text-on-surface mb-3">Detailed Transactions</h4>
+                <div className="border border-outline-variant rounded-lg overflow-hidden">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-surface-container-low text-on-surface-variant text-xs uppercase font-semibold border-b border-outline-variant">
+                        <th className="p-3">Date</th>
+                        <th className="p-3">Description</th>
+                        <th className="p-3">Type</th>
+                        <th className="p-3 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-outline-variant">
+                      <tr>
+                        <td className="p-3 text-on-surface-variant">{new Date().toLocaleDateString()}</td>
+                        <td className="p-3 font-medium">Earnest Money Deposit</td>
+                        <td className="p-3"><span className="text-success">Deposit</span></td>
+                        <td className="p-3 text-right font-medium">+${Math.floor(totalEscrowValue).toLocaleString()}.00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-outline-variant bg-surface flex flex-col sm:flex-row justify-end gap-3">
+              <button onClick={() => setIsStatementOpen(false)} className="px-5 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">
+                Close
+              </button>
+              <button onClick={() => setIsStatementOpen(false)} className="px-5 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" />
+                Download as PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isTransferOpen && actionProp && actionTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" id="transfer-funds-modal">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setIsTransferOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-lg rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface">
+              <h3 className="text-xl font-headline font-bold text-on-surface">Transfer Funds to Escrow</h3>
+              <button onClick={() => setIsTransferOpen(false)} className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors">
+                <AlertCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="bg-primary-container p-4 rounded-lg mb-6">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-on-primary-container font-medium uppercase tracking-wider">Required Deposit</span>
+                  <span className="text-xs text-on-primary-container opacity-70">Due in 48h</span>
+                </div>
+                <p className="text-3xl font-display font-bold text-on-primary-container">${actionTx.totalAmount.toLocaleString()}.00</p>
+                <p className="text-sm text-on-primary-container mt-2 flex items-center gap-1">
+                  {actionProp.address}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-on-surface-variant">Select Funding Source</label>
+                  <select className="w-full bg-surface-container-low border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none">
+                    <option>Chase Checking (...4829)</option>
+                    <option>Wire Transfer</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-on-surface-variant">Routing Number</label>
+                  <input type="text" placeholder="Enter routing number" className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none" />
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-end gap-3">
+              <button onClick={() => setIsTransferOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">
+                Cancel
+              </button>
+              <button onClick={() => setIsTransferOpen(false)} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity">
+                Transfer Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isReviewOpen && actionProp && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-on-surface opacity-50" onClick={() => setIsReviewOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-3xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+              <h3 className="text-xl font-headline font-bold text-on-surface">Approve Title Transfer</h3>
+              <button onClick={() => setIsReviewOpen(false)} className="text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors">
+                <AlertCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="bg-surface-container-low border border-outline-variant rounded-lg p-8 shadow-inner">
+                <div className="max-w-2xl mx-auto bg-white p-10 shadow-sm border border-outline-variant min-h-[600px] flex flex-col gap-4">
+                  <div className="flex justify-between items-start border-b pb-4">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-lg uppercase tracking-tight">Preliminary Title Report</h4>
+                      <p className="text-xs text-on-surface-variant">Report No: TR-{actionProp.id.substring(0,6).toUpperCase()}-2023</p>
+                    </div>
+                    <div className="text-right text-xs text-on-surface-variant">
+                      <p>Date: {new Date().toLocaleDateString()}</p>
+                      <p>Property: {actionProp.address}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4 mt-4">
+                    <div className="h-4 bg-surface-container-high rounded w-3/4"></div>
+                    <div className="h-4 bg-surface-container-high rounded w-full"></div>
+                    <div className="h-4 bg-surface-container-high rounded w-5/6"></div>
+                    <div className="h-4 bg-surface-container-high rounded w-full"></div>
+                    <div className="pt-4">
+                      <div className="h-6 bg-surface-container-high rounded w-1/3 mb-2"></div>
+                      <div className="h-4 bg-surface-container-high rounded w-full"></div>
+                      <div className="h-4 bg-surface-container-high rounded w-full"></div>
+                    </div>
+                    <div className="pt-4">
+                      <div className="h-6 bg-surface-container-high rounded w-1/4 mb-2"></div>
+                      <div className="h-4 bg-surface-container-high rounded w-full"></div>
+                      <div className="h-4 bg-surface-container-high rounded w-2/3"></div>
+                    </div>
+                  </div>
+                  <div className="mt-auto pt-8 border-t border-dashed border-outline-variant">
+                    <p className="text-[10px] text-on-surface-variant italic text-center">This document is a preliminary report and is subject to final verification by TrustEstate legal counsel.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-headline font-semibold text-on-surface">Digital Signature</h4>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-on-surface-variant">Type your full name to sign</label>
+                  <input className="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="John D. Smith" type="text" />
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input className="mt-1 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox" />
+                  <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">I agree to the Electronic Record and Signature Disclosure and understand that my typed name constitutes a legal signature.</span>
+                </label>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex flex-col sm:flex-row justify-end gap-3">
+              <button onClick={() => setIsReviewOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">Cancel</button>
+              <button onClick={() => setIsReviewOpen(false)} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity">Approve & Sign</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -128,7 +128,7 @@ const mockProperties: Property[] = [
 
 
 
-const API_BASE = typeof window !== 'undefined' ? "" : "http://localhost:8080";
+const API_BASE = typeof window !== 'undefined' ? "" : "http://istio-ingress.istio-system.svc.cluster.local";
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
