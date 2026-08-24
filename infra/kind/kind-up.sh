@@ -80,16 +80,10 @@ build_and_load_images() {
 }
 
 deploy_argocd_and_postgres() {
-    step "Deploying ArgoCD and PostgreSQL"
+    step "Deploying ArgoCD and Core Services via GitOps"
 
     # Create target namespace
     kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
-
-    # Deploy Vault & External Secrets Operator (replacing create-secrets.sh)
-    "${SCRIPT_DIR}/deploy-vault-eso.sh"
-
-    # Deploy PostgreSQL (Dependency for ArgoCD apps)
-    kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
 
     # Install ArgoCD (using server-side apply to avoid CRD size limits)
     kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
@@ -102,32 +96,33 @@ deploy_argocd_and_postgres() {
     kubectl apply -f "${PROJECT_ROOT}/infra/gitops/root-application.yaml"
 
     log "ArgoCD will now sync the applications from Git."
+
+    # Configure Vault & Deploy Postgres
+    "${SCRIPT_DIR}/deploy-vault-eso.sh"
 }
 
 deploy_helm_local_and_postgres() {
-	step "Deploying Local Helm Charts, PostgreSQL, and Istio Service Mesh"
+	step "Deploying Local Helm Charts, PostgreSQL, and Core Services via ArgoCD"
 
 	# Create target namespace
 	kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
 
-	# Deploy Istio Service Mesh
-	"${SCRIPT_DIR}/deploy-istio.sh"
-
-	# Apply Observability Routing Gateway
-	kubectl apply -f "${MANIFESTS_DIR}/observability-gateway.yaml"
-
-	# Deploy ArgoCD and GitOps Observability Stack
-	step "Deploying ArgoCD for Observability Stack"
+	# Deploy ArgoCD
+	step "Deploying ArgoCD for Core Infrastructure"
 	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side --force-conflicts
 	log "Waiting for ArgoCD Server to be ready..."
 	kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=300s
+
+	# Apply Core Infrastructure and Observability via GitOps
+	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/core-infra-apps.yaml"
 	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/observability-apps.yaml"
 
-	# Apply Istio Gateway, PeerAuthentication, and DestinationRules
+	# Apply Observability Routing Gateway & Istio Gateway
+	kubectl apply -f "${MANIFESTS_DIR}/observability-gateway.yaml"
 	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
-	# Deploy Vault, ESO, and PostgreSQL
+	# Configure Vault, ESO, and Deploy PostgreSQL
 	"${SCRIPT_DIR}/deploy-vault-eso.sh"
 
 	# Deploy RabbitMQ

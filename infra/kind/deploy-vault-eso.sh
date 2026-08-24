@@ -15,32 +15,13 @@ NC='\033[0m'
 log() { echo -e "${GREEN}[✓]${NC} $1"; }
 err() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 
-# 1. Add Helm repos
-log "Adding Helm repositories..."
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo add external-secrets https://charts.external-secrets.io
-helm repo update
+# 1. Wait for Vault StatefulSet to be created by ArgoCD
+log "Waiting for Vault to be deployed by ArgoCD..."
+while ! kubectl get statefulset vault -n vault > /dev/null 2>&1; do
+  sleep 2
+done
 
-# 2. Deploy HashiCorp Vault in dev mode
-log "Deploying HashiCorp Vault (Dev Mode)..."
-helm upgrade --install vault hashicorp/vault \
-  --namespace vault \
-  --create-namespace \
-  --set "server.dev.enabled=true" \
-  --set "injector.enabled=false" \
-  --wait \
-  --timeout 10m0s
-
-# 3. Deploy External Secrets Operator (ESO)
-log "Deploying External Secrets Operator..."
-helm upgrade --install external-secrets external-secrets/external-secrets \
-  --namespace external-secrets \
-  --create-namespace \
-  --set installCRDs=true \
-  --wait \
-  --timeout 10m0s
-
-# 4. Wait for Vault pod to be Ready
+# 2. Wait for Vault pod to be Ready
 log "Waiting for vault-0 pod to be ready..."
 kubectl wait --for=condition=Ready pod/vault-0 -n vault --timeout=120s
 
