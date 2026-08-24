@@ -433,12 +433,22 @@ export default function BuyerDashboard() {
               <button onClick={() => setIsTransferOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">
                 Cancel
               </button>
-              <button 
-                onClick={() => {
-                  alert("Funds transferred successfully!");
-                  setIsTransferOpen(false);
-                  setRoutingNumber("");
-                }} 
+              <button
+                onClick={async () => {
+                  try {
+                    await api.fundEscrow(actionTx.id, actionTx.totalAmount);
+                    const newTx = await api.getTransactions();
+                    setTransactions(newTx.filter(t => t.buyerId === user?.id));
+                    const newEscrow = await api.getEscrow(actionTx.id);
+                    setEscrows(prev => ({ ...prev, [actionTx.id]: newEscrow }));
+                    alert("Funds transferred successfully!");
+                    setIsTransferOpen(false);
+                    setRoutingNumber("");
+                  } catch (e) {
+                    console.error(e);
+                    alert("Failed to transfer funds");
+                  }
+                }}
                 disabled={!routingNumber}
                 className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                 Transfer Now
@@ -506,13 +516,22 @@ export default function BuyerDashboard() {
             </div>
             <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex flex-col sm:flex-row justify-end gap-3">
               <button onClick={() => setIsReviewOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">Cancel</button>
-              <button 
-                onClick={() => {
-                  alert("Document signed and approved successfully!");
-                  setIsReviewOpen(false);
-                  setSignature("");
-                  setIsAgreed(false);
-                }} 
+              <button
+                onClick={async () => {
+                  if (!actionTx) return;
+                  try {
+                    await api.updateTransactionStatus(actionTx.id, 'FUNDED');
+                    const newTx = await api.getTransactions();
+                    setTransactions(newTx.filter(t => t.buyerId === user?.id));
+                    alert("Document signed and approved successfully!");
+                    setIsReviewOpen(false);
+                    setSignature("");
+                    setIsAgreed(false);
+                  } catch (e) {
+                    console.error(e);
+                    alert("Failed to approve document");
+                  }
+                }}
                 disabled={!signature || !isAgreed}
                 className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                 Approve & Sign
