@@ -57,6 +57,9 @@ func (r *SQLPropertyRepository) ListProperties() ([]*Property, error) {
 		}
 		result = append(result, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*Property{}, nil
 	}

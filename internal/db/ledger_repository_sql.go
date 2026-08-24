@@ -124,6 +124,9 @@ func (r *SQLLedgerRepository) ListLogs() ([]*core.AuditEntry, error) {
 		}
 		result = append(result, entry)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*core.AuditEntry{}, nil
 	}

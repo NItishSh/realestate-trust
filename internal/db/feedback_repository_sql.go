@@ -64,6 +64,9 @@ func (r *SQLFeedbackRepository) ListFeedback() ([]*Feedback, error) {
 		}
 		result = append(result, f)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*Feedback{}, nil
 	}

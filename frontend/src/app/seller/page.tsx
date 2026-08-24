@@ -12,6 +12,7 @@ import {
   FileText,
   AlertCircle,
   Plus,
+  X,
   RefreshCw,
   TrendingUp,
   MapPin,
@@ -24,6 +25,14 @@ export default function SellerDashboard() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isListPropertyModalOpen, setIsListPropertyModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [newProperty, setNewProperty] = useState<Partial<Property>>({
+    address: '',
+    description: '',
+    value: 0,
+    thumbnail: ''
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -53,6 +62,20 @@ export default function SellerDashboard() {
     return <div className="flex h-full items-center justify-center text-on-surface-variant"><RefreshCw className="animate-spin w-8 h-8 text-primary"/></div>;
   }
 
+  const handleCreateProperty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProperty.address || !newProperty.description || !newProperty.value) return;
+    try {
+      const prop = await api.createProperty(newProperty);
+      setProperties([...properties, prop]);
+      setIsListPropertyModalOpen(false);
+      setNewProperty({ address: '', description: '', value: 0, thumbnail: '' });
+    } catch (e) {
+      console.error(e);
+      alert('Failed to list property');
+    }
+  };
+
   const activeTx = transactions.filter(tx => tx.status !== 'CLOSED' && tx.status !== 'CANCELLED');
   const securedInEscrow = activeTx.filter(tx => tx.status === 'ESCROW').reduce((acc, tx) => acc + tx.totalAmount, 0);
   const pendingClosing = activeTx.filter(tx => tx.status !== 'ESCROW').reduce((acc, tx) => acc + tx.totalAmount, 0);
@@ -66,7 +89,7 @@ export default function SellerDashboard() {
           <h1 className="text-3xl font-headline font-bold text-on-surface">Seller Dashboard</h1>
           <p className="text-on-surface-variant mt-1">Manage your property listings and incoming escrow funds.</p>
         </div>
-        <button onClick={() => alert("Feature coming soon!")} className="flex items-center gap-2 bg-primary text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
+        <button onClick={() => setIsListPropertyModalOpen(true)} className="flex items-center gap-2 bg-primary text-white font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
           <Plus className="w-4 h-4" /> List New Property
         </button>
       </div>
@@ -255,13 +278,102 @@ export default function SellerDashboard() {
               )}
             </div>
             <div className="p-4 border-t border-outline-variant bg-surface">
-              <button onClick={() => alert("Feature coming soon!")} className="w-full py-2.5 bg-white border border-outline-variant rounded-lg text-sm font-medium text-on-surface hover:bg-surface-variant transition-colors shadow-sm">
+              <button onClick={() => setIsHistoryModalOpen(true)} className="w-full py-2.5 bg-white border border-outline-variant rounded-lg text-sm font-medium text-on-surface hover:bg-surface-variant transition-colors shadow-sm">
                 View Complete History
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {isListPropertyModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-outline-variant">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
+                <Plus className="w-6 h-6 text-primary" />
+                List New Property
+              </h3>
+              <button onClick={() => setIsListPropertyModalOpen(false)} className="p-2 hover:bg-surface-container rounded-full transition-colors">
+                <X className="w-5 h-5 text-on-surface-variant" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateProperty} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-1">Address *</label>
+                <input required type="text" className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2.5 text-on-surface" placeholder="e.g. 123 Ocean View Dr, Malibu" value={newProperty.address} onChange={e => setNewProperty({...newProperty, address: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-1">Description *</label>
+                <textarea required className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2.5 text-on-surface min-h-[80px]" placeholder="e.g. Luxury beachfront villa" value={newProperty.description} onChange={e => setNewProperty({...newProperty, description: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-1">Value (USD) *</label>
+                <input required type="number" min="1" step="1" className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2.5 text-on-surface" placeholder="e.g. 4500000" value={newProperty.value || ''} onChange={e => setNewProperty({...newProperty, value: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-1">Thumbnail URL</label>
+                <input type="text" className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2.5 text-on-surface" placeholder="e.g. https://images.unsplash.com/..." value={newProperty.thumbnail} onChange={e => setNewProperty({...newProperty, thumbnail: e.target.value})} />
+                <p className="text-xs text-on-surface-variant mt-1">Leave empty for a default placeholder image.</p>
+              </div>
+              
+              <div className="flex gap-3 mt-6 pt-6 border-t border-outline-variant">
+                <button type="button" onClick={() => setIsListPropertyModalOpen(false)} className="flex-1 py-2.5 bg-white border border-outline-variant rounded-lg text-on-surface font-medium hover:bg-surface-variant transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" className="flex-1 py-2.5 bg-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
+                  List Property
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-outline-variant max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 shrink-0">
+              <h3 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
+                <Clock className="w-6 h-6 text-primary" />
+                Complete Transaction History
+              </h3>
+              <button onClick={() => setIsHistoryModalOpen(false)} className="p-2 hover:bg-surface-container rounded-full transition-colors">
+                <X className="w-5 h-5 text-on-surface-variant" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3">
+              {transactions.length > 0 ? (
+                transactions.map(tx => (
+                  <div key={tx.id} className="p-4 border border-outline-variant rounded-xl flex items-center justify-between hover:bg-surface-container-lowest transition-colors">
+                    <div>
+                      <h4 className="font-semibold text-on-surface">TX {tx.id.substring(0,8)}</h4>
+                      <p className="text-sm text-on-surface-variant mt-0.5">Property ID: {tx.propertyId}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-on-surface">${tx.totalAmount.toLocaleString()}</p>
+                      <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${
+                        tx.status === 'CLOSED' ? 'bg-surface-variant text-on-surface-variant' :
+                        tx.status === 'ESCROW' ? 'bg-success-container text-on-success-container' :
+                        tx.status === 'FUNDED' ? 'bg-primary-container text-on-primary-container' :
+                        'bg-warning-container text-on-warning-container'
+                      }`}>
+                        {tx.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center text-on-surface-variant">
+                  No historical transactions found.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

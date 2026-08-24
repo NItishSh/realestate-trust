@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 )
 
@@ -38,6 +39,48 @@ func (h *PropertyHandler) GetProperty(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, p)
+}
+
+type CreatePropertyRequest struct {
+	Address     string  `json:"address"`
+	Description string  `json:"description"`
+	Value       float64 `json:"value"`
+	Thumbnail   string  `json:"thumbnail"`
+}
+
+func (h *PropertyHandler) CreateProperty(c *echo.Context) error {
+	var req CreatePropertyRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.Address == "" || req.Description == "" || req.Value <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing required fields"})
+	}
+
+	userToken, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: missing or invalid token"})
+	}
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: invalid claims"})
+	}
+	ownerID, ok := claims["sub"].(string)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: user ID missing from claims"})
+	}
+
+	if req.Thumbnail == "" {
+		req.Thumbnail = "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800"
+	}
+
+	p, err := h.Repo.CreateProperty(req.Address, req.Description, req.Value, req.Thumbnail, ownerID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create property"})
+	}
+
+	return c.JSON(http.StatusCreated, p)
 }
 
 // UnlockDocuments Request Payload

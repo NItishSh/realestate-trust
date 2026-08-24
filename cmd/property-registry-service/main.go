@@ -73,6 +73,7 @@ func main() {
 		ContextKey: "user",
 	}))
 	api.GET("/properties", handler.ListProperties)
+	api.POST("/properties", handler.CreateProperty)
 	api.GET("/properties/:id", handler.GetProperty)
 	api.POST("/properties/:id/documents/unlock", handler.UnlockDocuments)
 	api.POST("/properties/:id/insurance/verify", handler.VerifyTitleInsurance)

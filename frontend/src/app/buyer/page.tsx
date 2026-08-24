@@ -14,7 +14,8 @@ import {
   PenTool,
   Search,
   Key,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { api, Transaction, Property, EscrowAccount, User } from '@/lib/api';
 
@@ -29,6 +30,11 @@ export default function BuyerDashboard() {
   const [isStatementOpen, setIsStatementOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+
+  // Form states
+  const [routingNumber, setRoutingNumber] = useState("");
+  const [signature, setSignature] = useState("");
+  const [isAgreed, setIsAgreed] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -268,8 +274,11 @@ export default function BuyerDashboard() {
         })}
 
         {activeTx.length === 0 && (
-          <div className="col-span-1 md:col-span-12 p-8 text-center text-gray-500 bg-white rounded-xl border border-outline-variant shadow-sm border-dashed">
-            You have no active property purchases at this time.
+          <div className="col-span-1 md:col-span-12 p-8 text-center bg-white rounded-xl border border-outline-variant shadow-sm border-dashed flex flex-col items-center justify-center">
+            <p className="text-on-surface-variant mb-4">You have no active property purchases at this time.</p>
+            <button className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+              Browse Marketplace
+            </button>
           </div>
         )}
 
@@ -330,7 +339,7 @@ export default function BuyerDashboard() {
             <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface">
               <h3 className="text-xl font-headline font-bold text-on-surface">Escrow Account Statement</h3>
               <button onClick={() => setIsStatementOpen(false)} className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors">
-                <AlertCircle className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -392,7 +401,7 @@ export default function BuyerDashboard() {
             <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface">
               <h3 className="text-xl font-headline font-bold text-on-surface">Transfer Funds to Escrow</h3>
               <button onClick={() => setIsTransferOpen(false)} className="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-colors">
-                <AlertCircle className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -416,7 +425,7 @@ export default function BuyerDashboard() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-on-surface-variant">Routing Number</label>
-                  <input type="text" placeholder="Enter routing number" className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none" />
+                  <input type="text" value={routingNumber} onChange={(e) => setRoutingNumber(e.target.value)} placeholder="Enter routing number" className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
               </div>
             </div>
@@ -424,7 +433,14 @@ export default function BuyerDashboard() {
               <button onClick={() => setIsTransferOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">
                 Cancel
               </button>
-              <button onClick={() => setIsTransferOpen(false)} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity">
+              <button 
+                onClick={() => {
+                  alert("Funds transferred successfully!");
+                  setIsTransferOpen(false);
+                  setRoutingNumber("");
+                }} 
+                disabled={!routingNumber}
+                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                 Transfer Now
               </button>
             </div>
@@ -439,7 +455,7 @@ export default function BuyerDashboard() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
               <h3 className="text-xl font-headline font-bold text-on-surface">Approve Title Transfer</h3>
               <button onClick={() => setIsReviewOpen(false)} className="text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors">
-                <AlertCircle className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -480,17 +496,27 @@ export default function BuyerDashboard() {
                 <h4 className="font-headline font-semibold text-on-surface">Digital Signature</h4>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-on-surface-variant">Type your full name to sign</label>
-                  <input className="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="John D. Smith" type="text" />
+                  <input value={signature} onChange={(e) => setSignature(e.target.value)} className="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="John D. Smith" type="text" />
                 </div>
                 <label className="flex items-start gap-3 cursor-pointer group">
-                  <input className="mt-1 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox" />
+                  <input checked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)} className="mt-1 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox" />
                   <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">I agree to the Electronic Record and Signature Disclosure and understand that my typed name constitutes a legal signature.</span>
                 </label>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex flex-col sm:flex-row justify-end gap-3">
               <button onClick={() => setIsReviewOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">Cancel</button>
-              <button onClick={() => setIsReviewOpen(false)} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity">Approve & Sign</button>
+              <button 
+                onClick={() => {
+                  alert("Document signed and approved successfully!");
+                  setIsReviewOpen(false);
+                  setSignature("");
+                  setIsAgreed(false);
+                }} 
+                disabled={!signature || !isAgreed}
+                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                Approve & Sign
+              </button>
             </div>
           </div>
         </div>

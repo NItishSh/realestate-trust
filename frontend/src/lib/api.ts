@@ -315,6 +315,11 @@ export const api = {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount })
   }, { status: "funding_received" }),
+  updateTransactionStatus: (txId: string, newState: string) => safeFetch<{ status: string }>(`${API_BASE}/api/v1/transactions/${txId}/status`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newState })
+  }, { status: "success" }),
 
   // 3. Financing Engine API mappings
   getLoans: () => safeFetch<Loan[]>(`${API_BASE}/api/v1/loans`, { method: "GET" }, mockLoans),
@@ -349,6 +354,11 @@ export const api = {
   // 6. Property Registry API mappings
   getProperties: () => safeFetch<Property[]>(`${API_BASE}/api/v1/properties`, { method: "GET" }, mockProperties),
   getProperty: (id: string) => safeFetch<Property>(`${API_BASE}/api/v1/properties/${id}`, { method: "GET" }, mockProperties[0]),
+  createProperty: (property: Partial<Property>) => safeFetch<Property>(`${API_BASE}/api/v1/properties`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(property)
+  }, { id: "prop-" + Math.random().toString(36).substr(2, 5), ...property } as Property),
   verifyTitleInsurance: (id: string, insurance: { company: string; policy: string }) => safeFetch<Property>(`${API_BASE}/api/v1/properties/${id}/insurance/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

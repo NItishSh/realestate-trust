@@ -220,6 +220,18 @@ spec:
     repoURL: "https://kedacore.github.io/charts"
     targetRevision: "2.14.2"
     chart: keda
+    helm:
+      values: |
+        podAnnotations:
+          keda:
+            traffic.sidecar.istio.io/excludeInboundPorts: "9666"
+            traffic.sidecar.istio.io/excludeOutboundPorts: "9443,6443"
+          metricsAdapter:
+            traffic.sidecar.istio.io/excludeInboundPorts: "6443"
+            traffic.sidecar.istio.io/excludeOutboundPorts: "9666,9443"
+          webhooks:
+            traffic.sidecar.istio.io/excludeInboundPorts: "9443"
+            traffic.sidecar.istio.io/excludeOutboundPorts: "9666,6443"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: keda

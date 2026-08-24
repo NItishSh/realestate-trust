@@ -14,7 +14,8 @@ import {
   RefreshCw,
   MoreVertical,
   Activity,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { api, Transaction, Property, EscrowAccount, User } from '@/lib/api';
 
@@ -24,6 +25,8 @@ export default function AdminDashboard() {
   const [properties, setProperties] = useState<Record<string, Property>>({});
   const [escrows, setEscrows] = useState<Record<string, EscrowAccount>>({});
   const [loading, setLoading] = useState(true);
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -68,6 +71,23 @@ export default function AdminDashboard() {
   if (loading) {
     return <div className="flex h-full items-center justify-center text-on-surface-variant"><RefreshCw className="animate-spin w-8 h-8 text-primary"/></div>;
   }
+
+  const handleReleaseFunds = async (txId: string) => {
+    try {
+      await api.updateTransactionStatus(txId, 'CLOSED');
+      // Refresh transactions
+      const allTx = await api.getTransactions();
+      setTransactions(allTx);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to release funds');
+    }
+  };
+
+  const handleViewDetails = (txId: string) => {
+    setSelectedTxId(txId);
+    setIsDetailsModalOpen(true);
+  };
 
   const activeTx = transactions.filter(tx => tx.status !== 'CLOSED' && tx.status !== 'CANCELLED');
   const closingSoon = activeTx.filter(tx => tx.status === 'ESCROW').length;
@@ -196,11 +216,11 @@ export default function AdminDashboard() {
                     </td>
                     <td className="p-4 text-right">
                       {tx.status === 'ESCROW' ? (
-                        <button onClick={() => alert("Feature coming soon!")} className="bg-primary text-white text-xs font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
+                        <button onClick={() => handleReleaseFunds(tx.id)} className="bg-primary text-white text-xs font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity shadow-sm">
                           Release Funds
                         </button>
                       ) : (
-                        <button onClick={() => alert("Feature coming soon!")} className="bg-white border border-outline-variant text-on-surface text-xs font-semibold py-2 px-4 rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
+                        <button onClick={() => handleViewDetails(tx.id)} className="bg-white border border-outline-variant text-on-surface text-xs font-semibold py-2 px-4 rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
                           View Details
                         </button>
                       )}
@@ -227,6 +247,50 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {isDetailsModalOpen && selectedTxId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-outline-variant relative">
+            <button onClick={() => setIsDetailsModalOpen(false)} className="absolute top-4 right-4 p-2 hover:bg-surface-container rounded-full transition-colors">
+              <X className="w-5 h-5 text-on-surface-variant" />
+            </button>
+            <h3 className="text-xl font-headline font-bold text-on-surface mb-4">Transaction Details</h3>
+            
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="flex justify-between border-b border-outline-variant pb-2">
+                <span className="font-semibold text-on-surface-variant">Transaction ID</span>
+                <span className="font-mono text-on-surface">{selectedTxId}</span>
+              </div>
+              <div className="flex justify-between border-b border-outline-variant pb-2">
+                <span className="font-semibold text-on-surface-variant">Status</span>
+                <span className="font-bold text-on-surface">{transactions.find(t => t.id === selectedTxId)?.status}</span>
+              </div>
+              <div className="flex justify-between border-b border-outline-variant pb-2">
+                <span className="font-semibold text-on-surface-variant">Buyer ID</span>
+                <span className="text-on-surface">{transactions.find(t => t.id === selectedTxId)?.buyerId}</span>
+              </div>
+              <div className="flex justify-between border-b border-outline-variant pb-2">
+                <span className="font-semibold text-on-surface-variant">Seller ID</span>
+                <span className="text-on-surface">{transactions.find(t => t.id === selectedTxId)?.sellerId}</span>
+              </div>
+              <div className="flex justify-between border-b border-outline-variant pb-2">
+                <span className="font-semibold text-on-surface-variant">Total Amount</span>
+                <span className="font-bold text-on-surface">${transactions.find(t => t.id === selectedTxId)?.totalAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between pb-2">
+                <span className="font-semibold text-on-surface-variant">Escrow Balance</span>
+                <span className="font-bold text-success">${escrows[selectedTxId]?.balance?.toLocaleString() || 0}</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-outline-variant flex justify-end">
+               <button onClick={() => setIsDetailsModalOpen(false)} className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
+                 Close
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

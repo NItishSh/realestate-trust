@@ -198,6 +198,9 @@ func (r *SQLTransactionRepository) ListTransactions() ([]*Transaction, error) {
 		transaction.Status = core.TransactionState(statusStr)
 		result = append(result, transaction)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*Transaction{}, nil
 	}

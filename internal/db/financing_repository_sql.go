@@ -142,6 +142,9 @@ func (r *SQLFinancingRepository) ListLoans() ([]*Loan, error) {
 		}
 		result = append(result, loan)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*Loan{}, nil
 	}

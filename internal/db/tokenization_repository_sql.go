@@ -136,6 +136,9 @@ func (r *SQLTokenizationRepository) ListPools() ([]*core.FractionalPool, error) 
 		}
 		result = append(result, pool)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*core.FractionalPool{}, nil
 	}

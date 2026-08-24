@@ -125,6 +125,7 @@ log "Secrets successfully seeded into Vault KV."
 # 9. Create Application Namespace and Apply ESO CRDs
 log "Applying SecretStore and ExternalSecret specifications..."
 kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
+kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f "${MANIFESTS_DIR}/vault-eso-resources.yaml"
 
 log "Waiting for external secret database syncs..."

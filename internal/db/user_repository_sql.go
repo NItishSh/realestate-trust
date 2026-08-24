@@ -164,6 +164,9 @@ func (r *SQLUserRepository) ListUsers() ([]*User, error) {
 		user.Role = core.UserRole(roleStr)
 		result = append(result, user)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if result == nil {
 		return []*User{}, nil
 	}
