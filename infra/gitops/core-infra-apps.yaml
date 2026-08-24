@@ -1,0 +1,129 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-base
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+  source:
+    repoURL: 'https://istio-release.storage.googleapis.com/charts'
+    targetRevision: 1.22.1
+    chart: base
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istiod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: default
+  source:
+    repoURL: 'https://istio-release.storage.googleapis.com/charts'
+    targetRevision: 1.22.1
+    chart: istiod
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-ingress
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  project: default
+  source:
+    repoURL: 'https://istio-release.storage.googleapis.com/charts'
+    targetRevision: 1.22.1
+    chart: gateway
+    helm:
+      values: |
+        service:
+          type: NodePort
+          ports:
+            - name: http2
+              port: 80
+              targetPort: 80
+              nodePort: 30080
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://helm.releases.hashicorp.com'
+    targetRevision: 0.28.0
+    chart: vault
+    helm:
+      values: |
+        server:
+          dev:
+            enabled: true
+        injector:
+          enabled: false
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: vault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://charts.external-secrets.io'
+    targetRevision: 0.9.18
+    chart: external-secrets
+    helm:
+      values: |
+        installCRDs: true
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: external-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
