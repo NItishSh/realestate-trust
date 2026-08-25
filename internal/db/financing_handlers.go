@@ -3,7 +3,7 @@ package db
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v5"
+	echo "github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 

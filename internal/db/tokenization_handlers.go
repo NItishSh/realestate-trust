@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/labstack/echo/v5"
+	echo "github.com/labstack/echo/v5"
 )
 
 type TokenizationHandler struct {

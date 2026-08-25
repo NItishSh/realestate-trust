@@ -11,8 +11,8 @@ import (
 	"time"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
-	"github.com/labstack/echo/v5"
-	"github.com/labstack/echo/v5/middleware"
+	echo "github.com/labstack/echo/v5"
+	middleware "github.com/labstack/echo/v5/middleware"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 

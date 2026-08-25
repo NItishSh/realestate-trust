@@ -56,6 +56,10 @@ kubectl exec -i vault-0 -n vault -- vault write auth/kubernetes/role/realestate-
   ttl=24h
 
 # 7. Wait for PostgreSQL (deployed by ArgoCD)
+log "Waiting for PostgreSQL to be deployed by ArgoCD..."
+while ! kubectl get statefulset postgres -n realestate-trust > /dev/null 2>&1; do
+  sleep 2
+done
 log "Waiting for PostgreSQL to be ready..."
 sleep 5
 kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s

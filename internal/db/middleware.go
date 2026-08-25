@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v5"
+	echo "github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 

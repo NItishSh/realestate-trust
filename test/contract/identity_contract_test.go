@@ -12,7 +12,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-	"github.com/labstack/echo/v5"
+	echo "github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/db"
 	"github.com/stretchr/testify/assert"

@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v5"
+	jwt "github.com/golang-jwt/jwt/v5"
+	echo "github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 

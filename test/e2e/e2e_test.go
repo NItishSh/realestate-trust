@@ -15,7 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const gatewayURL = "http://localhost:8080/api/v1"
+const (
+	transactionManagerURL = "http://localhost:8080/api/v1"
+	identityServiceURL    = "http://localhost:8081/api/v1"
+)
 
 func TestFullDealLifecycleE2E(t *testing.T) {
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -33,7 +36,7 @@ func TestFullDealLifecycleE2E(t *testing.T) {
 		Role:     core.Seller,
 	})
 
-	req, err := http.NewRequest(http.MethodPost, gatewayURL+"/users", bytes.NewBuffer(registerBody))
+	req, err := http.NewRequest(http.MethodPost, identityServiceURL+"/users", bytes.NewBuffer(registerBody))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -41,7 +44,7 @@ func TestFullDealLifecycleE2E(t *testing.T) {
 	// We only require no error communicating. The actual gateway might be down in our local run,
 	// but this test is meant to run in CI after docker-compose up.
 	if err != nil {
-		t.Skipf("Gateway not reachable, skipping E2E test: %v", err)
+		t.Skipf("Identity Service not reachable, skipping E2E test: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -50,7 +53,8 @@ func TestFullDealLifecycleE2E(t *testing.T) {
 
 	// 2. Health checks for other services
 	healthUrls := []string{
-		gatewayURL + "/health", // assuming gateway routes this somewhere
+		identityServiceURL + "/health",    // checking identity service health
+		transactionManagerURL + "/health", // checking transaction manager health
 	}
 	for _, u := range healthUrls {
 		req, _ := http.NewRequest(http.MethodGet, u, nil)

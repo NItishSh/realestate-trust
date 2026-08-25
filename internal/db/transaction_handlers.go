@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v5"
+	echo "github.com/labstack/echo/v5"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/events"
