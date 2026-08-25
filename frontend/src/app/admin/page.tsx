@@ -255,7 +255,7 @@ export default function AdminDashboard() {
               <X className="w-5 h-5 text-on-surface-variant" />
             </button>
             <h3 className="text-xl font-headline font-bold text-on-surface mb-4">Transaction Details</h3>
-            
+
             <div className="flex flex-col gap-3 text-sm">
               <div className="flex justify-between border-b border-outline-variant pb-2">
                 <span className="font-semibold text-on-surface-variant">Transaction ID</span>
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
                 <span className="font-bold text-success">${escrows[selectedTxId]?.balance?.toLocaleString() || 0}</span>
               </div>
             </div>
-            
+
             <div className="mt-6 pt-4 border-t border-outline-variant flex justify-end">
                <button onClick={() => setIsDetailsModalOpen(false)} className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
                  Close

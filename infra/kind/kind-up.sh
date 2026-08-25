@@ -116,17 +116,11 @@ deploy_helm_local_and_postgres() {
 
 	# Apply Core Infrastructure and Observability via GitOps
 	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/core-infra-apps.yaml"
+	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/core-manifests-app.yaml"
 	kubectl apply -f "${PROJECT_ROOT}/infra/gitops/observability-apps.yaml"
-
-	# Apply Observability Routing Gateway & Istio Gateway
-	kubectl apply -f "${MANIFESTS_DIR}/observability-gateway.yaml"
-	kubectl apply -f "${MANIFESTS_DIR}/istio-gateway.yaml"
 
 	# Configure Vault, ESO, and Deploy PostgreSQL
 	"${SCRIPT_DIR}/deploy-vault-eso.sh"
-
-	# Deploy RabbitMQ
-	kubectl apply -f "${MANIFESTS_DIR}/rabbitmq.yaml"
 
 	log "Waiting for RabbitMQ to be ready..."
 	sleep 5

@@ -55,9 +55,7 @@ kubectl exec -i vault-0 -n vault -- vault write auth/kubernetes/role/realestate-
   policies="realestate-trust-policy" \
   ttl=24h
 
-# 7. Deploy PostgreSQL (to resolve connection verification dependency)
-log "Deploying PostgreSQL database..."
-kubectl apply -f "${MANIFESTS_DIR}/postgres.yaml"
+# 7. Wait for PostgreSQL (deployed by ArgoCD)
 log "Waiting for PostgreSQL to be ready..."
 sleep 5
 kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=300s
@@ -103,11 +101,8 @@ kubectl exec -i vault-0 -n vault -- vault kv put secret/realestate-trust/databas
 kubectl exec -i vault-0 -n vault -- vault kv put secret/realestate-trust/grafana admin-password="dynamic_admin_pass"
 log "Secrets successfully seeded into Vault KV."
 
-# 9. Create Application Namespace and Apply ESO CRDs
-log "Applying SecretStore and ExternalSecret specifications..."
-kubectl apply -f "${MANIFESTS_DIR}/namespace.yaml"
-kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f "${MANIFESTS_DIR}/vault-eso-resources.yaml"
+# 9. Wait for Application Namespace and ESO CRDs (deployed by ArgoCD)
+log "Waiting for SecretStore and ExternalSecret specifications..."
 
 log "Waiting for external secret database syncs..."
 sleep 5

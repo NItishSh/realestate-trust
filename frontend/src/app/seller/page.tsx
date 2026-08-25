@@ -298,7 +298,7 @@ export default function SellerDashboard() {
                 <X className="w-5 h-5 text-on-surface-variant" />
               </button>
             </div>
-            
+
             <form onSubmit={handleCreateProperty} className="flex flex-col gap-4">
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1">Address *</label>
@@ -317,7 +317,7 @@ export default function SellerDashboard() {
                 <input type="text" className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2.5 text-on-surface" placeholder="e.g. https://images.unsplash.com/..." value={newProperty.thumbnail} onChange={e => setNewProperty({...newProperty, thumbnail: e.target.value})} />
                 <p className="text-xs text-on-surface-variant mt-1">Leave empty for a default placeholder image.</p>
               </div>
-              
+
               <div className="flex gap-3 mt-6 pt-6 border-t border-outline-variant">
                 <button type="button" onClick={() => setIsListPropertyModalOpen(false)} className="flex-1 py-2.5 bg-white border border-outline-variant rounded-lg text-on-surface font-medium hover:bg-surface-variant transition-colors">
                   Cancel
@@ -343,7 +343,7 @@ export default function SellerDashboard() {
                 <X className="w-5 h-5 text-on-surface-variant" />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3">
               {transactions.length > 0 ? (
                 transactions.map(tx => (
