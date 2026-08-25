@@ -20,7 +20,7 @@ func (r *SQLTransactionRepository) CreateTransaction(propertyID, buyerID, seller
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	id := "tx-" + propertyID
 	va := "VA-YES-" + propertyID
@@ -134,7 +134,7 @@ func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Update Escrow balance
 	accQuery := `UPDATE escrow_accounts SET balance = balance + $1, updated_at = NOW() WHERE transaction_id = $2`
@@ -176,7 +176,7 @@ func (r *SQLTransactionRepository) ListTransactions() ([]*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []*Transaction
 	for rows.Next() {

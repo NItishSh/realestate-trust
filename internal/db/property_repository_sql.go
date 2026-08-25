@@ -28,7 +28,7 @@ func (r *SQLPropertyRepository) ListProperties() ([]*Property, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []*Property
 	for rows.Next() {

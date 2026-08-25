@@ -30,7 +30,7 @@ func main() {
 			slog.Error("Database connection failed", "err", err)
 			os.Exit(1)
 		}
-		defer dbPool.Close()
+		defer func() { _ = dbPool.Close() }()
 		repo = db.NewSQLTokenizationRepository(dbPool.SQL)
 	} else {
 		slog.Info("DATABASE_URL is empty. Falling back to InMemoryTokenizationRepository.")

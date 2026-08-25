@@ -59,7 +59,7 @@ func (r *SQLTokenizationRepository) BuyTokens(poolID, investorID string, count i
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Get pool and lock row
 	queryPool := `SELECT id, property_id, total_tokens, tokens_sold, token_price FROM fractional_pools WHERE id = $1 FOR UPDATE`
@@ -119,7 +119,7 @@ func (r *SQLTokenizationRepository) ListPools() ([]*core.FractionalPool, error) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []*core.FractionalPool
 	for rows.Next() {

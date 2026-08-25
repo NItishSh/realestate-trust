@@ -35,7 +35,7 @@ func main() {
 		} else {
 			slog.Info("Connected to RabbitMQ successfully!")
 			rabbitConn = conn
-			defer rabbitConn.Close()
+			defer func() { _ = rabbitConn.Close() }()
 		}
 	} else {
 		slog.Warn("RABBITMQ_URL is empty. Running without event publishing.")
@@ -50,7 +50,7 @@ func main() {
 			slog.Error("Database connection failed", "err", err)
 			os.Exit(1)
 		}
-		defer dbPool.Close()
+		defer func() { _ = dbPool.Close() }()
 		repo = db.NewSQLTransactionRepository(dbPool.SQL)
 	} else {
 		slog.Info("DATABASE_URL is empty. Falling back to InMemoryTransactionRepository.")

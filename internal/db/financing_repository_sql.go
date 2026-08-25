@@ -80,7 +80,7 @@ func (r *SQLFinancingRepository) CreateDisbursement(loanID, vaNumber string, amo
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Update loan status to DISBURSED
 	updateQuery := `UPDATE loans SET status = $1, updated_at = NOW() WHERE id = $2`
@@ -123,7 +123,7 @@ func (r *SQLFinancingRepository) ListLoans() ([]*Loan, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []*Loan
 	for rows.Next() {

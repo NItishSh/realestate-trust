@@ -96,7 +96,7 @@ func Publish(ctx context.Context, conn *amqp.Connection, queueName string, event
 	if err != nil {
 		return fmt.Errorf("failed to open channel: %w", err)
 	}
-	defer ch.Close()
+	defer func() { _ = ch.Close() }()
 
 	// Setup queue with DLX/DLQ
 	q, err := setupQueue(ch, queueName)
@@ -185,7 +185,7 @@ func Consume(conn *amqp.Connection, queueName string, handler func(context.Conte
 	}
 
 	go func() {
-		defer ch.Close()
+		defer func() { _ = ch.Close() }()
 		slog.Info("Started consuming events from RabbitMQ", "queue", queueName)
 		for d := range msgs {
 			var event TransactionEvent

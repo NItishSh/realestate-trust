@@ -144,7 +144,7 @@ func (r *SQLUserRepository) ListUsers() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var result []*User
 	for rows.Next() {
