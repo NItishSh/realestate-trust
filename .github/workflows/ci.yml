@@ -57,9 +57,9 @@ jobs:
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
 
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
+      uses: golangci/golangci-lint-action@v6
       with:
-        version: v1.54
+        version: v1.61.0
 
     - name: Install Helm
       uses: azure/setup-helm@v4
