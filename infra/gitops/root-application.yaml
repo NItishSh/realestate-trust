@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/realestate-trust/monorepo.git'
+    repoURL: 'https://github.com/NItishSh/realestate-trust.git'
     targetRevision: HEAD
     path: infra/gitops # Path to our service declarations
   destination:
