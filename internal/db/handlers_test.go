@@ -162,7 +162,7 @@ func TestCorrelationIDMiddleware(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	e.GET("/test", func(c *echo.Context) error {
-		cid := c.Get(CorrelationIDContextKey).(string)
+		cid := c.Get(string(CorrelationIDContextKey)).(string)
 		if cid != "custom-correlation-id" {
 			t.Errorf("expected correlation id custom-correlation-id; got %s", cid)
 		}

@@ -24,7 +24,7 @@ func TestRabbitMQ_CorrelationIDPropagation(t *testing.T) {
 	const expectedCorrelationID = "test-correlation-12345"
 
 	// Create context with correlation_id
-	ctx := context.WithValue(context.Background(), "correlation_id", expectedCorrelationID)
+	ctx := context.WithValue(context.Background(), CorrelationIDContextKey, expectedCorrelationID)
 
 	event := TransactionEvent{
 		ID:        "evt-test-123",

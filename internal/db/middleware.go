@@ -58,7 +58,10 @@ func RBACMiddleware(allowedRoles ...core.UserRole) echo.MiddlewareFunc {
 }
 
 const CorrelationIDHeader = "X-Correlation-ID"
-const CorrelationIDContextKey = "correlation_id"
+
+type contextKey string
+
+const CorrelationIDContextKey contextKey = "correlation_id"
 
 // CorrelationIDMiddleware extracts or generates a Request/Correlation ID
 func CorrelationIDMiddleware() echo.MiddlewareFunc {
@@ -71,7 +74,7 @@ func CorrelationIDMiddleware() echo.MiddlewareFunc {
 			}
 
 			// Store in Echo context
-			c.Set(CorrelationIDContextKey, cid)
+			c.Set(string(CorrelationIDContextKey), cid)
 
 			// Propagate into Request Context
 			ctx := context.WithValue(req.Context(), CorrelationIDContextKey, cid)

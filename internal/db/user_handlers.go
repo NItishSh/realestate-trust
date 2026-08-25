@@ -231,7 +231,7 @@ func (h *UserHandler) DeleteUser(c *echo.Context) error {
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: invalid claims"})
 	}
-	tokenUserID, ok := claims["sub"].(string)
+	tokenUserID, _ := claims["sub"].(string)
 	tokenRole, _ := claims["role"].(string)
 
 	if tokenUserID != userID && tokenRole != "ADMIN" {
