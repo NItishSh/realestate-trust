@@ -46,7 +46,7 @@ func TestFullDealLifecycleE2E(t *testing.T) {
 	if err != nil {
 		t.Skipf("Identity Service not reachable, skipping E2E test: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Just asserting the gateway responded with something (like 201 Created or 409 Conflict if already exists)
 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, resp.StatusCode, "Expected 201 or 409 from user registration")

@@ -166,7 +166,7 @@ func (h *PropertyHandler) VerifyTitleInsurance(c *echo.Context) error {
 	if postErr != nil {
 		fmt.Printf("Error sending ledger log: %v\n", postErr)
 	} else {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	return c.JSON(http.StatusOK, p)
@@ -209,7 +209,7 @@ func (h *PropertyHandler) UpdatePropertyDetails(c *echo.Context) error {
 	if postErr != nil {
 		fmt.Printf("Error sending ledger log: %v\n", postErr)
 	} else {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	return c.JSON(http.StatusOK, p)

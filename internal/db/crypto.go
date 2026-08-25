@@ -86,7 +86,7 @@ func encryptWithVault(addr, token, plaintext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New("vault encrypt request failed with status: " + resp.Status)
@@ -128,7 +128,7 @@ func decryptWithVault(addr, token, ciphertext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New("vault decrypt request failed with status: " + resp.Status)

@@ -93,7 +93,7 @@ func TestSQLLedgerRepository_Idempotency(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	repo := NewSQLLedgerRepository(db)
 

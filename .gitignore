@@ -41,4 +41,4 @@ coverage.html
 *.pem
 *.key
 *.crt
-re-cli
+/re-cli

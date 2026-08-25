@@ -18,13 +18,13 @@ func TestRabbitMQ_CorrelationIDPropagation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	const queueName = "test-correlation-queue"
 	const expectedCorrelationID = "test-correlation-12345"
 
 	// Create context with correlation_id
-	ctx := context.WithValue(context.Background(), "correlation_id", expectedCorrelationID)
+	ctx := context.WithValue(context.Background(), CorrelationIDContextKey, expectedCorrelationID)
 
 	event := TransactionEvent{
 		ID:        "evt-test-123",

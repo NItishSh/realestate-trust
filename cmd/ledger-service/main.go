@@ -36,7 +36,7 @@ func main() {
 			slog.Error("Database connection failed", "err", err)
 			os.Exit(1)
 		}
-		defer dbPool.Close()
+		defer func() { _ = dbPool.Close() }()
 		repo = db.NewSQLLedgerRepository(dbPool.SQL)
 	} else {
 		slog.Info("DATABASE_URL is empty. Falling back to InMemoryLedgerRepository.")
@@ -59,7 +59,7 @@ func main() {
 		} else {
 			slog.Info("Connected to RabbitMQ successfully!")
 			rabbitConn = conn
-			defer rabbitConn.Close()
+			defer func() { _ = rabbitConn.Close() }()
 
 			// Start RabbitMQ background consumer
 			err = events.Consume(rabbitConn, "transaction-events", func(ctx context.Context, event events.TransactionEvent) error {

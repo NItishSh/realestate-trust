@@ -10,6 +10,10 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+type contextKey string
+
+const CorrelationIDContextKey contextKey = "correlation_id"
+
 type TransactionEvent struct {
 	ID        string    `json:"id"`
 	Action    string    `json:"action"`
@@ -96,7 +100,7 @@ func Publish(ctx context.Context, conn *amqp.Connection, queueName string, event
 	if err != nil {
 		return fmt.Errorf("failed to open channel: %w", err)
 	}
-	defer ch.Close()
+	defer func() { _ = ch.Close() }()
 
 	// Setup queue with DLX/DLQ
 	q, err := setupQueue(ch, queueName)
@@ -121,7 +125,7 @@ func Publish(ctx context.Context, conn *amqp.Connection, queueName string, event
 
 	cid := ""
 	if ctx != nil {
-		if val, ok := ctx.Value("correlation_id").(string); ok {
+		if val, ok := ctx.Value(CorrelationIDContextKey).(string); ok {
 			cid = val
 		}
 	}
@@ -166,7 +170,7 @@ func Consume(conn *amqp.Connection, queueName string, handler func(context.Conte
 	// Setup queue with DLX/DLQ
 	q, err := setupQueue(ch, queueName)
 	if err != nil {
-		ch.Close()
+		_ = ch.Close()
 		return fmt.Errorf("failed to setup queue: %w", err)
 	}
 
@@ -180,12 +184,12 @@ func Consume(conn *amqp.Connection, queueName string, handler func(context.Conte
 		nil,    // args
 	)
 	if err != nil {
-		ch.Close()
+		_ = ch.Close()
 		return fmt.Errorf("failed to start consuming: %w", err)
 	}
 
 	go func() {
-		defer ch.Close()
+		defer func() { _ = ch.Close() }()
 		slog.Info("Started consuming events from RabbitMQ", "queue", queueName)
 		for d := range msgs {
 			var event TransactionEvent
@@ -204,7 +208,7 @@ func Consume(conn *amqp.Connection, queueName string, handler func(context.Conte
 				cid = string(valBytes)
 			}
 
-			ctx := context.WithValue(context.Background(), "correlation_id", cid)
+			ctx := context.WithValue(context.Background(), CorrelationIDContextKey, cid)
 
 			slog.InfoContext(ctx, "Event received from RabbitMQ", "queue", queueName, "action", event.Action, "id", event.ID)
 			if err := handler(ctx, event); err != nil {
