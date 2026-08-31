@@ -17,7 +17,7 @@ help: ## Show this help message
 	@echo -e "$(COLOR_TITLE) RealEstate Trust - Development & Automation Makefile   $(COLOR_RESET)"
 	@echo -e "$(COLOR_TITLE)=======================================================$(COLOR_RESET)"
 	@echo -e "Usage: $(COLOR_INFO)make <target>$(COLOR_RESET)\n"
-	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  $(COLOR_INFO)%-22s$(COLOR_RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  $(COLOR_INFO)%-26s$(COLOR_RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 # ==============================================================================
 # Dependency Management & Setup
@@ -43,7 +43,7 @@ deps-frontend: ## Install frontend npm dependencies
 .PHONY: deps-tools
 deps-tools: ## Check if required development tools are installed on host
 	@echo -e "$(COLOR_INFO)Checking local toolchain...$(COLOR_RESET)"
-	@tools="go docker terraform helm kind golangci-lint hadolint trivy checkov tflint pre-commit"; \
+	@tools="go docker terraform helm kind golangci-lint hadolint trivy checkov tflint pre-commit kubectl"; \
 	for tool in $$tools; do \
 		if command -v $$tool >/dev/null 2>&1; then \
 			echo -e "  [$(COLOR_SUCCESS)OK$(COLOR_RESET)] $$tool ($$(command -v $$tool))"; \
@@ -107,6 +107,30 @@ fmt: ## Format Go code and Terraform files
 	terraform -chdir=infra/terraform fmt
 
 # ==============================================================================
+# Security & Vulnerability Scanning
+# ==============================================================================
+
+.PHONY: scan-vuln
+scan-vuln: ## Scan filesystem for package vulnerabilities using Trivy
+	@echo -e "$(COLOR_INFO)Scanning repo for high/critical vulnerabilities...$(COLOR_RESET)"
+	trivy fs --severity HIGH,CRITICAL .
+
+.PHONY: scan-secrets
+scan-secrets: ## Scan filesystem for unencrypted secrets using Trivy
+	@echo -e "$(COLOR_INFO)Scanning repo for exposed secrets...$(COLOR_RESET)"
+	trivy fs --security-checks secret .
+
+.PHONY: scan-docker
+scan-docker: ## Scan built microservice container images for vulnerabilities
+	@echo -e "$(COLOR_INFO)Scanning container images with Trivy...$(COLOR_RESET)"
+	@for svc in $(SERVICES); do \
+		if [ "$$svc" != "re-cli" ]; then \
+			echo -e "Scanning $$svc:latest..."; \
+			trivy image --severity HIGH,CRITICAL $$svc:latest || true; \
+		fi; \
+	done
+
+# ==============================================================================
 # Build Binaries & Images
 # ==============================================================================
 
@@ -155,7 +179,7 @@ test-contract: ## Run contract tests
 	go test -v ./test/contract/...
 
 # ==============================================================================
-# Docker Compose Management
+# Docker Compose & Database Helpers
 # ==============================================================================
 
 .PHONY: compose-up
@@ -176,6 +200,11 @@ compose-logs: ## Follow Docker Compose container logs
 compose-ps: ## List running Docker Compose services
 	docker compose ps
 
+.PHONY: db-psql
+db-psql: ## Open interactive psql shell into Docker Compose postgres container
+	@echo -e "$(COLOR_INFO)Connecting to PostgreSQL...$(COLOR_RESET)"
+	docker compose exec postgres psql -U postgres -d postgres
+
 # ==============================================================================
 # Kubernetes / Kind & GitOps Cluster Management
 # ==============================================================================
@@ -195,10 +224,44 @@ cluster-status: ## Show status of all pods across all namespaces
 	@echo -e "$(COLOR_INFO)Cluster Pod Status:$(COLOR_RESET)"
 	kubectl get pods -A
 
-.PHONY: argocd-apps
+.PHONY: cluster-apps
 cluster-apps: ## List all ArgoCD application statuses
 	@echo -e "$(COLOR_INFO)ArgoCD Applications:$(COLOR_RESET)"
 	kubectl get applications.argoproj.io -n argocd
+
+# ==============================================================================
+# Cluster Access, Credentials & Port-Forwarding
+# ==============================================================================
+
+.PHONY: argocd-password
+argocd-password: ## Fetch ArgoCD admin password from Kubernetes secret
+	@echo -e "$(COLOR_INFO)ArgoCD Admin Password:$(COLOR_RESET)"
+	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+
+.PHONY: port-forward-argocd
+port-forward-argocd: ## Port-forward ArgoCD server to localhost:8080
+	@echo -e "$(COLOR_INFO)Port-forwarding ArgoCD UI on https://localhost:8080 (admin / run 'make argocd-password')...$(COLOR_RESET)"
+	kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+.PHONY: port-forward-grafana
+port-forward-grafana: ## Port-forward Grafana dashboard to localhost:3001
+	@echo -e "$(COLOR_INFO)Port-forwarding Grafana UI on http://localhost:3001...$(COLOR_RESET)"
+	kubectl port-forward svc/grafana -n observability 3001:80
+
+.PHONY: port-forward-keycloak
+port-forward-keycloak: ## Port-forward Keycloak UI to localhost:8088
+	@echo -e "$(COLOR_INFO)Port-forwarding Keycloak UI on http://localhost:8088 (admin / admin)...$(COLOR_RESET)"
+	kubectl port-forward svc/keycloakx-http -n realestate-trust 8088:80
+
+.PHONY: port-forward-kiali
+port-forward-kiali: ## Port-forward Kiali Istio console to localhost:20001
+	@echo -e "$(COLOR_INFO)Port-forwarding Kiali UI on http://localhost:20001...$(COLOR_RESET)"
+	kubectl port-forward svc/kiali -n istio-system 20001:20001
+
+.PHONY: port-forward-vault
+port-forward-vault: ## Port-forward HashiCorp Vault to localhost:8200
+	@echo -e "$(COLOR_INFO)Port-forwarding Vault on http://localhost:8200...$(COLOR_RESET)"
+	kubectl port-forward svc/vault -n vault 8200:8200
 
 # ==============================================================================
 # Clean & Housekeeping
