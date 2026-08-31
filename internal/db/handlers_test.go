@@ -208,7 +208,7 @@ func TestDeleteUser(t *testing.T) {
 		w := httptest.NewRecorder()
 		c := e.NewContext(req, w)
 		c.SetPathValues(echo.PathValues{
-			{Name: "id", Value: "usr-user-to-delete@example.com"},
+			echo.PathValue{Name: "id", Value: "usr-user-to-delete@example.com"},
 		})
 		c.Set("user", token)
 
@@ -232,7 +232,7 @@ func TestDeleteUser(t *testing.T) {
 		w := httptest.NewRecorder()
 		c := e.NewContext(req, w)
 		c.SetPathValues(echo.PathValues{
-			{Name: "id", Value: "usr-user-to-delete@example.com"},
+			echo.PathValue{Name: "id", Value: "usr-user-to-delete@example.com"},
 		})
 		c.Set("user", token)
 
