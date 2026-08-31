@@ -68,17 +68,14 @@ func main() {
 
 	// Optional JWT verification: if authorization header is provided, it parses it
 	jwtConfig := echojwt.Config{
+		KeyFunc:    db.GetJWTKeyFunc(),
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}
 
-	// We can choose to make it optional or required. Let's make it optional for feedback submission
-	// but required for listing feedback (collation). Actually, to be safe, let's allow anyone authenticated
-	// to submit feedback, and only admins to list feedback.
-
-	// Optional JWT middleware for POST (so anonymous users can also send feedback if desired,
-	// but we'll extract user ID if they are logged in)
+	// Optional JWT middleware for POST
 	optionalJWT := echojwt.WithConfig(echojwt.Config{
+		KeyFunc:    db.GetJWTKeyFunc(),
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 		ErrorHandler: func(c *echo.Context, err error) error {

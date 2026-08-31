@@ -16,6 +16,7 @@ data:
         CREATE DATABASE ledger_db;
         CREATE DATABASE properties_db;
         CREATE DATABASE tokenization_db;
+        CREATE DATABASE keycloak_db;
     EOSQL
 ---
 # PostgreSQL Service (headless for StatefulSet)

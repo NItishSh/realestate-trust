@@ -1,0 +1,223 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-config
+  namespace: realestate-trust
+data:
+  realestate-trust-realm.json: |
+    {
+      "realm": "realestate-trust",
+      "enabled": true,
+      "displayName": "Real Estate Trust",
+      "sslRequired": "NONE",
+      "registrationAllowed": true,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": true,
+      "roles": {
+        "realm": [
+          { "name": "BUYER", "description": "Property Buyer" },
+          { "name": "SELLER", "description": "Property Seller" },
+          { "name": "BROKER", "description": "Real Estate Broker" },
+          { "name": "OFFICER", "description": "Compliance / Title Officer" },
+          { "name": "ADMIN", "description": "Platform Administrator" }
+        ]
+      },
+      "clients": [
+        {
+          "clientId": "frontend",
+          "name": "Real Estate Frontend Client",
+          "enabled": true,
+          "publicClient": true,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": true,
+          "serviceAccountsEnabled": false,
+          "redirectUris": [
+            "http://localhost:3000/*",
+            "http://localhost:8080/*",
+            "*"
+          ],
+          "webOrigins": ["*"]
+        },
+        {
+          "clientId": "microservices",
+          "name": "Backend Microservices Client",
+          "enabled": true,
+          "bearerOnly": true
+        }
+      ],
+      "users": [
+        {
+          "username": "aryan.dev@realestate.in",
+          "email": "aryan.dev@realestate.in",
+          "firstName": "Aryan",
+          "lastName": "Dev",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["BUYER"]
+        },
+        {
+          "username": "priya.sharma@realestate.in",
+          "email": "priya.sharma@realestate.in",
+          "firstName": "Priya",
+          "lastName": "Sharma",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["SELLER"]
+        },
+        {
+          "username": "ravi.kumar@realestate.in",
+          "email": "ravi.kumar@realestate.in",
+          "firstName": "Ravi",
+          "lastName": "Kumar",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["BROKER"]
+        },
+        {
+          "username": "officer@realestate.in",
+          "email": "officer@realestate.in",
+          "firstName": "Compliance",
+          "lastName": "Officer",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["OFFICER"]
+        },
+        {
+          "username": "admin@realestate.in",
+          "email": "admin@realestate.in",
+          "firstName": "System",
+          "lastName": "Admin",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["ADMIN"]
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: realestate-trust
+  labels:
+    app: keycloak
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: keycloak
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: realestate-trust
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:24.0.5
+          args: ["start-dev", "--import-realm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "admin"
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres:5432/keycloak_db"
+            - name: KC_DB_USERNAME
+              value: "postgres"
+            - name: KC_DB_PASSWORD
+              value: "postgres"
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_METRICS_ENABLED
+              value: "true"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: "/"
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import/realestate-trust-realm.json
+              subPath: realestate-trust-realm.json
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+      volumes:
+        - name: realm-import
+          configMap:
+            name: keycloak-realm-config

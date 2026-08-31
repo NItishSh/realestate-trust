@@ -71,6 +71,7 @@ func main() {
 
 	api := e.Group("/api/v1")
 	api.Use(echojwt.WithConfig(echojwt.Config{
+		KeyFunc:    db.GetJWTKeyFunc(),
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}))
