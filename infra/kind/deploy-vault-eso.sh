@@ -109,11 +109,18 @@ kubectl exec -i vault-0 -n vault -- vault kv put secret/realestate-trust/databas
 kubectl exec -i vault-0 -n vault -- vault kv put secret/realestate-trust/grafana admin-password="dynamic_admin_pass"
 log "Secrets successfully seeded into Vault KV."
 
-# 9. Wait for Application Namespace and ESO CRDs (deployed by ArgoCD)
-log "Waiting for SecretStore and ExternalSecret specifications..."
+# 9. Apply SecretStores and ExternalSecrets
+log "Ensuring namespaces and applying SecretStores & ExternalSecrets..."
+kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace realestate-trust --dry-run=client -o yaml | kubectl apply -f -
+
+log "Waiting for External Secrets Operator webhook to be ready..."
+kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=external-secrets-webhook -n external-secrets --timeout=180s
+
+log "Applying vault-eso-resources.yaml..."
+kubectl apply -f "${SCRIPT_DIR}/eso-manifests/vault-eso-resources.yaml"
 
 log "Waiting for external secret database syncs..."
-sleep 5
 ext_secrets=(
   "identity-service-db-secret-sync"
   "transaction-manager-db-secret-sync"
@@ -123,11 +130,9 @@ ext_secrets=(
   "property-registry-service-db-secret-sync"
 )
 for es in "${ext_secrets[@]}"; do
-  log "Waiting for ExternalSecret ${es} to be created by ArgoCD..."
-  while ! kubectl get externalsecret/"${es}" -n realestate-trust > /dev/null 2>&1; do
-    sleep 3
-  done
-  kubectl wait --for=condition=Ready externalsecret/"${es}" -n realestate-trust --timeout=300s
+  kubectl wait --for=condition=Ready externalsecret/"${es}" -n realestate-trust --timeout=60s
 done
+
+kubectl wait --for=condition=Ready externalsecret/grafana-admin-secret-sync -n observability --timeout=60s
 
 log "Vault and External Secrets Operator successfully configured!"

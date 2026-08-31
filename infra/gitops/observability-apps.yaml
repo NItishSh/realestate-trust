@@ -21,6 +21,11 @@ spec:
             type: filesystem
         singleBinary:
           replicas: 1
+        monitoring:
+          selfMonitoring:
+            enabled: false
+            grafanaAgent:
+              installOperator: false
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: observability
@@ -236,14 +241,11 @@ spec:
       values: |
         podAnnotations:
           keda:
-            traffic.sidecar.istio.io/excludeInboundPorts: "9666"
-            traffic.sidecar.istio.io/excludeOutboundPorts: "9443,6443"
+            sidecar.istio.io/inject: "false"
           metricsAdapter:
-            traffic.sidecar.istio.io/excludeInboundPorts: "6443"
-            traffic.sidecar.istio.io/excludeOutboundPorts: "9666,9443"
+            sidecar.istio.io/inject: "false"
           webhooks:
-            traffic.sidecar.istio.io/excludeInboundPorts: "9443"
-            traffic.sidecar.istio.io/excludeOutboundPorts: "9666,6443"
+            sidecar.istio.io/inject: "false"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: keda
