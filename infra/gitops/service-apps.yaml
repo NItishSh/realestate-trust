@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -87,7 +87,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -183,7 +183,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -272,7 +272,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -337,7 +337,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
