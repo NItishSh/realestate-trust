@@ -27,6 +27,8 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [isListPropertyModalOpen, setIsListPropertyModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isReviewInspectionOpen, setIsReviewInspectionOpen] = useState(false);
+  const [selectedActionTxId, setSelectedActionTxId] = useState<string | null>(null);
   const [newProperty, setNewProperty] = useState<Partial<Property>>({
     address: '',
     description: '',
@@ -143,7 +145,13 @@ export default function SellerDashboard() {
                   </div>
                 </div>
               </div>
-              <button className="bg-white border border-outline-variant text-on-surface font-medium px-4 py-2.5 rounded-lg hover:bg-surface-variant transition-colors w-full mt-auto shadow-sm">
+              <button
+                onClick={() => {
+                  setSelectedActionTxId(activeTx[0].id);
+                  setIsReviewInspectionOpen(true);
+                }}
+                className="bg-white border border-outline-variant text-on-surface font-medium px-4 py-2.5 rounded-lg hover:bg-surface-variant transition-colors w-full mt-auto shadow-sm"
+              >
                 Review & Respond
               </button>
             </div>
@@ -370,6 +378,50 @@ export default function SellerDashboard() {
                   No historical transactions found.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isReviewInspectionOpen && selectedActionTxId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-on-surface opacity-50" onClick={() => setIsReviewInspectionOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-lg rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+              <h3 className="text-xl font-headline font-bold text-on-surface">Review Inspection Report</h3>
+              <button onClick={() => setIsReviewInspectionOpen(false)} className="text-on-surface-variant hover:bg-surface-variant p-2 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 p-6 space-y-4">
+              <div className="bg-surface-container-low p-4 rounded-lg border border-outline-variant">
+                <h4 className="font-semibold text-on-surface">Property Inspection Complete</h4>
+                <p className="text-sm text-on-surface-variant mt-2">
+                  The buyer has submitted the inspection report for your review. No major issues were found.
+                  Please approve the report to advance the transaction to the Escrow phase.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-end gap-3">
+              <button onClick={() => setIsReviewInspectionOpen(false)} className="px-6 py-2 border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-surface-variant transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.updateTransactionStatus(selectedActionTxId, 'ESCROW');
+                    const newTx = await api.getTransactions();
+                    setTransactions(newTx.filter(t => t.sellerId === user?.id));
+                    alert("Inspection approved! Transaction advanced to Escrow.");
+                    setIsReviewInspectionOpen(false);
+                  } catch (e) {
+                    console.error(e);
+                    alert("Failed to approve inspection");
+                  }
+                }}
+                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 transition-opacity">
+                Approve & Continue
+              </button>
             </div>
           </div>
         </div>

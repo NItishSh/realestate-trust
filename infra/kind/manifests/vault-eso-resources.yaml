@@ -7,7 +7,7 @@ type: Opaque
 stringData:
   token: "root"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: vault-backend
@@ -22,7 +22,7 @@ spec:
           name: vault-token
           key: token
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: identity-service-db-secret-sync
@@ -43,7 +43,7 @@ spec:
     - extract:
         key: "database/creds/realestate-trust-role"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: transaction-manager-db-secret-sync
@@ -64,7 +64,7 @@ spec:
     - extract:
         key: "database/creds/realestate-trust-role"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: financing-engine-db-secret-sync
@@ -85,7 +85,7 @@ spec:
     - extract:
         key: "database/creds/realestate-trust-role"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: tokenization-engine-db-secret-sync
@@ -106,7 +106,7 @@ spec:
     - extract:
         key: "database/creds/realestate-trust-role"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: ledger-service-db-secret-sync
@@ -127,7 +127,7 @@ spec:
     - extract:
         key: "database/creds/realestate-trust-role"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: property-registry-service-db-secret-sync
@@ -157,7 +157,7 @@ type: Opaque
 stringData:
   token: "root"
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: vault-backend-observability
@@ -172,7 +172,7 @@ spec:
           name: vault-token
           key: token
 ---
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: grafana-admin-secret-sync
