@@ -9,7 +9,8 @@ TF_DIR="${SCRIPT_DIR}/infra/terraform"
 
 echo -e "\033[0;36m━━━ Destroying existing local infrastructure ━━━\033[0m"
 kind delete cluster --name realestate-trust 2>/dev/null || true
-rm -f "$TF_DIR/terraform.tfstate"* "$TF_DIR/realestate-trust-config"
+sleep 3
+rm -f "$TF_DIR/terraform.tfstate"* "$TF_DIR/.terraform.tfstate.lock.info" "$TF_DIR/realestate-trust-config"
 
 echo -e "\n\033[0;36m━━━ Provisioning local infrastructure via Terraform ━━━\033[0m"
 cd "$TF_DIR"
