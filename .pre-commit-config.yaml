@@ -35,6 +35,11 @@ repos:
       - id: terraform_validate
       - id: terraform_tflint
       - id: terraform_trivy
+      - id: terraform_checkov
+        args:
+          - --args=--framework terraform
+          - --args=--compact
+          - --args=--quiet
 
   - repo: local
     hooks:
