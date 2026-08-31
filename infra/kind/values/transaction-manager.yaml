@@ -16,7 +16,7 @@ smokeTest:
     # 1. Wait for identity-service to get JWT token
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf http://identity-service:8081/api/v1/health; then
+      if curl -sf http://identity-service/api/v1/health; then
         break
       fi
       echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
@@ -26,13 +26,13 @@ smokeTest:
 
     PASS_KEY="password"
     PASS_VAL="password123"
-    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
     # 2. Verify transaction-manager transactions API endpoint
     attempt=1
     while [ $attempt -le 12 ]; do
       PROP_ID="prop-smoke-${RANDOM}"
-      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"buyerId\":\"usr-123\",\"sellerId\":\"usr-456\",\"totalAmount\":500000.00}" http://transaction-manager:8080/api/v1/transactions; then
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"buyerId\":\"usr-123\",\"sellerId\":\"usr-456\",\"totalAmount\":500000.00}" http://transaction-manager/api/v1/transactions; then
         echo "Success!"
         exit 0
       fi

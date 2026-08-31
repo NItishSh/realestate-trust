@@ -11,7 +11,7 @@ smokeTest:
     echo "Sleeping for pod startup..."
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf http://feedback-service:8086/api/v1/health; then
+      if curl -sf http://feedback-service/api/v1/health; then
         echo "Success!"
         exit 0
       fi

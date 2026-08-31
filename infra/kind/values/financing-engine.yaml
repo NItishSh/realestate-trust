@@ -11,7 +11,7 @@ smokeTest:
     # 1. Wait for identity-service to get JWT token
     attempt=1
     while [ $attempt -le 12 ]; do
-      if curl -sf http://identity-service:8081/api/v1/health; then
+      if curl -sf http://identity-service/api/v1/health; then
         break
       fi
       echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
@@ -21,13 +21,13 @@ smokeTest:
 
     PASS_KEY="password"
     PASS_VAL="password123"
-    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service:8081/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
     # 2. Verify financing-engine loans API endpoint
     attempt=1
     while [ $attempt -le 12 ]; do
       TX_ID="tx-smoke-${RANDOM}"
-      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"transactionId\":\"${TX_ID}\",\"userId\":\"usr-123\",\"requestedAmount\":400000.00,\"propertyValue\":1000000.00}" http://financing-engine:8082/api/v1/loans; then
+      if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"transactionId\":\"${TX_ID}\",\"userId\":\"usr-123\",\"requestedAmount\":400000.00,\"propertyValue\":1000000.00}" http://financing-engine/api/v1/loans; then
         echo "Success!"
         exit 0
       fi
