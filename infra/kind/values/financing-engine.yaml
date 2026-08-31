@@ -19,9 +19,10 @@ smokeTest:
       attempt=$((attempt + 1))
     done
 
-    PASS_KEY="password"
-    PASS_VAL="password123"
-    TOKEN=$(curl -s -X POST -H "Content-Type: application/json" -d "{\"email\":\"aryan.dev@realestate.in\",\"${PASS_KEY}\":\"${PASS_VAL}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+    EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+    PASS="SmokePass_${RANDOM}${RANDOM}"
+    curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users
+    TOKEN=$(curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
     # 2. Verify financing-engine loans API endpoint
     attempt=1
