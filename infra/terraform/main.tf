@@ -90,10 +90,10 @@ resource "kubernetes_namespace" "argocd" {
 resource "helm_release" "argocd" {
   depends_on = [kubernetes_namespace.argocd, null_resource.build_and_load_images]
 
-  name       = "argocd"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  version    = "6.7.1"
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "6.7.1"
   namespace        = "argocd"
   create_namespace = false
 
