@@ -41,6 +41,11 @@ repos:
           - --args=--compact
           - --args=--quiet
 
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+
   - repo: local
     hooks:
       - id: golangci-lint
@@ -54,4 +59,10 @@ repos:
         entry: helm lint infra/helm/charts/microservice
         language: system
         files: ^infra/helm/
+        pass_filenames: false
+      - id: docker-compose-check
+        name: docker-compose-check
+        entry: docker compose config -q
+        language: system
+        files: ^docker-compose.*\.ya?ml$
         pass_filenames: false
