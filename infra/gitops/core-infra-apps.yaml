@@ -127,3 +127,62 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://codecentric.github.io/helm-charts'
+    targetRevision: 7.3.0
+    chart: keycloakx
+    helm:
+      values: |
+        fullnameOverride: "keycloak"
+        command:
+          - "/opt/keycloak/bin/kc.sh"
+          - "start-dev"
+          - "--import-realm"
+        http:
+          relativePath: "/"
+        database:
+          vendor: "postgres"
+          hostname: "postgres.realestate-trust.svc.cluster.local"
+          port: 5432
+          database: "keycloak_db"
+          username: "postgres"
+          password: "postgres"
+        extraEnv: |
+          - name: KEYCLOAK_ADMIN
+            value: "admin"
+          - name: KEYCLOAK_ADMIN_PASSWORD
+            value: "admin"
+          - name: KC_CACHE
+            value: "local"
+          - name: JAVA_OPTS_APPEND
+            value: "-XX:TieredStopAtLevel=1 -Xms256m -Xmx512m"
+        extraVolumes: |
+          - name: realm-config
+            configMap:
+              name: keycloak-realm-config
+        extraVolumeMounts: |
+          - name: realm-config
+            mountPath: /opt/keycloak/data/import
+            readOnly: true
+        service:
+          type: ClusterIP
+          httpPort: 8080
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

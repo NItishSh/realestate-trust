@@ -137,7 +137,7 @@ metadata:
   name: keycloak
   namespace: realestate-trust
   labels:
-    app: keycloak
+    app.kubernetes.io/name: keycloakx
 spec:
   type: ClusterIP
   ports:
@@ -145,86 +145,4 @@ spec:
       targetPort: 8080
       name: http
   selector:
-    app: keycloak
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: keycloak
-  namespace: realestate-trust
-  labels:
-    app: keycloak
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: keycloak
-  template:
-    metadata:
-      labels:
-        app: keycloak
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - name: keycloak
-          image: quay.io/keycloak/keycloak:24.0.5
-          args: ["start-dev", "--import-realm"]
-          ports:
-            - name: http
-              containerPort: 8080
-          env:
-            - name: KEYCLOAK_ADMIN
-              value: "admin"
-            - name: KEYCLOAK_ADMIN_PASSWORD
-              value: "admin"
-            - name: KC_DB
-              value: "postgres"
-            - name: KC_DB_URL
-              value: "jdbc:postgresql://postgres:5432/keycloak_db"
-            - name: KC_DB_USERNAME
-              value: "postgres"
-            - name: KC_DB_PASSWORD
-              value: "postgres"
-            - name: KC_HEALTH_ENABLED
-              value: "true"
-            - name: KC_METRICS_ENABLED
-              value: "true"
-            - name: KC_HTTP_RELATIVE_PATH
-              value: "/"
-          volumeMounts:
-            - name: realm-import
-              mountPath: /opt/keycloak/data/import/realestate-trust-realm.json
-              subPath: realestate-trust-realm.json
-          startupProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 5
-            failureThreshold: 60
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 5
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 5
-          resources:
-            requests:
-              cpu: 250m
-              memory: 384Mi
-            limits:
-              cpu: 1000m
-              memory: 768Mi
-      volumes:
-        - name: realm-import
-          configMap:
-            name: keycloak-realm-config
+    app.kubernetes.io/name: keycloakx
