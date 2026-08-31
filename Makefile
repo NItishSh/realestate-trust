@@ -91,7 +91,7 @@ lint-docker: ## Run hadolint on Dockerfiles
 lint-tf: ## Run tflint and terraform validate
 	@echo -e "$(COLOR_INFO)Validating Terraform configurations...$(COLOR_RESET)"
 	terraform -chdir=infra/terraform validate
-	tflint --chdir=infra/terraform
+	tflint --chdir=infra/terraform --config=$(CURDIR)/.tflint.hcl
 
 .PHONY: lint-compose
 lint-compose: ## Validate docker-compose file configuration
