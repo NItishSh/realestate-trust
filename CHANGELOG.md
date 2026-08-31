@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/NItishSh/realestate-trust/compare/v1.0.0...v1.0.1) (2026-08-31)
+
+
+### Bug Fixes
+
+* update external-secrets apiVersion to v1beta1 ([#3](https://github.com/NItishSh/realestate-trust/issues/3)) ([8de4daf](https://github.com/NItishSh/realestate-trust/commit/8de4dafd2d27670fce4e2f1b72215beb6b0cf3ec))
+
 ## 1.0.0 (2026-08-25)
 
 
