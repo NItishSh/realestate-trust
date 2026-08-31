@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: identity-service
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
@@ -82,6 +84,8 @@ kind: Application
 metadata:
   name: transaction-manager
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
@@ -179,6 +183,8 @@ kind: Application
 metadata:
   name: financing-engine
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
@@ -269,6 +275,8 @@ kind: Application
 metadata:
   name: tokenization-engine
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
@@ -335,6 +343,8 @@ kind: Application
 metadata:
   name: ledger-service
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:

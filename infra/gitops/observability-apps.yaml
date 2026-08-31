@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: loki
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
@@ -34,6 +36,8 @@ kind: Application
 metadata:
   name: promtail
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
@@ -58,6 +62,8 @@ kind: Application
 metadata:
   name: tempo
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
@@ -85,6 +91,8 @@ kind: Application
 metadata:
   name: grafana
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
@@ -148,6 +156,8 @@ kind: Application
 metadata:
   name: prometheus
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 spec:
   project: default
   source:
@@ -178,6 +188,8 @@ kind: Application
 metadata:
   name: kiali
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
@@ -213,7 +225,7 @@ metadata:
   name: keda
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "-2"
 spec:
   project: default
   source:
