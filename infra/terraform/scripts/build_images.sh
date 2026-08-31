@@ -22,6 +22,18 @@ done
 docker build -q -t "ghcr.io/realestate-trust/monorepo/frontend:latest" "${PROJECT_ROOT}/frontend"
 
 step "Loading images into Kind cluster"
+third_party_images=(
+    "postgres:15-alpine"
+    "rabbitmq:3.13-management-alpine"
+    "hashicorp/vault:1.16.1"
+    "quay.io/keycloak/keycloak:26.7.2"
+)
+for img in "${third_party_images[@]}"; do
+    log "Pulling and loading ${img} into Kind..."
+    docker pull -q "${img}" || true
+    kind load docker-image "${img}" --name "${CLUSTER_NAME}" || true
+done
+
 images=(
     "ghcr.io/realestate-trust/monorepo/transaction-manager:latest"
     "ghcr.io/realestate-trust/monorepo/identity-service:latest"

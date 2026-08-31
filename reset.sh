@@ -8,13 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TF_DIR="${SCRIPT_DIR}/infra/terraform"
 
 echo -e "\033[0;36m━━━ Destroying existing local infrastructure ━━━\033[0m"
-if [ -d "$TF_DIR/.terraform" ]; then
-    cd "$TF_DIR"
-    terraform destroy -auto-approve || echo -e "\033[1;33m[!] Destroy had issues or nothing to destroy. Continuing...\033[0m"
-else
-    # Fallback to destroy the kind cluster manually if terraform state doesn't exist
-    kind delete cluster --name realestate-trust 2>/dev/null || true
-fi
+kind delete cluster --name realestate-trust 2>/dev/null || true
+rm -f "$TF_DIR/terraform.tfstate"* "$TF_DIR/realestate-trust-config"
 
 echo -e "\n\033[0;36m━━━ Provisioning local infrastructure via Terraform ━━━\033[0m"
 cd "$TF_DIR"

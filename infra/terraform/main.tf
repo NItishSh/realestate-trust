@@ -95,7 +95,7 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   version    = "6.7.1"
   namespace        = "argocd"
-  create_namespace = true
+  create_namespace = false
 
   set {
     name  = "server.extraArgs"

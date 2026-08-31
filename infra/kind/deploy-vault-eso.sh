@@ -27,7 +27,7 @@ while ! kubectl get pod vault-0 -n vault > /dev/null 2>&1; do
   sleep 2
 done
 log "Waiting for vault-0 pod to be ready..."
-kubectl wait --for=condition=Ready pod/vault-0 -n vault --timeout=120s
+kubectl wait --for=condition=Ready pod/vault-0 -n vault --timeout=600s
 
 # 5. Enable and Configure Kubernetes Authentication in Vault
 log "Configuring Kubernetes authentication inside Vault..."
@@ -123,7 +123,11 @@ ext_secrets=(
   "property-registry-service-db-secret-sync"
 )
 for es in "${ext_secrets[@]}"; do
-  kubectl wait --for=condition=Ready externalsecret/"${es}" -n realestate-trust --timeout=60s
+  log "Waiting for ExternalSecret ${es} to be created by ArgoCD..."
+  while ! kubectl get externalsecret/"${es}" -n realestate-trust > /dev/null 2>&1; do
+    sleep 3
+  done
+  kubectl wait --for=condition=Ready externalsecret/"${es}" -n realestate-trust --timeout=300s
 done
 
 log "Vault and External Secrets Operator successfully configured!"
