@@ -66,3 +66,6 @@ override.tf.json
 
 # Ignore plan files
 *.tfplan
+
+# Ignore local kubeconfig for kind cluster
+infra/terraform/realestate-trust-config
