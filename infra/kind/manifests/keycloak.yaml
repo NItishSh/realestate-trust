@@ -196,18 +196,25 @@ spec:
             - name: realm-import
               mountPath: /opt/keycloak/data/import/realestate-trust-realm.json
               subPath: realestate-trust-realm.json
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /health/ready
               port: 8080
-            initialDelaySeconds: 20
+            initialDelaySeconds: 5
             periodSeconds: 5
-            failureThreshold: 20
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /health/live
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 5
           resources:
