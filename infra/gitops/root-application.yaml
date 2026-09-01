@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: fix-local-helm-ports
+    targetRevision: main
     path: infra/gitops # Path to our service declarations
   destination:
     server: 'https://kubernetes.default.svc'
