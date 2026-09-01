@@ -173,6 +173,18 @@ test-e2e: ## Run E2E test suite (requires running services or compose)
 	@echo -e "$(COLOR_INFO)Running E2E tests...$(COLOR_RESET)"
 	go test -v -tags=e2e ./test/e2e/...
 
+.PHONY: compose-test-e2e
+compose-test-e2e: ## Build, start Docker Compose stack, run E2E tests, and tear down cleanly
+	@echo -e "$(COLOR_INFO)Building and starting Docker Compose stack...$(COLOR_RESET)"
+	docker compose up -d --build
+	@echo -e "$(COLOR_INFO)Waiting for services to become healthy...$(COLOR_RESET)"
+	@sleep 15
+	@echo -e "$(COLOR_INFO)Running E2E tests...$(COLOR_RESET)"
+	@go test -v -tags=e2e ./test/e2e/... || (docker compose down -v && exit 1)
+	@echo -e "$(COLOR_SUCCESS)✓ E2E tests passed successfully.$(COLOR_RESET)"
+	@echo -e "$(COLOR_INFO)Stopping Docker Compose stack...$(COLOR_RESET)"
+	docker compose down -v
+
 .PHONY: test-contract
 test-contract: ## Run contract tests
 	@echo -e "$(COLOR_INFO)Running contract tests...$(COLOR_RESET)"

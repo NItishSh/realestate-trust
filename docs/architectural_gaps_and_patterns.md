@@ -20,18 +20,18 @@ pie title Architectural Health by Category
     "Security & Auth Edge Cases" : 10
 ```
 
-| ID | Gap / Vulnerability | Area | Severity | Recommended Design Pattern |
-| :--- | :--- | :--- | :--- | :--- |
-| **GAP-01** | Dual-Write & Event Loss Vulnerability | Microservices / Transactions | 🔴 **CRITICAL** | **Transactional Outbox Pattern** + CDC / Debezium / Polling Relay |
-| **GAP-02** | Unstructured String Event Payloads | Event Bus / Messaging | 🟠 **HIGH** | **CloudEvents Standard Schema** with Typed DTOs |
-| **GAP-03** | In-Memory Mutex in Distributed Ledger | Ledger / Immutability | 🔴 **CRITICAL** | **PostgreSQL Row-Locking (`FOR UPDATE`) / Atomic Sequence** |
-| **GAP-04** | Non-Deterministic Hash on Monotonic Clock | Ledger / Cryptography | 🟠 **HIGH** | **Deterministic UTC RFC3339 Timestamp Hashing** |
-| **GAP-05** | AMQP Channel Churn per Publish | RabbitMQ / Messaging | 🟡 **MEDIUM** | **Publisher Channel Pooling / Long-Lived Channel** |
-| **GAP-06** | Immediate DLQ Routing without Retry Backoff | RabbitMQ / Consumers | 🟡 **MEDIUM** | **Exponential Backoff & Retry Exchange Pattern** |
-| **GAP-07** | JWKS Unknown Key Fallback Loophole | Security / IAM | 🟠 **HIGH** | **Strict `kid` Matching & Explicit Cache Eviction** |
-| **GAP-08** | Silent Fallback from Vault Transit to Local Key | Security / KMS | 🟠 **HIGH** | **Fail-Closed Encryption & KMS Alerting** |
-| **GAP-09** | Unbounded SQL Connection Pooling | Database / Persistence | 🟡 **MEDIUM** | **Explicit Connection Pool Bounds (`SetMaxOpenConns`)** |
-| **GAP-10** | Dynamic Database Credential Rotation Gap | Database / Vault | 🟡 **MEDIUM** | **Reloader Sidecar / Dynamic DB Reconnection Hook** |
+| ID | Gap / Vulnerability | Area | Severity | Recommended Design Pattern | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **GAP-01** | Dual-Write & Event Loss Vulnerability | Microservices / Transactions | 🔴 **CRITICAL** | **Transactional Outbox Pattern** + Polling Relay | 🟢 **RESOLVED** ([`outbox_processor.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/outbox_processor.go)) |
+| **GAP-02** | Unstructured String Event Payloads | Event Bus / Messaging | 🟠 **HIGH** | **CloudEvents Standard Schema** with Typed DTOs | 🟢 **RESOLVED** ([`rabbitmq.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/rabbitmq.go)) |
+| **GAP-03** | In-Memory Mutex in Distributed Ledger | Ledger / Immutability | 🔴 **CRITICAL** | **PostgreSQL Advisory / Row-Locking (`pg_advisory_xact_lock`)** | 🟢 **RESOLVED** ([`ledger_repository_sql.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/ledger_repository_sql.go)) |
+| **GAP-04** | Non-Deterministic Hash on Monotonic Clock | Ledger / Cryptography | 🟠 **HIGH** | **Deterministic UTC RFC3339 Microsecond Timestamp Hashing** | 🟢 **RESOLVED** ([`ledger.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/core/ledger.go)) |
+| **GAP-05** | AMQP Channel Churn per Publish | RabbitMQ / Messaging | 🟡 **MEDIUM** | **Publisher Channel Pooling / Long-Lived Channel** | 🟢 **RESOLVED** ([`rabbitmq.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/rabbitmq.go)) |
+| **GAP-06** | Immediate DLQ Routing without Retry Backoff | RabbitMQ / Consumers | 🟡 **MEDIUM** | **Exponential Backoff & Retry Exchange Pattern** | 🟢 **RESOLVED** ([`rabbitmq.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/rabbitmq.go)) |
+| **GAP-07** | JWKS Unknown Key Fallback Loophole | Security / IAM | 🟠 **HIGH** | **Strict `kid` Matching & Explicit Cache Eviction** | 🟢 **RESOLVED** ([`jwks.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/jwks.go)) |
+| **GAP-08** | Silent Fallback from Vault Transit to Local Key | Security / KMS | 🟠 **HIGH** | **Fail-Closed Encryption & KMS Alerting** | ⚪ *PLANNED* |
+| **GAP-09** | Unbounded SQL Connection Pooling | Database / Persistence | 🟡 **MEDIUM** | **Explicit Connection Pool Bounds (`SetMaxOpenConns`)** | 🟢 **RESOLVED** ([`db.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/db.go)) |
+| **GAP-10** | Dynamic Database Credential Rotation Gap | Database / Vault | 🟡 **MEDIUM** | **Reloader Sidecar / Dynamic DB Reconnection Hook** | ⚪ *PLANNED* |
 
 ---
 
