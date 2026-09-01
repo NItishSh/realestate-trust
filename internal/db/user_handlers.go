@@ -150,11 +150,31 @@ func (h *UserHandler) Logout(c *echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out successfully"})
 }
 
+func getRequesterInfo(c *echo.Context) (requesterID string, role string, ok bool) {
+	userToken, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return "", "", false
+	}
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", false
+	}
+	sub, _ := claims["sub"].(string)
+	r, _ := claims["role"].(string)
+	return sub, r, true
+}
+
 // GetUser handles GET /users/{id}
 func (h *UserHandler) GetUser(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
+	}
+
+	if reqID, role, ok := getRequesterInfo(c); ok {
+		if reqID != userID && role != "ADMIN" && role != "OFFICER" {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: access denied"})
+		}
 	}
 
 	user, err := h.Repo.GetUser(userID)
@@ -171,6 +191,12 @@ func (h *UserHandler) SubmitKYC(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
+	}
+
+	if reqID, role, ok := getRequesterInfo(c); ok {
+		if reqID != userID && role != "ADMIN" {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: you can only submit KYC for your own account"})
+		}
 	}
 
 	var req core.KYCSubmissionRequest
@@ -196,6 +222,12 @@ func (h *UserHandler) GetKYCStatus(c *echo.Context) error {
 	userID := c.Param("id")
 	if userID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
+	}
+
+	if reqID, role, ok := getRequesterInfo(c); ok {
+		if reqID != userID && role != "ADMIN" && role != "OFFICER" {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: access denied"})
+		}
 	}
 
 	status, verifiedAt, err := h.Repo.GetKYCStatus(userID)
@@ -227,18 +259,12 @@ func (h *UserHandler) DeleteUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing user ID"})
 	}
 
-	userToken, ok := c.Get("user").(*jwt.Token)
+	reqID, role, ok := getRequesterInfo(c)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: missing or invalid token"})
 	}
-	claims, ok := userToken.Claims.(jwt.MapClaims)
-	if !ok {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: invalid claims"})
-	}
-	tokenUserID, _ := claims["sub"].(string)
-	tokenRole, _ := claims["role"].(string)
 
-	if tokenUserID != userID && tokenRole != "ADMIN" {
+	if reqID != userID && role != "ADMIN" {
 		return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: you can only delete your own account"})
 	}
 

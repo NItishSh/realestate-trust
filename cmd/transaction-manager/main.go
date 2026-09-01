@@ -14,6 +14,7 @@ import (
 	echo "github.com/labstack/echo/v5"
 	middleware "github.com/labstack/echo/v5/middleware"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/db"
 	"github.com/realestate-trust/monorepo/internal/events"
 )
@@ -109,12 +110,12 @@ func main() {
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}))
-	api.POST("/transactions", handler.CreateTransaction)
+	api.POST("/transactions", handler.CreateTransaction, db.RBACMiddleware(core.Buyer, core.Seller, core.Broker, core.Admin))
 	api.GET("/transactions", handler.GetTransactions)
 	api.GET("/transactions/:id", handler.GetTransaction)
 	api.GET("/transactions/:id/escrow", handler.GetEscrow)
-	api.PUT("/transactions/:id/status", handler.UpdateStatus)
-	api.POST("/transactions/:id/escrow/fund", handler.FundEscrow)
+	api.PUT("/transactions/:id/status", handler.UpdateStatus, db.RBACMiddleware(core.Buyer, core.Seller, core.Broker, core.Officer, core.Admin))
+	api.POST("/transactions/:id/escrow/fund", handler.FundEscrow, db.RBACMiddleware(core.Buyer, core.Admin))
 
 	srv := &http.Server{
 		Addr:         ":8080",

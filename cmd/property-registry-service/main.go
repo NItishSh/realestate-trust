@@ -13,6 +13,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v5"
 	echo "github.com/labstack/echo/v5"
 	middleware "github.com/labstack/echo/v5/middleware"
+	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -74,11 +75,11 @@ func main() {
 		ContextKey: "user",
 	}))
 	api.GET("/properties", handler.ListProperties)
-	api.POST("/properties", handler.CreateProperty)
+	api.POST("/properties", handler.CreateProperty, db.RBACMiddleware(core.Seller, core.Broker, core.Admin))
 	api.GET("/properties/:id", handler.GetProperty)
-	api.POST("/properties/:id/documents/unlock", handler.UnlockDocuments)
-	api.POST("/properties/:id/insurance/verify", handler.VerifyTitleInsurance)
-	api.PUT("/properties/:id/details", handler.UpdatePropertyDetails)
+	api.POST("/properties/:id/documents/unlock", handler.UnlockDocuments, db.RBACMiddleware(core.Buyer, core.Broker, core.Admin))
+	api.POST("/properties/:id/insurance/verify", handler.VerifyTitleInsurance, db.RBACMiddleware(core.Officer, core.Broker, core.Admin))
+	api.PUT("/properties/:id/details", handler.UpdatePropertyDetails, db.RBACMiddleware(core.Seller, core.Broker, core.Admin))
 
 	srv := &http.Server{
 		Addr:         ":8085",
