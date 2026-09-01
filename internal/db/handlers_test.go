@@ -386,3 +386,39 @@ func TestFinancingHandler_BankWebhookAuth(t *testing.T) {
 		t.Errorf("expected 200 for valid webhook secret, got %d", rec.Code)
 	}
 }
+
+func TestGetCORSOrigins(t *testing.T) {
+	orig := os.Getenv("CORS_ALLOWED_ORIGINS")
+	defer func() { _ = os.Setenv("CORS_ALLOWED_ORIGINS", orig) }()
+
+	// 1. Default fallback
+	_ = os.Setenv("CORS_ALLOWED_ORIGINS", "")
+	defaults := GetCORSOrigins()
+	if len(defaults) != 2 || defaults[0] != "http://localhost:3000" {
+		t.Errorf("expected default localhost:3000, got %v", defaults)
+	}
+
+	// 2. Custom comma-separated
+	_ = os.Setenv("CORS_ALLOWED_ORIGINS", "https://app.realestate-trust.com, https://admin.realestate-trust.com")
+	custom := GetCORSOrigins()
+	if len(custom) != 2 || custom[0] != "https://app.realestate-trust.com" || custom[1] != "https://admin.realestate-trust.com" {
+		t.Errorf("expected parsed custom origins, got %v", custom)
+	}
+}
+
+func TestAuthRateLimiterMiddleware(t *testing.T) {
+	e := echo.New()
+	e.POST("/api/v1/auth-test", func(c *echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	}, AuthRateLimiterMiddleware())
+
+	// Send requests within burst limit
+	for i := 0; i < 5; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth-test", nil)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected 200 for request %d, got %d", i, rec.Code)
+		}
+	}
+}
