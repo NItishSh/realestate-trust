@@ -31,6 +31,10 @@ func (h *FeedbackHandler) CreateFeedback(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Message is required"})
 	}
 
+	if req.Rating < 1 || req.Rating > 5 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Rating must be between 1 and 5"})
+	}
+
 	userID := "anonymous"
 	// Extract user ID from JWT token if available
 	if userVal := c.Get("user"); userVal != nil {
