@@ -16,9 +16,10 @@ type AuditEntry struct {
 	EventID      string    `json:"eventId,omitempty"`
 }
 
-// CalculateHash generates SHA256 code mapping payload content.
+// CalculateHash generates SHA256 code mapping payload content deterministically.
 func (e *AuditEntry) CalculateHash() string {
-	record := fmt.Sprintf("%d%s%s%s%s", e.Index, e.Timestamp.String(), e.Payload, e.PreviousHash, e.EventID)
+	canonicalTime := e.Timestamp.UTC().Truncate(time.Microsecond).Format(time.RFC3339Nano)
+	record := fmt.Sprintf("%d%s%s%s%s", e.Index, canonicalTime, e.Payload, e.PreviousHash, e.EventID)
 	h := sha256.New()
 	h.Write([]byte(record))
 	return hex.EncodeToString(h.Sum(nil))

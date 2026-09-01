@@ -65,6 +65,9 @@ func (c *JWKSClient) GetKey(token *jwt.Token) (interface{}, error) {
 	}
 
 	kid, _ := token.Header["kid"].(string)
+	if kid == "" {
+		return nil, errors.New("missing kid header in JWT token")
+	}
 
 	c.mu.RLock()
 	key, exists := c.keys[kid]
@@ -87,9 +90,6 @@ func (c *JWKSClient) GetKey(token *jwt.Token) (interface{}, error) {
 	defer c.mu.RUnlock()
 	key, exists = c.keys[kid]
 	if !exists {
-		for _, k := range c.keys {
-			return k, nil
-		}
 		return nil, fmt.Errorf("unable to find public key for kid: %s", kid)
 	}
 
