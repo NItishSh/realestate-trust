@@ -25,6 +25,9 @@ func main() {
 
 	slog.Info("Starting Transaction & Escrow Manager API on :8080...")
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	var rabbitConn *amqp.Connection
 	rabbitURL := os.Getenv("RABBITMQ_URL")
 	if rabbitURL != "" {
@@ -42,19 +45,33 @@ func main() {
 	}
 
 	var repo db.TransactionRepository
+	var dbPool *db.DB
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL != "" {
 		slog.Info("Connecting to database...", "url", dbURL)
-		dbPool, err := db.Connect()
+		pool, err := db.Connect()
 		if err != nil {
 			slog.Error("Database connection failed", "err", err)
 			os.Exit(1)
 		}
+		dbPool = pool
 		defer func() { _ = dbPool.Close() }()
 		repo = db.NewSQLTransactionRepository(dbPool.SQL)
 	} else {
 		slog.Info("DATABASE_URL is empty. Falling back to InMemoryTransactionRepository.")
 		repo = db.NewInMemoryTransactionRepository()
+	}
+
+	// Start Transactional Outbox Relay if DB and RabbitMQ are available
+	var outboxRelay *events.OutboxRelay
+	if dbPool != nil && dbPool.SQL != nil && rabbitConn != nil {
+		relay, err := events.NewOutboxRelay(dbPool.SQL, rabbitConn, "transaction-events", 500*time.Millisecond)
+		if err != nil {
+			slog.Error("Failed to initialize Transactional Outbox Relay", "err", err)
+		} else {
+			outboxRelay = relay
+			outboxRelay.Start(ctx)
+		}
 	}
 
 	// Seed demo data in non-production environments
@@ -108,9 +125,6 @@ func main() {
 	}
 	slog.Info("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("server error", "err", err)
@@ -120,6 +134,10 @@ func main() {
 
 	<-ctx.Done()
 	slog.Info("Shutting down server gracefully...")
+
+	if outboxRelay != nil {
+		outboxRelay.Stop()
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

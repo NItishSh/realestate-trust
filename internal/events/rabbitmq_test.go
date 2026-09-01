@@ -43,7 +43,7 @@ func TestRabbitMQ_CorrelationIDPropagation(t *testing.T) {
 		defer wg.Done()
 		receivedEvent = e
 		if c != nil {
-			if cid, ok := c.Value("correlation_id").(string); ok {
+			if cid, ok := c.Value(CorrelationIDContextKey).(string); ok {
 				receivedCorrelationID = cid
 			}
 		}

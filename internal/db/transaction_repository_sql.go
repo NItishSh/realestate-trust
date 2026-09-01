@@ -2,9 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/realestate-trust/monorepo/internal/core"
+	"github.com/realestate-trust/monorepo/internal/events"
 )
 
 type SQLTransactionRepository struct {
@@ -15,6 +19,26 @@ func NewSQLTransactionRepository(db *sql.DB) *SQLTransactionRepository {
 	return &SQLTransactionRepository{db: db}
 }
 
+func insertOutboxEvent(tx *sql.Tx, aggregateType, aggregateID, eventType string, payload any) error {
+	eventID := uuid.NewString()
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	query := `INSERT INTO outbox_events (id, aggregate_type, aggregate_id, event_type, payload, status)
+	          VALUES ($1, $2, $3, $4, $5, 'PENDING')`
+	_, err = tx.Exec(query, eventID, aggregateType, aggregateID, eventType, string(payloadBytes))
+	return err
+}
+
+func toUUID(s string) string {
+	if _, err := uuid.Parse(s); err == nil {
+		return s
+	}
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(s)).String()
+}
+
 func (r *SQLTransactionRepository) CreateTransaction(propertyID, buyerID, sellerID string, totalAmount float64) (*Transaction, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -22,9 +46,12 @@ func (r *SQLTransactionRepository) CreateTransaction(propertyID, buyerID, seller
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	id := "tx-" + propertyID
-	va := "VA-YES-" + propertyID
-	accID := "acc-" + propertyID
+	id := uuid.NewString()
+	propUUID := toUUID(propertyID)
+	buyerUUID := toUUID(buyerID)
+	sellerUUID := toUUID(sellerID)
+	va := "VA-YES-" + id[:8]
+	accID := uuid.NewString()
 
 	// Insert Transaction
 	txQuery := `INSERT INTO transactions (id, property_id, buyer_id, seller_id, total_amount, status)
@@ -33,7 +60,7 @@ func (r *SQLTransactionRepository) CreateTransaction(propertyID, buyerID, seller
 
 	transaction := &Transaction{}
 	var statusStr string
-	err = tx.QueryRow(txQuery, id, propertyID, buyerID, sellerID, totalAmount, string(core.Draft)).Scan(
+	err = tx.QueryRow(txQuery, id, propUUID, buyerUUID, sellerUUID, totalAmount, string(core.Draft)).Scan(
 		&transaction.ID,
 		&transaction.PropertyID,
 		&transaction.BuyerID,
@@ -55,6 +82,24 @@ func (r *SQLTransactionRepository) CreateTransaction(propertyID, buyerID, seller
 	if err != nil {
 		return nil, err
 	}
+
+	// Insert CloudEvent in Outbox Table within same ACID transaction
+	cloudEvent := events.CloudEvent[events.TransactionCreatedPayload]{
+		SpecVersion: "1.0",
+		ID:          uuid.NewString(),
+		Source:      "realestate-trust/transaction-manager",
+		Type:        "com.realestatetrust.transaction.created.v1",
+		Time:        time.Now().UTC(),
+		Data: events.TransactionCreatedPayload{
+			TransactionID: id,
+			PropertyID:    propertyID,
+			BuyerID:       buyerID,
+			SellerID:      sellerID,
+			Amount:        totalAmount,
+			Currency:      "INR",
+		},
+	}
+	_ = insertOutboxEvent(tx, "transaction", id, "com.realestatetrust.transaction.created.v1", cloudEvent)
 
 	if err := tx.Commit(); err != nil {
 		return nil, err
@@ -114,8 +159,14 @@ func (r *SQLTransactionRepository) GetEscrow(txID string) (*EscrowAccount, error
 }
 
 func (r *SQLTransactionRepository) UpdateTransactionStatus(id string, status core.TransactionState) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
 	query := `UPDATE transactions SET status = $1, updated_at = NOW() WHERE id = $2`
-	res, err := r.db.Exec(query, string(status), id)
+	res, err := tx.Exec(query, string(status), id)
 	if err != nil {
 		return err
 	}
@@ -126,7 +177,21 @@ func (r *SQLTransactionRepository) UpdateTransactionStatus(id string, status cor
 	if rows == 0 {
 		return errors.New("transaction not found")
 	}
-	return nil
+
+	cloudEvent := events.CloudEvent[events.TransactionStatusUpdatedPayload]{
+		SpecVersion: "1.0",
+		ID:          uuid.NewString(),
+		Source:      "realestate-trust/transaction-manager",
+		Type:        "com.realestatetrust.transaction.updated.v1",
+		Time:        time.Now().UTC(),
+		Data: events.TransactionStatusUpdatedPayload{
+			TransactionID: id,
+			NewState:      string(status),
+		},
+	}
+	_ = insertOutboxEvent(tx, "transaction", id, "com.realestatetrust.transaction.updated.v1", cloudEvent)
+
+	return tx.Commit()
 }
 
 func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
@@ -163,6 +228,20 @@ func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
 	if rows == 0 {
 		return errors.New("transaction not found")
 	}
+
+	cloudEvent := events.CloudEvent[events.EscrowFundedPayload]{
+		SpecVersion: "1.0",
+		ID:          uuid.NewString(),
+		Source:      "realestate-trust/transaction-manager",
+		Type:        "com.realestatetrust.escrow.funded.v1",
+		Time:        time.Now().UTC(),
+		Data: events.EscrowFundedPayload{
+			TransactionID: id,
+			Amount:        amount,
+			Currency:      "INR",
+		},
+	}
+	_ = insertOutboxEvent(tx, "transaction", id, "com.realestatetrust.escrow.funded.v1", cloudEvent)
 
 	return tx.Commit()
 }

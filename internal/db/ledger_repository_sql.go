@@ -22,12 +22,25 @@ func (r *SQLLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntr
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// Acquire transactional advisory lock to serialize distributed concurrent appends (including empty table bootstrap).
+	// This lock automatically releases on tx.Commit() / tx.Rollback() and allows concurrent read-only queries.
+	_, err = tx.Exec(`SELECT pg_advisory_xact_lock(73849102)`)
+	if err != nil {
+		return nil, err
+	}
+
 	// Query last entry to find the previous hash and current index
 	var lastIndex int64
 	var lastHash string
 
 	queryLast := `SELECT log_index, hash FROM ledger_entries ORDER BY log_index DESC LIMIT 1`
-	err := r.db.QueryRow(queryLast).Scan(&lastIndex, &lastHash)
+	err = tx.QueryRow(queryLast).Scan(&lastIndex, &lastHash)
 
 	var index int64
 	var prevHash string
@@ -46,7 +59,7 @@ func (r *SQLLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntr
 
 	entry := &core.AuditEntry{
 		Index:        index,
-		Timestamp:    time.Now(),
+		Timestamp:    time.Now().UTC(),
 		Payload:      payload,
 		PreviousHash: prevHash,
 		EventID:      eventID,
@@ -62,8 +75,12 @@ func (r *SQLLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntr
 	                VALUES ($1, $2, $3, $4, $5, $6)
 	                RETURNING timestamp`
 
-	err = r.db.QueryRow(insertQuery, entry.Index, entry.Timestamp, entry.Payload, entry.PreviousHash, entry.Hash, eventIDVal).Scan(&entry.Timestamp)
+	err = tx.QueryRow(insertQuery, entry.Index, entry.Timestamp, entry.Payload, entry.PreviousHash, entry.Hash, eventIDVal).Scan(&entry.Timestamp)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
