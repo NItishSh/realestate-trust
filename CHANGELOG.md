@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/NItishSh/realestate-trust/compare/v1.1.0...v1.1.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **gitops:** update targetRevision from feature branch to main ([#9](https://github.com/NItishSh/realestate-trust/issues/9)) ([377087e](https://github.com/NItishSh/realestate-trust/commit/377087e04a19ec4a35dbee5020c5d0a61cedfe1a))
+
 ## [1.1.0](https://github.com/NItishSh/realestate-trust/compare/v1.0.1...v1.1.0) (2026-09-01)
 
 
