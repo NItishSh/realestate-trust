@@ -311,3 +311,78 @@ func TestKYCEncryption_FailClosedInProduction(t *testing.T) {
 		t.Errorf("expected secret-doc-123, got: %s", dec)
 	}
 }
+
+func TestFeedbackHandler_RatingBounds(t *testing.T) {
+	e := echo.New()
+	repo := NewInMemoryFeedbackRepository()
+	handler := NewFeedbackHandler(repo)
+
+	// 1. Invalid rating < 1
+	body, _ := json.Marshal(CreateFeedbackRequest{Message: "Great", Category: "General", Rating: 0})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/feedback", bytes.NewBuffer(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	_ = handler.CreateFeedback(c)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for rating 0, got %d", rec.Code)
+	}
+
+	// 2. Invalid rating > 5
+	body, _ = json.Marshal(CreateFeedbackRequest{Message: "Great", Category: "General", Rating: 6})
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/feedback", bytes.NewBuffer(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	_ = handler.CreateFeedback(c)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for rating 6, got %d", rec.Code)
+	}
+
+	// 3. Valid rating 5
+	body, _ = json.Marshal(CreateFeedbackRequest{Message: "Great", Category: "General", Rating: 5})
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/feedback", bytes.NewBuffer(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	_ = handler.CreateFeedback(c)
+	if rec.Code != http.StatusCreated {
+		t.Errorf("expected 201 for valid rating 5, got %d", rec.Code)
+	}
+}
+
+func TestFinancingHandler_BankWebhookAuth(t *testing.T) {
+	originalSecret := os.Getenv("BANK_WEBHOOK_SECRET")
+	defer func() { _ = os.Setenv("BANK_WEBHOOK_SECRET", originalSecret) }()
+
+	_ = os.Setenv("BANK_WEBHOOK_SECRET", "super-secret-key")
+
+	e := echo.New()
+	repo := NewInMemoryFinancingRepository()
+	handler := NewFinancingHandler(repo)
+
+	// Create a loan
+	loan, _ := repo.CreateLoan("tx-1", "usr-1", 100000.0)
+
+	// 1. Missing secret header (Unauthorized 401)
+	webhookPayload := []byte(`{"applicationId":"` + loan.ID + `","status":"APPROVED","approvedAmount":100000.0}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/loans/webhooks/bank", bytes.NewBuffer(webhookPayload))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	_ = handler.BankWebhook(c)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for missing webhook secret, got %d", rec.Code)
+	}
+
+	// 2. Valid secret header (Success 200)
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/loans/webhooks/bank", bytes.NewBuffer(webhookPayload))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("X-Webhook-Secret", "super-secret-key")
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	_ = handler.BankWebhook(c)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 for valid webhook secret, got %d", rec.Code)
+	}
+}

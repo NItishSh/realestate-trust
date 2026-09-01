@@ -4,11 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	echo "github.com/labstack/echo/v5"
 )
+
+var defaultHTTPClient = &http.Client{
+	Timeout: 5 * time.Second,
+}
 
 type PropertyHandler struct {
 	Repo PropertyRepository
@@ -116,10 +123,21 @@ func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 	}
 	bodyBytes, _ := json.Marshal(txPayload)
 
+	txManagerURL := os.Getenv("TRANSACTION_MANAGER_URL")
+	if txManagerURL == "" {
+		txManagerURL = "http://transaction-manager:8080"
+	}
+
 	// Call Transaction Manager internally via Kubernetes DNS
-	resp, err := http.Post("http://transaction-manager:8080/api/v1/transactions", "application/json", bytes.NewBuffer(bodyBytes))
-	if err != nil || resp.StatusCode != http.StatusCreated {
-		fmt.Printf("Error creating escrow: %v\n", err)
+	resp, err := defaultHTTPClient.Post(txManagerURL+"/api/v1/transactions", "application/json", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "Error creating earnest money escrow", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to initiate earnest money deposit escrow"})
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusCreated {
+		slog.WarnContext(c.Request().Context(), "Transaction manager returned non-201 status", "status", resp.Status)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to initiate earnest money deposit escrow"})
 	}
 
@@ -157,14 +175,19 @@ func (h *PropertyHandler) VerifyTitleInsurance(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
 	}
 
+	ledgerURL := os.Getenv("LEDGER_SERVICE_URL")
+	if ledgerURL == "" {
+		ledgerURL = "http://ledger-service:8084"
+	}
+
 	// Record verification in the ledger log
 	payload := fmt.Sprintf("Title Insurance Verified: Policy #%s issued by %s for property at %s", req.Policy, req.Company, p.Address)
 	logRequest := map[string]string{"payload": payload}
 	bodyBytes, _ := json.Marshal(logRequest)
 
-	resp, postErr := http.Post("http://ledger-service:8084/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
+	resp, postErr := defaultHTTPClient.Post(ledgerURL+"/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
 	if postErr != nil {
-		fmt.Printf("Error sending ledger log: %v\n", postErr)
+		slog.WarnContext(c.Request().Context(), "Error sending ledger log for title insurance", "err", postErr)
 	} else {
 		defer func() { _ = resp.Body.Close() }()
 	}
@@ -200,14 +223,19 @@ func (h *PropertyHandler) UpdatePropertyDetails(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
 	}
 
+	ledgerURL := os.Getenv("LEDGER_SERVICE_URL")
+	if ledgerURL == "" {
+		ledgerURL = "http://ledger-service:8084"
+	}
+
 	// Record updating in ledger log
 	payload := fmt.Sprintf("Property Details Updated: ID %s, SqFt %d, Bed %d, Bath %d, Year %d, Type %s", p.ID, p.SqFt, p.Bedrooms, p.Bathrooms, p.YearBuilt, p.PropertyType)
 	logRequest := map[string]string{"payload": payload}
 	bodyBytes, _ := json.Marshal(logRequest)
 
-	resp, postErr := http.Post("http://ledger-service:8084/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
+	resp, postErr := defaultHTTPClient.Post(ledgerURL+"/api/v1/logs", "application/json", bytes.NewBuffer(bodyBytes))
 	if postErr != nil {
-		fmt.Printf("Error sending ledger log: %v\n", postErr)
+		slog.WarnContext(c.Request().Context(), "Error sending ledger log for property update", "err", postErr)
 	} else {
 		defer func() { _ = resp.Body.Close() }()
 	}

@@ -2,6 +2,7 @@ package db
 
 import (
 	"net/http"
+	"os"
 
 	echo "github.com/labstack/echo/v5"
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -89,6 +90,14 @@ func (h *FinancingHandler) DisburseLoan(c *echo.Context) error {
 
 // BankWebhook handles POST /loans/webhooks/bank
 func (h *FinancingHandler) BankWebhook(c *echo.Context) error {
+	expectedSecret := os.Getenv("BANK_WEBHOOK_SECRET")
+	if expectedSecret != "" {
+		secret := c.Request().Header.Get("X-Webhook-Secret")
+		if secret != expectedSecret {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid or missing webhook secret"})
+		}
+	}
+
 	var payload struct {
 		ApplicationID  string  `json:"applicationId"`
 		Status         string  `json:"status"`
