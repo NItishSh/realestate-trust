@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/NItishSh/realestate-trust/compare/v1.3.0...v1.4.0) (2026-09-01)
+
+
+### Features
+
+* **core:** harden HTTP client timeouts, webhook authentication, and input boundaries ([#19](https://github.com/NItishSh/realestate-trust/issues/19)) ([26d8a3b](https://github.com/NItishSh/realestate-trust/commit/26d8a3b2ac661a4af53f2c542b273612733ff3b5))
+* **security:** add auth rate limiting and dynamic CORS configuration ([#21](https://github.com/NItishSh/realestate-trust/issues/21)) ([ec9cb09](https://github.com/NItishSh/realestate-trust/commit/ec9cb093334da9156d4224f067de2957ad94ebbf))
+* **security:** enforce Kubernetes Restricted Pod Security Standards across Helm microservice charts ([#22](https://github.com/NItishSh/realestate-trust/issues/22)) ([4ff6587](https://github.com/NItishSh/realestate-trust/commit/4ff6587c48019067e4f0f6b20f44eeeca96593bb))
+* **security:** enforce RBAC/ABAC role gates, attribute ownership, and input sanitization ([#23](https://github.com/NItishSh/realestate-trust/issues/23)) ([09d0f8e](https://github.com/NItishSh/realestate-trust/commit/09d0f8eeb124f7cfa91baaa8d7fa45f0d860d1f0))
+
 ## [1.3.0](https://github.com/NItishSh/realestate-trust/compare/v1.2.0...v1.3.0) (2026-09-01)
 
 
