@@ -139,8 +139,15 @@ spec:
   project: default
   source:
     repoURL: 'https://stakater.github.io/stakater-charts'
-    targetRevision: v1.0.115
+    targetRevision: v1.4.21
     chart: reloader
+    helm:
+      values: |
+        reloader:
+          autoReloadAll: false
+          watchGlobally: true
+          logLevel: info
+          reloadStrategy: default
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: reloader
