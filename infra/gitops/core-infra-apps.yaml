@@ -131,6 +131,29 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: reloader
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://stakater.github.io/stakater-charts'
+    targetRevision: v1.0.115
+    chart: reloader
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: reloader
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: keycloak
   namespace: argocd
   annotations:
