@@ -29,9 +29,9 @@ pie title Architectural Health by Category
 | **GAP-05** | AMQP Channel Churn per Publish | RabbitMQ / Messaging | 🟡 **MEDIUM** | **Publisher Channel Pooling / Long-Lived Channel** | 🟢 **RESOLVED** ([`rabbitmq.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/rabbitmq.go)) |
 | **GAP-06** | Immediate DLQ Routing without Retry Backoff | RabbitMQ / Consumers | 🟡 **MEDIUM** | **Exponential Backoff & Retry Exchange Pattern** | 🟢 **RESOLVED** ([`rabbitmq.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/events/rabbitmq.go)) |
 | **GAP-07** | JWKS Unknown Key Fallback Loophole | Security / IAM | 🟠 **HIGH** | **Strict `kid` Matching & Explicit Cache Eviction** | 🟢 **RESOLVED** ([`jwks.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/jwks.go)) |
-| **GAP-08** | Silent Fallback from Vault Transit to Local Key | Security / KMS | 🟠 **HIGH** | **Fail-Closed Encryption & KMS Alerting** | ⚪ *PLANNED* |
+| **GAP-08** | Silent Fallback from Vault Transit to Local Key | Security / KMS | 🟠 **HIGH** | **Fail-Closed Encryption & KMS Alerting** | 🟢 **RESOLVED** ([`crypto.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/crypto.go)) |
 | **GAP-09** | Unbounded SQL Connection Pooling | Database / Persistence | 🟡 **MEDIUM** | **Explicit Connection Pool Bounds (`SetMaxOpenConns`)** | 🟢 **RESOLVED** ([`db.go`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/internal/db/db.go)) |
-| **GAP-10** | Dynamic Database Credential Rotation Gap | Database / Vault | 🟡 **MEDIUM** | **Reloader Sidecar / Dynamic DB Reconnection Hook** | ⚪ *PLANNED* |
+| **GAP-10** | Dynamic Database Credential Rotation Gap | Database / Vault | 🟡 **MEDIUM** | **Reloader Sidecar / Dynamic DB Reconnection Hook** | 🟢 **RESOLVED** ([`deployment.yaml`](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/infra/helm/charts/microservice/templates/deployment.yaml)) |
 
 ---
 

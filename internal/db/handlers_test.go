@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -270,5 +271,43 @@ func TestKYCEncryption(t *testing.T) {
 
 	if decrypted != original {
 		t.Errorf("expected decrypted value %s; got %s", original, decrypted)
+	}
+}
+
+func TestKYCEncryption_FailClosedInProduction(t *testing.T) {
+	originalEnv := os.Getenv("APP_ENV")
+	defer func() { _ = os.Setenv("APP_ENV", originalEnv) }()
+
+	// 1. Missing Vault in production must fail closed
+	_ = os.Setenv("APP_ENV", "production")
+	_ = os.Setenv("VAULT_ADDR", "")
+	_ = os.Setenv("VAULT_TOKEN", "")
+
+	_, err := EncryptKYC("secret-doc-123")
+	if err == nil {
+		t.Fatal("expected EncryptKYC to fail closed when Vault is missing in production, got nil error")
+	}
+
+	// 2. Unreachable Vault in production must fail closed
+	_ = os.Setenv("VAULT_ADDR", "http://127.0.0.1:59999")
+	_ = os.Setenv("VAULT_TOKEN", "fake-token")
+
+	_, err = EncryptKYC("secret-doc-123")
+	if err == nil {
+		t.Fatal("expected EncryptKYC to fail closed when Vault is unreachable in production, got nil error")
+	}
+
+	// 3. In non-production, fallback is allowed
+	_ = os.Setenv("APP_ENV", "development")
+	enc, err := EncryptKYC("secret-doc-123")
+	if err != nil {
+		t.Fatalf("expected EncryptKYC to fall back to local AES in development, got: %v", err)
+	}
+	dec, err := DecryptKYC(enc)
+	if err != nil {
+		t.Fatalf("failed to decrypt local fallback ciphertext: %v", err)
+	}
+	if dec != "secret-doc-123" {
+		t.Errorf("expected secret-doc-123, got: %s", dec)
 	}
 }

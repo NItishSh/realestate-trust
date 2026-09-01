@@ -175,10 +175,16 @@ test-e2e: ## Run E2E test suite (requires running services or compose)
 
 .PHONY: compose-test-e2e
 compose-test-e2e: ## Build, start Docker Compose stack, run E2E tests, and tear down cleanly
-	@echo -e "$(COLOR_INFO)Building and starting Docker Compose stack...$(COLOR_RESET)"
-	docker compose up -d --build
-	@echo -e "$(COLOR_INFO)Waiting for services to become healthy...$(COLOR_RESET)"
-	@sleep 15
+	@echo -e "$(COLOR_INFO)Building and starting Docker Compose infrastructure...$(COLOR_RESET)"
+	@docker compose down -v >/dev/null 2>&1 || true
+	docker compose up -d --build postgres rabbitmq
+	@echo -e "$(COLOR_INFO)Waiting for database and message broker to be healthy...$(COLOR_RESET)"
+	@sleep 5
+	@echo -e "$(COLOR_INFO)Running database schema migrations...$(COLOR_RESET)"
+	docker compose up identity-migrate transactions-migrate financing-migrate feedback-migrate tokenization-migrate ledger-migrate properties-migrate
+	@echo -e "$(COLOR_INFO)Starting microservices and frontend...$(COLOR_RESET)"
+	docker compose up -d
+	@sleep 5
 	@echo -e "$(COLOR_INFO)Running E2E tests...$(COLOR_RESET)"
 	@go test -v -tags=e2e ./test/e2e/... || (docker compose down -v && exit 1)
 	@echo -e "$(COLOR_SUCCESS)✓ E2E tests passed successfully.$(COLOR_RESET)"
