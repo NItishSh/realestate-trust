@@ -11,10 +11,11 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./infra/compose/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d tokenization_db"]
-      interval: 3s
+      test: ["CMD-SHELL", "grep -q postgres /proc/1/comm && pg_isready -U postgres -d tokenization_db"]
+      interval: 2s
       timeout: 3s
-      retries: 10
+      retries: 20
+      start_period: 5s
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
