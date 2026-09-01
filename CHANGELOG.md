@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/NItishSh/realestate-trust/compare/v1.1.1...v1.1.2) (2026-09-01)
+
+
+### Bug Fixes
+
+* **infra:** add retry loop for ESO webhook warm-up and add production porting guide ([4ccae12](https://github.com/NItishSh/realestate-trust/commit/4ccae12beaad993e90a6cb7b1ff0013cbd064afb))
+
 ## [1.1.1](https://github.com/NItishSh/realestate-trust/compare/v1.1.0...v1.1.1) (2026-09-01)
 
 
