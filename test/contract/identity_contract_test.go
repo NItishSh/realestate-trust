@@ -41,7 +41,7 @@ func TestIdentityServiceContract(t *testing.T) {
 	e.GET("/api/v1/users/:id", handler.GetUser)
 
 	// Helper to validate request/response against OpenAPI spec
-	validateInteraction := func(req *http.Request, valReq *http.Request, rec *httptest.ResponseRecorder) {
+	validateInteraction := func(valReq *http.Request, rec *httptest.ResponseRecorder) {
 		route, pathParams, err := router.FindRoute(valReq)
 		require.NoError(t, err, "Route not found in OpenAPI spec")
 
@@ -87,6 +87,6 @@ func TestIdentityServiceContract(t *testing.T) {
 
 		valReq := httptest.NewRequest(http.MethodPost, "http://localhost:3001/api/v1/users", bytes.NewBuffer(reqBody))
 		valReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		validateInteraction(req, valReq, rec)
+		validateInteraction(valReq, rec)
 	})
 }

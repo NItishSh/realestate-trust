@@ -41,7 +41,7 @@ func TestTransactionManagerContract(t *testing.T) {
 	e.POST("/api/v1/transactions", handler.CreateTransaction)
 
 	// Helper to validate request/response against OpenAPI spec
-	validateInteraction := func(req *http.Request, valReq *http.Request, rec *httptest.ResponseRecorder) {
+	validateInteraction := func(valReq *http.Request, rec *httptest.ResponseRecorder) {
 		route, pathParams, err := router.FindRoute(valReq)
 		require.NoError(t, err, "Route not found in OpenAPI spec")
 
@@ -83,6 +83,6 @@ func TestTransactionManagerContract(t *testing.T) {
 
 		valReq := httptest.NewRequest(http.MethodPost, "http://localhost:3000/api/v1/transactions", bytes.NewBuffer(reqBody))
 		valReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		validateInteraction(req, valReq, rec)
+		validateInteraction(valReq, rec)
 	})
 }
