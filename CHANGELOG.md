@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/NItishSh/realestate-trust/compare/v1.2.0...v1.3.0) (2026-09-01)
+
+
+### Features
+
+* **architecture:** complete Phase 3 gaps (GAP-08 fail-closed KMS, GAP-10 reloader rotation, compose-test-e2e) ([#16](https://github.com/NItishSh/realestate-trust/issues/16)) ([6019e8f](https://github.com/NItishSh/realestate-trust/commit/6019e8f23be175ca019a0ab7cc0290940efab577))
+
+
+### Bug Fixes
+
+* **ci:** make compose E2E test in CI deterministic and fix postgres healthcheck ([#18](https://github.com/NItishSh/realestate-trust/issues/18)) ([8d5a067](https://github.com/NItishSh/realestate-trust/commit/8d5a067afbf417635fc5ed5eb7de55641417a3ba))
+
 ## [1.2.0](https://github.com/NItishSh/realestate-trust/compare/v1.1.2...v1.2.0) (2026-09-01)
 
 
