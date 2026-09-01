@@ -18,6 +18,20 @@ resources:
     cpu: 250m
     memory: 256Mi
 
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
 healthCheck:
   path: /api/v1/health
   initialDelaySeconds: 5

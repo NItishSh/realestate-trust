@@ -18,18 +18,16 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
+      {{- with .Values.podSecurityContext }}
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: {{ .Release.Name }}
+        {{- with .Values.securityContext }}
         securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
