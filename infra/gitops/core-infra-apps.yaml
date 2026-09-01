@@ -139,7 +139,7 @@ spec:
   project: default
   source:
     repoURL: 'https://stakater.github.io/stakater-charts'
-    targetRevision: v1.4.21
+    targetRevision: 2.2.16
     chart: reloader
     helm:
       values: |
@@ -148,6 +148,8 @@ spec:
           watchGlobally: true
           logLevel: info
           reloadStrategy: default
+          deployment:
+            replicas: 1
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: reloader
