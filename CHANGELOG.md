@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/NItishSh/realestate-trust/compare/v1.0.1...v1.1.0) (2026-09-01)
+
+
+### Features
+
+* **infra:** terraform kind provisioning, keycloak IAM gitops integration, and dynamic smoke test auth ([bdfc35b](https://github.com/NItishSh/realestate-trust/commit/bdfc35b012d6a699ea87cee764886ba2722e7b46))
+
 ## [1.0.1](https://github.com/NItishSh/realestate-trust/compare/v1.0.0...v1.0.1) (2026-08-31)
 
 
