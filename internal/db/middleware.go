@@ -4,15 +4,46 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	echo "github.com/labstack/echo/v5"
+	middleware "github.com/labstack/echo/v5/middleware"
 	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 var JWTSecret = []byte("super-secret-key-for-local-demo-only")
+
+// GetCORSOrigins returns the configured CORS allowed origins from CORS_ALLOWED_ORIGINS,
+// falling back to local frontend and gateway origins if not specified.
+func GetCORSOrigins() []string {
+	if env := os.Getenv("CORS_ALLOWED_ORIGINS"); env != "" {
+		var origins []string
+		for _, o := range strings.Split(env, ",") {
+			trimmed := strings.TrimSpace(o)
+			if trimmed != "" {
+				origins = append(origins, trimmed)
+			}
+		}
+		if len(origins) > 0 {
+			return origins
+		}
+	}
+	return []string{"http://localhost:3000", "http://localhost:8080"}
+}
+
+// AuthRateLimiterMiddleware returns a rate limiting middleware configured for sensitive auth/registration endpoints.
+func AuthRateLimiterMiddleware() echo.MiddlewareFunc {
+	store := middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{
+		Rate:      10, // 10 req/sec
+		Burst:     20,
+		ExpiresIn: 5 * time.Minute,
+	})
+	return middleware.RateLimiter(store)
+}
 
 // GenerateJWT creates a dummy JWT for a given user ID and role (for demo purposes)
 func GenerateJWT(userID string, role core.UserRole) (string, error) {

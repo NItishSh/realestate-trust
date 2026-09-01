@@ -53,7 +53,7 @@ func main() {
 	e.Use(db.RequestLoggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
+		AllowOrigins: db.GetCORSOrigins(),
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
@@ -71,9 +71,9 @@ func main() {
 
 	api := e.Group("/api/v1")
 
-	// Public routes
-	api.POST("/users", handler.RegisterUser)
-	api.POST("/login", handler.Login)
+	// Public routes with rate limiting
+	api.POST("/users", handler.RegisterUser, db.AuthRateLimiterMiddleware())
+	api.POST("/login", handler.Login, db.AuthRateLimiterMiddleware())
 	api.POST("/refresh", handler.RefreshToken)
 	api.POST("/logout", handler.Logout)
 
