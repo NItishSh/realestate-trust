@@ -79,27 +79,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
 
-    - name: Verify Docker Compose Build
-      run: docker compose build
-
-    - name: Start Docker Compose Stack
-      run: docker compose up -d
-
-    - name: Wait for services
-      run: sleep 15
-
     - name: Set up Go for E2E
       uses: actions/setup-go@v7
       with:
         go-version: '1.26.5'
         cache: true
 
-    - name: Run E2E Tests
-      run: go test -v -tags=e2e ./test/e2e/...
-
-    - name: Stop Docker Compose Stack
-      if: always()
-      run: docker compose down
+    - name: Run Docker Compose E2E Test Suite
+      run: make compose-test-e2e
 
   build-and-push:
     name: Build & Push to GHCR
