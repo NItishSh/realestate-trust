@@ -116,23 +116,25 @@ kubectl create namespace realestate-trust --dry-run=client -o yaml | kubectl app
 
 log "Waiting for External Secrets Operator webhook to be ready..."
 kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=external-secrets-webhook -n external-secrets --timeout=180s
+sleep 5
 
-log "Applying vault-eso-resources.yaml..."
-kubectl apply -f "${SCRIPT_DIR}/eso-manifests/vault-eso-resources.yaml"
-
-log "Waiting for external secret database syncs..."
-ext_secrets=(
-  "identity-service-db-secret-sync"
-  "transaction-manager-db-secret-sync"
-  "financing-engine-db-secret-sync"
-  "tokenization-engine-db-secret-sync"
-  "ledger-service-db-secret-sync"
-  "property-registry-service-db-secret-sync"
-)
-for es in "${ext_secrets[@]}"; do
-  kubectl wait --for=condition=Ready externalsecret/"${es}" -n realestate-trust --timeout=60s
+log "Applying vault-eso-resources.yaml (with retry for webhook warm-up)..."
+applied=false
+for i in $(seq 1 12); do
+  if kubectl apply -f "${SCRIPT_DIR}/eso-manifests/vault-eso-resources.yaml"; then
+    applied=true
+    break
+  fi
+  echo "External Secrets admission webhook is warming up. Retrying in 5s (attempt $i/12)..."
+  sleep 5
 done
 
-kubectl wait --for=condition=Ready externalsecret/grafana-admin-secret-sync -n observability --timeout=60s
+if [ "$applied" = false ]; then
+  err "Failed to apply vault-eso-resources.yaml after multiple attempts."
+fi
+
+log "Waiting for external secret database syncs..."
+kubectl wait --for=condition=Ready externalsecret --all -n realestate-trust --timeout=180s
+kubectl wait --for=condition=Ready externalsecret --all -n observability --timeout=180s
 
 log "Vault and External Secrets Operator successfully configured!"
