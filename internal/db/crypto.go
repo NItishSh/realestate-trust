@@ -9,7 +9,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -27,17 +29,26 @@ func getEncryptionKey() []byte {
 }
 
 // EncryptKYC encrypts a document reference using Vault Transit engine if configured,
-// falling back to local AES-256-GCM.
+// falling back to local AES-256-GCM in non-production environments.
+// In production (APP_ENV=production), it fails closed to prevent split-key degradation.
 func EncryptKYC(plaintext string) (string, error) {
 	vaultAddr := os.Getenv("VAULT_ADDR")
 	vaultToken := os.Getenv("VAULT_TOKEN")
+	appEnv := os.Getenv("APP_ENV")
 
 	if vaultAddr != "" && vaultToken != "" {
 		ciphertext, err := encryptWithVault(vaultAddr, vaultToken, plaintext)
 		if err == nil {
 			return ciphertext, nil
 		}
-		// If Vault fails, we fall back to local GCM to ensure robustness in tests
+		if appEnv == "production" {
+			slog.Error("CRITICAL: Vault Transit KMS encryption failed in production; failing closed to prevent split-key degradation", "err", err)
+			return "", fmt.Errorf("kms transit encryption failed in production: %w", err)
+		}
+		slog.Warn("Vault Transit encryption failed, falling back to local AES-GCM (non-production environment)", "err", err)
+	} else if appEnv == "production" {
+		slog.Error("CRITICAL: Vault Transit KMS configuration missing in production environment; failing closed")
+		return "", errors.New("kms transit configuration (VAULT_ADDR/VAULT_TOKEN) required in production")
 	}
 
 	return encryptLocal(plaintext)
@@ -56,7 +67,9 @@ func DecryptKYC(ciphertext string) (string, error) {
 			if err == nil {
 				return plaintext, nil
 			}
+			return "", fmt.Errorf("vault transit decryption failed: %w", err)
 		}
+		return "", errors.New("vault transit credentials required to decrypt vault ciphertext")
 	}
 
 	return decryptLocal(ciphertext)

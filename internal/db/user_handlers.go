@@ -3,6 +3,7 @@ package db
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	echo "github.com/labstack/echo/v5"
@@ -37,6 +38,9 @@ func (h *UserHandler) RegisterUser(c *echo.Context) error {
 
 	user, err := h.Repo.CreateUser(req.Email, string(hashedPassword), req.FullName, req.Role)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "unique constraint") {
+			return c.JSON(http.StatusConflict, map[string]string{"error": "User with this email already exists"})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to register user"})
 	}
 
