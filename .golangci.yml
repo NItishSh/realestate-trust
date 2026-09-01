@@ -1,0 +1,19 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - unparam
+    - misspell
+    - unconvert
+  settings:
+    unparam:
+      check-exported: false

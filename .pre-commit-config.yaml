@@ -28,11 +28,41 @@ repos:
       - id: go-fmt
       - id: go-mod-tidy
 
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.4
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
+      - id: terraform_trivy
+      - id: terraform_checkov
+        args:
+          - --args=--framework terraform
+          - --args=--compact
+          - --args=--quiet
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+
   - repo: local
     hooks:
+      - id: golangci-lint
+        name: golangci-lint
+        entry: golangci-lint run ./cmd/... ./internal/... ./test/...
+        types: [go]
+        language: system
+        pass_filenames: false
       - id: helm-lint
         name: helm-lint
         entry: helm lint infra/helm/charts/microservice
         language: system
         files: ^infra/helm/
+        pass_filenames: false
+      - id: docker-compose-check
+        name: docker-compose-check
+        entry: docker compose config -q
+        language: system
+        files: ^docker-compose.*\.ya?ml$
         pass_filenames: false

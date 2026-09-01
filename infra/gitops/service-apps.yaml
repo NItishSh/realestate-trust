@@ -3,11 +3,13 @@ kind: Application
 metadata:
   name: identity-service
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -28,7 +30,20 @@ spec:
             echo "Sleeping for pod startup..."
             sleep 10
             echo "Verifying identity-service User Registration API endpoint..."
-            curl -f -X POST -H "Content-Type: application/json" -d '{"email":"smoke@test.com","fullName":"Smoke Tester","role":"BUYER"}' http://identity-service/api/v1/users
+            EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+            PASS="SmokePass_${RANDOM}${RANDOM}"
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
         db:
           migrations:
             enabled: true
@@ -69,11 +84,13 @@ kind: Application
 metadata:
   name: transaction-manager
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -96,9 +113,36 @@ spec:
           enabled: true
           script: |
             echo "Sleeping for pod startup..."
-            sleep 10
-            echo "Verifying transaction-manager Escrow Transaction API endpoint..."
-            curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","buyerId":"usr-123","sellerId":"usr-456","totalAmount":500000.00}' http://transaction-manager/api/v1/transactions
+            # 1. Wait for identity-service to get JWT token
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://identity-service/api/v1/health; then
+                break
+              fi
+              echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+
+            EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+            PASS="SmokePass_${RANDOM}${RANDOM}"
+            curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users
+            TOKEN=$(curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+            # 2. Verify transaction-manager Escrow Transaction API endpoint
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              PROP_ID="prop-smoke-${RANDOM}"
+              if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"buyerId\":\"usr-123\",\"sellerId\":\"usr-456\",\"totalAmount\":500000.00}" http://transaction-manager/api/v1/transactions; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "transaction-manager not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
         db:
           migrations:
             enabled: true
@@ -139,11 +183,13 @@ kind: Application
 metadata:
   name: financing-engine
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -155,9 +201,36 @@ spec:
           enabled: true
           script: |
             echo "Sleeping for pod startup..."
-            sleep 10
-            echo "Verifying financing-engine Loan underwriting API endpoint..."
-            curl -f -X POST -H "Content-Type: application/json" -d '{"transactionId":"tx-123","userId":"usr-123","requestedAmount":400000.00}' http://financing-engine/api/v1/loans
+            # 1. Wait for identity-service to get JWT token
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://identity-service/api/v1/health; then
+                break
+              fi
+              echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+
+            EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+            PASS="SmokePass_${RANDOM}${RANDOM}"
+            curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users
+            TOKEN=$(curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+            # 2. Verify financing-engine Loan underwriting API endpoint
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              TX_ID="tx-smoke-${RANDOM}"
+              if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"transactionId\":\"${TX_ID}\",\"userId\":\"usr-123\",\"requestedAmount\":400000.00,\"propertyValue\":1000000.00}" http://financing-engine/api/v1/loans; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "financing-engine not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
         db:
           migrations:
             enabled: true
@@ -202,11 +275,13 @@ kind: Application
 metadata:
   name: tokenization-engine
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -225,9 +300,36 @@ spec:
           enabled: true
           script: |
             echo "Sleeping for pod startup..."
-            sleep 10
-            echo "Verifying tokenization-engine pool creation API endpoint..."
-            curl -f -X POST -H "Content-Type: application/json" -d '{"propertyId":"prop-123","totalTokens":1000,"tokenPrice":500.0}' http://tokenization-engine/api/v1/pools
+            # 1. Wait for identity-service to get JWT token
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://identity-service/api/v1/health; then
+                break
+              fi
+              echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+
+            EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+            PASS="SmokePass_${RANDOM}${RANDOM}"
+            curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users
+            TOKEN=$(curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+            # 2. Verify tokenization-engine pool creation API endpoint
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              PROP_ID="prop-smoke-${RANDOM}"
+              if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"propertyId\":\"${PROP_ID}\",\"totalTokens\":1000,\"tokenPrice\":500.0}" http://tokenization-engine/api/v1/pools; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "tokenization-engine not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: realestate-trust
@@ -241,11 +343,13 @@ kind: Application
 metadata:
   name: ledger-service
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   project: default
   source:
     repoURL: 'https://github.com/NItishSh/realestate-trust.git'
-    targetRevision: HEAD
+    targetRevision: fix-local-helm-ports
     path: infra/helm/charts/microservice
     helm:
       values: |
@@ -257,9 +361,35 @@ spec:
           enabled: true
           script: |
             echo "Sleeping for pod startup..."
-            sleep 10
-            echo "Verifying ledger-service transaction block write API endpoint..."
-            curl -f -X POST -H "Content-Type: application/json" -d '{"payload":"smoke audit log"}' http://ledger-service/api/v1/logs
+            # 1. Wait for identity-service to get JWT token
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://identity-service/api/v1/health; then
+                break
+              fi
+              echo "identity-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+
+            EMAIL="smoke-${RANDOM}-$(( $(date +%s) % 100000 ))@test.local"
+            PASS="SmokePass_${RANDOM}${RANDOM}"
+            curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\",\"fullName\":\"Smoke Tester\",\"role\":\"BUYER\"}" http://identity-service/api/v1/users
+            TOKEN=$(curl -sf -X POST -H "Content-Type: application/json" -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASS}\"}" http://identity-service/api/v1/login | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+            # 2. Verify ledger-service transaction block write API endpoint
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"payload":"smoke audit log"}' http://ledger-service/api/v1/logs; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "ledger-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: realestate-trust

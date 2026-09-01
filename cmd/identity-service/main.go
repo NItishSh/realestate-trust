@@ -80,6 +80,7 @@ func main() {
 	// Protected routes
 	protected := api.Group("")
 	protected.Use(echojwt.WithConfig(echojwt.Config{
+		KeyFunc:    db.GetJWTKeyFunc(),
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}))

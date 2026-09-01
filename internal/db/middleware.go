@@ -40,14 +40,46 @@ func RBACMiddleware(allowedRoles ...core.UserRole) echo.MiddlewareFunc {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: invalid claims"})
 			}
 
-			roleRaw, ok := claims["role"].(string)
-			if !ok {
+			// Extract roles from token: support direct role, Keycloak realm_access, and resource_access
+			userRoles := make(map[core.UserRole]bool)
+
+			// 1. Direct role claim (legacy/local test tokens)
+			if roleRaw, ok := claims["role"].(string); ok && roleRaw != "" {
+				userRoles[core.UserRole(roleRaw)] = true
+			}
+
+			// 2. Keycloak realm_access.roles
+			if realmAccess, ok := claims["realm_access"].(map[string]interface{}); ok {
+				if rolesList, ok := realmAccess["roles"].([]interface{}); ok {
+					for _, r := range rolesList {
+						if rStr, ok := r.(string); ok {
+							userRoles[core.UserRole(rStr)] = true
+						}
+					}
+				}
+			}
+
+			// 3. Keycloak resource_access.<client>.roles
+			if resAccess, ok := claims["resource_access"].(map[string]interface{}); ok {
+				for _, clientVal := range resAccess {
+					if clientMap, ok := clientVal.(map[string]interface{}); ok {
+						if rolesList, ok := clientMap["roles"].([]interface{}); ok {
+							for _, r := range rolesList {
+								if rStr, ok := r.(string); ok {
+									userRoles[core.UserRole(rStr)] = true
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if len(userRoles) == 0 {
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden: missing role in token"})
 			}
-			role := core.UserRole(roleRaw)
 
 			for _, allowed := range allowedRoles {
-				if role == allowed {
+				if userRoles[allowed] {
 					return next(c)
 				}
 			}
