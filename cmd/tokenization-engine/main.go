@@ -13,6 +13,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v5"
 	echo "github.com/labstack/echo/v5"
 	middleware "github.com/labstack/echo/v5/middleware"
+	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -72,9 +73,9 @@ func main() {
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}))
-	api.POST("/pools", handler.CreatePool)
+	api.POST("/pools", handler.CreatePool, db.RBACMiddleware(core.Seller, core.Broker, core.Admin))
 	api.GET("/pools", handler.GetPools)
-	api.POST("/pools/:id/buy", handler.BuyShares)
+	api.POST("/pools/:id/buy", handler.BuyShares, db.RBACMiddleware(core.Buyer, core.Admin))
 
 	srv := &http.Server{
 		Addr:         ":8083",

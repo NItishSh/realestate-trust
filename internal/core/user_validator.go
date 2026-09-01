@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"html"
 	"net/mail"
 	"strings"
 )
@@ -14,7 +15,19 @@ const (
 	Broker  UserRole = "BROKER"
 	Officer UserRole = "OFFICER"
 	Admin   UserRole = "ADMIN"
+
+	RoleBuyer   = Buyer
+	RoleSeller  = Seller
+	RoleBroker  = Broker
+	RoleOfficer = Officer
+	RoleAdmin   = Admin
 )
+
+// SanitizeString removes leading/trailing spaces and neutralizes HTML injection.
+func SanitizeString(s string) string {
+	trimmed := strings.TrimSpace(s)
+	return html.EscapeString(trimmed)
+}
 
 type RegisterUserRequest struct {
 	Email    string   `json:"email"`

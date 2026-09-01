@@ -422,3 +422,109 @@ func TestAuthRateLimiterMiddleware(t *testing.T) {
 		}
 	}
 }
+
+func TestUserHandlers_ABACEnforcement(t *testing.T) {
+	e := echo.New()
+	repo := NewInMemoryUserRepository()
+	handler := NewUserHandler(repo)
+
+	// Create test users
+	userA, _ := repo.CreateUser("user-a@example.com", "User A", "secret", core.Buyer)
+	userB, _ := repo.CreateUser("user-b@example.com", "User B", "secret", core.Buyer)
+
+	// 1. User A cannot view User B profile (403 Forbidden)
+	tokenStrA, _ := GenerateJWT(userA.ID, core.Buyer)
+	tokenA, _ := jwt.Parse(tokenStrA, func(token *jwt.Token) (interface{}, error) {
+		return JWTSecret, nil
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/"+userB.ID, nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPathValues(echo.PathValues{echo.PathValue{Name: "id", Value: userB.ID}})
+	c.Set("user", tokenA)
+
+	_ = handler.GetUser(c)
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden for User A accessing User B, got %d", rec.Code)
+	}
+
+	// 2. Admin can view User B profile (200 OK)
+	tokenStrAdmin, _ := GenerateJWT("admin-id", core.Admin)
+	tokenAdmin, _ := jwt.Parse(tokenStrAdmin, func(token *jwt.Token) (interface{}, error) {
+		return JWTSecret, nil
+	})
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/users/"+userB.ID, nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetPathValues(echo.PathValues{echo.PathValue{Name: "id", Value: userB.ID}})
+	c.Set("user", tokenAdmin)
+
+	_ = handler.GetUser(c)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 OK for Admin accessing User B, got %d", rec.Code)
+	}
+
+	// 3. User A cannot submit KYC for User B (403 Forbidden)
+	kycBody, _ := json.Marshal(core.KYCSubmissionRequest{
+		DocumentType:      "PASSPORT",
+		DocumentReference: "PASS12345",
+	})
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/users/"+userB.ID+"/kyc", bytes.NewBuffer(kycBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetPathValues(echo.PathValues{echo.PathValue{Name: "id", Value: userB.ID}})
+	c.Set("user", tokenA)
+
+	_ = handler.SubmitKYC(c)
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden for User A submitting KYC for User B, got %d", rec.Code)
+	}
+}
+
+func TestRBACMiddleware_Enforcement(t *testing.T) {
+	e := echo.New()
+	e.GET("/api/v1/officer-only", func(c *echo.Context) error {
+		return c.String(http.StatusOK, "welcome officer")
+	}, RBACMiddleware(core.Officer, core.Admin))
+
+	// 1. Buyer gets 403
+	tokenStrBuyer, _ := GenerateJWT("buyer-id", core.Buyer)
+	tokenBuyer, _ := jwt.Parse(tokenStrBuyer, func(token *jwt.Token) (interface{}, error) {
+		return JWTSecret, nil
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/officer-only", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("user", tokenBuyer)
+
+	_ = RBACMiddleware(core.Officer, core.Admin)(func(c *echo.Context) error {
+		return c.String(http.StatusOK, "welcome officer")
+	})(c)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden for Buyer on officer route, got %d", rec.Code)
+	}
+
+	// 2. Officer gets 200
+	tokenStrOfficer, _ := GenerateJWT("officer-id", core.Officer)
+	tokenOfficer, _ := jwt.Parse(tokenStrOfficer, func(token *jwt.Token) (interface{}, error) {
+		return JWTSecret, nil
+	})
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/officer-only", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.Set("user", tokenOfficer)
+
+	_ = RBACMiddleware(core.Officer, core.Admin)(func(c *echo.Context) error {
+		return c.String(http.StatusOK, "welcome officer")
+	})(c)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 OK for Officer on officer route, got %d", rec.Code)
+	}
+}

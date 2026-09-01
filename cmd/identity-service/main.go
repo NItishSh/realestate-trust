@@ -13,6 +13,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v5"
 	echo "github.com/labstack/echo/v5"
 	middleware "github.com/labstack/echo/v5/middleware"
+	"github.com/realestate-trust/monorepo/internal/core"
 	"github.com/realestate-trust/monorepo/internal/db"
 )
 
@@ -84,7 +85,7 @@ func main() {
 		SigningKey: db.JWTSecret,
 		ContextKey: "user",
 	}))
-	protected.GET("/users", handler.GetUsers)
+	protected.GET("/users", handler.GetUsers, db.RBACMiddleware(core.Officer, core.Admin))
 	protected.GET("/users/:id", handler.GetUser)
 	protected.POST("/users/:id/kyc", handler.SubmitKYC)
 	protected.GET("/users/:id/kyc/status", handler.GetKYCStatus)
