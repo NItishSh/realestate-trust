@@ -59,7 +59,7 @@ func (r *SQLLedgerRepository) WriteLog(eventID, payload string) (*core.AuditEntr
 
 	entry := &core.AuditEntry{
 		Index:        index,
-		Timestamp:    time.Now().UTC(),
+		Timestamp:    time.Now().UTC().Truncate(time.Microsecond),
 		Payload:      payload,
 		PreviousHash: prevHash,
 		EventID:      eventID,

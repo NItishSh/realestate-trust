@@ -18,7 +18,7 @@ type AuditEntry struct {
 
 // CalculateHash generates SHA256 code mapping payload content deterministically.
 func (e *AuditEntry) CalculateHash() string {
-	canonicalTime := e.Timestamp.UTC().Format(time.RFC3339Nano)
+	canonicalTime := e.Timestamp.UTC().Truncate(time.Microsecond).Format(time.RFC3339Nano)
 	record := fmt.Sprintf("%d%s%s%s%s", e.Index, canonicalTime, e.Payload, e.PreviousHash, e.EventID)
 	h := sha256.New()
 	h.Write([]byte(record))
