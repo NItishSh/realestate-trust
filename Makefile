@@ -281,6 +281,21 @@ port-forward-vault: ## Port-forward HashiCorp Vault to localhost:8200
 	@echo -e "$(COLOR_INFO)Port-forwarding Vault on http://localhost:8200...$(COLOR_RESET)"
 	kubectl port-forward svc/vault -n vault 8200:8200
 
+.PHONY: port-forward-opencost
+port-forward-opencost: ## Port-forward OpenCost FinOps UI to localhost:9003
+	@echo -e "$(COLOR_INFO)Port-forwarding OpenCost UI on http://localhost:9003...$(COLOR_RESET)"
+	kubectl port-forward svc/opencost -n observability 9003:9003
+
+.PHONY: finops-rightsize
+finops-rightsize: ## Execute automated FinOps right-sizing policy engine against cluster
+	@echo -e "$(COLOR_INFO)Running FinOps Workload Right-Sizing Engine...$(COLOR_RESET)"
+	go run ./cmd/re-cli finops rightsize
+
+.PHONY: finops-rightsize-dryrun
+finops-rightsize-dryrun: ## Preview FinOps right-sizing recommendations without modifying files
+	@echo -e "$(COLOR_INFO)Previewing FinOps Workload Right-Sizing Recommendations...$(COLOR_RESET)"
+	go run ./cmd/re-cli finops rightsize --dry-run
+
 # ==============================================================================
 # Clean & Housekeeping
 # ==============================================================================

@@ -1,0 +1,55 @@
+name: FinOps Automated Workload Right-Sizing
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Every Monday at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rightsize:
+    name: Generate Right-Sizing Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Run Go FinOps Policy Engine
+        run: go run ./cmd/re-cli finops rightsize
+
+      - name: Check for Drift
+        id: git-diff
+        run: |
+          if git diff --quiet infra/kind/values/; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Right-Sizing Pull Request
+        if: steps.git-diff.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: finops/weekly-rightsizing
+          title: "finops(autotune): weekly microservice resource right-sizing from VPA"
+          commit-message: "finops(autotune): update microservice requests and limits from VPA telemetry"
+          body: |
+            ## 💰 Automated FinOps Workload Right-Sizing
+
+            This automated PR adjusts microservice resource `requests` and `limits` based on historical p95/p99 usage metrics from VPA / OpenCost.
+
+            ### Safety Policies Applied:
+            - **+20% Buffer Headroom** applied above VPA target recommendations.
+            - **Memory Limits** anchored at 1.5x of requests to prevent `OOMKilled`.
+            - **Minimum Floors** enforced (25m CPU, 32Mi RAM) to avoid cold-start delays.
+
+            *Review the diff and merge to allow ArgoCD to roll out the updated resource allocations.*
