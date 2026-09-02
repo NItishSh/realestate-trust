@@ -1,23 +1,24 @@
 # 🗺️ RealEstate-Trust: Feature Evolution & Architectural Journey
 
-An authoritative reference detailing the complete evolutionary history, architectural milestones, supported features, and security posture of the **RealEstate-Trust Monorepo Platform** across its first 23 Pull Requests and major milestone releases.
+An authoritative reference detailing the complete evolutionary history, architectural milestones, supported features, and security posture of the **RealEstate-Trust Monorepo Platform** from initial repository genesis across its Pull Requests and major milestone releases.
 
 ---
 
 ## 📑 Table of Contents
 1. [Executive Summary & System Vision](#-executive-summary--system-vision)
-2. [Evolutionary Timeline](#-evolutionary-timeline)
-3. [Chronological Engineering Phases](#-chronological-engineering-phases)
-4. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-5. [Pull Request (PR) Index (PRs #1 – #23)](#-pull-request-pr-index-prs-1--23)
-6. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
-7. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
+2. [Foundational Genesis Commits (Pre-PR Architecture)](#-foundational-genesis-commits-pre-pr-architecture)
+3. [Evolutionary Timeline](#-evolutionary-timeline)
+4. [Chronological Engineering Phases](#-chronological-engineering-phases)
+5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
+6. [Pull Request (PR) Index (PRs #1 – #33)](#-pull-request-pr-index-prs-1--33)
+7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
+8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
 ---
 
 ## 🎯 Executive Summary & System Vision
 
-**RealEstate-Trust** is an institutional-grade, zero-trust digital real estate tokenization and escrow transaction platform. Built as a Go-based microservice monorepo with a Next.js web application frontend, it provides cryptographically verified property escrows, tokenized fractional investments, automated bank financing workflows, and an immutable audit ledger.
+**RealEstate-Trust** is an institutional-grade, zero-trust digital real estate tokenization and escrow transaction platform. Built as a Go-based microservice monorepo with a Next.js web application frontend, it provides cryptographically verified property escrows, tokenized fractional investments, automated bank financing workflows, an immutable audit ledger, and continuous FinOps right-sizing.
 
 ```mermaid
 flowchart TB
@@ -31,6 +32,7 @@ flowchart TB
         RateLimit["Memory Token-Bucket Rate Limiter"]
         JWKS["Keycloak OIDC / Dynamic JWKS Client"]
         RBAC_ABAC["RBAC Role Gates + ABAC Ownership"]
+        Headers["HSTS, CSP & Security Headers"]
     end
 
     subgraph Services["⚙️ Domain Microservices (Distroless / UID 65532)"]
@@ -54,6 +56,12 @@ flowchart TB
         Vault["HashiCorp Vault KMS / Local AES-GCM"]
     end
 
+    subgraph FinOpsLayer["💰 FinOps & Observability"]
+        VPA["Vertical Pod Autoscaler (VPA)"]
+        OpenCost["OpenCost FinOps UI (:9003)"]
+        Prometheus["Prometheus / Grafana (:3001)"]
+    end
+
     ClientLayer --> GatewayLayer
     GatewayLayer --> Services
     TxManager --> Outbox
@@ -61,7 +69,46 @@ flowchart TB
     RabbitMQ --> Ledger
     Services --> Postgres
     Identity --> Vault
+    Services -.-> Prometheus
+    Prometheus --> VPA
+    Prometheus --> OpenCost
 ```
+
+---
+
+## 🏛️ Foundational Genesis Commits (Pre-PR Architecture)
+
+Prior to formal pull request workflow gating, the platform underwent rapid architectural foundation construction across several critical commit milestones:
+
+### 1. Monorepo Scaffolding & Initial Microservices (`4de286c` – `898b9db`)
+- Initialized Go monorepo structure with 5 foundational microservices: `transaction-manager`, `identity-service`, `financing-engine`, `tokenization-engine`, and `ledger-service`.
+- Integrated root `Makefile`, pre-commit hooks (`golangci-lint`, `hadolint`, `tflint`), and initial CI test workflows.
+- Implemented critical domain rules (e.g., 80% LTV mortgage limits, deal status state machine).
+
+### 2. Next.js Frontend Bootstrap & Luxury UI (`04549b0` – `1b57eb6`)
+- Bootstrapped Next.js 14 React frontend with Tailwind CSS v4 and Zustand state stores.
+- Designed luxury aesthetic with gold accents, refined typography, and glassmorphism styling.
+- Localized all currency displays to Indian Rupees (INR ₹).
+- Added interactive guided user journeys widget and buyer/seller/broker dashboard modals.
+
+### 3. Service Expansion & Schema Persistence (`1d2d4fe` – `6bece76`)
+- **`property-registry-service`** (`:8085`): Added property marketplace UI, land title registry, and escrow funding workflows.
+- **`feedback-service`** (`:8086`): Added post-transaction review collection and 1–5 rating validation.
+- Implemented PostgreSQL persistence repositories across all 7 services with isolated databases (`identity_db`, `transactions_db`, `properties_db`, `financing_db`, `tokenization_db`, `ledger_db`, `feedback_db`) and migration hooks (`000001_*.up.sql`).
+
+### 4. Framework Modernization & Authentication (`4e14069` – `51a1cc4`)
+- Migrated all microservices and HTTP handlers to the **Echo v5** web framework.
+- Upgraded password security with Bcrypt hashing (Cost 12), user session management, refresh token rotation, and idle logout timers.
+- Added initial AES-256-GCM encryption utilities for KYC/PII data.
+
+### 5. Asynchronous Messaging & Tracing Mesh (`9bae287` – `3c5f197`)
+- Integrated RabbitMQ AMQP messaging with publisher confirms, manual acknowledgments, and Dead Letter Queues (DLQs).
+- Implemented distributed correlation ID middleware (`X-Correlation-ID`) propagating across HTTP headers, log context, and AMQP message attributes.
+
+### 6. Service Mesh, Vault KMS & GitOps Packaging (`00e49a2` – `64e284a`)
+- Integrated **Istio Service Mesh** and Ingress Gateway routing with ClusterIP service backends.
+- Integrated **HashiCorp Vault** and **External Secrets Operator (ESO)** for dynamic database credential rotation and secret synchronization.
+- Packaged services into reusable Helm charts (`infra/helm/charts/microservice`) with KEDA autoscaling triggers and ArgoCD App-of-Apps GitOps definitions.
 
 ---
 
@@ -70,25 +117,26 @@ flowchart TB
 ```mermaid
 timeline
     title RealEstate-Trust Platform Evolutionary Journey
-    Phase 1 : Monorepo Scaffolding : 7 Go Microservices : Next.js Frontend : Echo Web Framework
-    Phase 2 : Distributed Storage & Schema : 7 Isolated PostgreSQL Schemas : Idempotent Auto-Migrations : Golangci-lint
-    Phase 3 : Cloud-Native & GitOps : Terraform Kind Provisioner : ArgoCD App-of-Apps : Keycloak IAM OIDC : External Secrets
-    Phase 4 : Event-Driven Architecture : Transactional Outbox Pattern : Outbox Relay Daemon : CloudEvents Spec : AMQP Broker
-    Phase 5 : Data Integrity & Concurrency : Distributed Ledger Idempotency : Row-Level Locking : Fail-Closed KMS Encryption
-    Phase 6 : Production Hardening & Zero-Trust : HTTP Client Timeouts : Restricted Pod Security : RBAC/ABAC Gates : Rate Limiting
+    Genesis : Monorepo Bootstrap : 7 Microservices : Next.js UI : Echo v5 : RabbitMQ : Vault & Istio
+    Phase 1 : Code Quality Baseline : Golangci-lint : Matrix CI : SemVer Release Please (v1.0.0)
+    Phase 2 : Cloud-Native Infrastructure : Terraform Kind Provisioning : Keycloak IAM OIDC : ESO v1beta1
+    Phase 3 : Distributed Concurrency : Transactional Outbox Pattern : Ledger Idempotency : Row Locks
+    Phase 4 : Production KMS & Reliability : Fail-Closed Vault KMS : Stakater Reloader : Docker Compose E2E
+    Phase 5 : Production Code Hardening : HTTP Client Timeouts : Bank Webhook Secrets : Rating Bounds
+    Phase 6 : Zero-Trust & Container PSS : Restricted PSS Profiles : RBAC Route Gates : ABAC Ownership
+    Phase 7 : Enterprise Architecture : Typed Sentinel Errors : Enterprise HSTS/CSP : Deep Health Probes
+    Phase 8 : Continuous FinOps & Observability : Go Right-Sizing CLI : VPA Auto-tuning : OpenCost GitOps
 ```
 
 ---
 
 ## 🚀 Chronological Engineering Phases
 
-### **Phase 1: Monorepo Foundation & Microservices Scaffolding**
-- **Focus**: Establishing clean domain microservice boundaries using Go, Echo, and a Next.js frontend.
+### **Phase 1: Code Quality Baseline & Initial Release**
+- **Focus**: Formatting, error checking, and automated release pipelines.
 - **Milestones**:
-  - Structured 7 independent services (`identity-service`, `transaction-manager`, `property-registry-service`, `financing-engine`, `tokenization-engine`, `ledger-service`, `feedback-service`) and a shared `internal/` core layer.
-  - Implemented initial domain entities, state machines, and REST API handlers.
-  - Formatted codebase and established `golangci-lint` code quality baseline ([PR #1](https://github.com/NItishSh/realestate-trust/pull/1)).
-  - **Release**: `v1.0.0` ([PR #2](https://github.com/NItishSh/realestate-trust/pull/2)).
+  - Formatted codebase and resolved all lint errors ([PR #1](https://github.com/NItishSh/realestate-trust/pull/1)).
+  - Automated SemVer release pipeline with Release Please ([PR #2](https://github.com/NItishSh/realestate-trust/pull/2) - `v1.0.0`).
 
 ---
 
@@ -147,6 +195,30 @@ timeline
 
 ---
 
+### **Phase 7: Enterprise Architecture, Typed Errors & Deep Probes**
+- **Focus**: Clean domain error propagation, enterprise headers, and Kubernetes probe accuracy.
+- **Milestones**:
+  - **Typed Sentinel Errors**: Replaced fragile string matching with `errors.Is(err, core.ErrNotFound)` and domain sentinel error definitions ([PR #25](https://github.com/NItishSh/realestate-trust/pull/25)).
+  - **Enterprise Security Headers**: Enforced HSTS (`max-age=31536000`), CSP (`default-src 'self'`), `X-Frame-Options: DENY`, and `X-Content-Type-Options: nosniff` ([PR #25](https://github.com/NItishSh/realestate-trust/pull/25)).
+  - **Centralized Service Configuration**: Created unified `internal/core/config.go` with fail-fast validation and diagnostic boot logging ([PR #27](https://github.com/NItishSh/realestate-trust/pull/27)).
+  - **Deep Kubernetes Health Probes**: Decoupled `/api/v1/health/live` (process liveness) from `/api/v1/health/ready` (active PostgreSQL pool ping and RabbitMQ connection checks) ([PR #27](https://github.com/NItishSh/realestate-trust/pull/27)).
+  - **Smoke Test RBAC Alignment**: Fixed tokenization-engine smoke test user role to `SELLER` to satisfy route authorization ([PR #28](https://github.com/NItishSh/realestate-trust/pull/28)).
+  - **Releases**: `v1.5.0` ([PR #26](https://github.com/NItishSh/realestate-trust/pull/26)), `v1.6.0` ([PR #29](https://github.com/NItishSh/realestate-trust/pull/29)).
+
+---
+
+### **Phase 8: Continuous FinOps Workload Right-Sizing & Observability**
+- **Focus**: Eliminating idle cloud compute waste and automated feedback loops.
+- **Milestones**:
+  - **Pure Go FinOps CLI**: Implemented `re-cli finops rightsize [--dry-run]` natively in Go with +20% safety headroom and 1.5x memory limit multiplier ([PR #30](https://github.com/NItishSh/realestate-trust/pull/30)).
+  - **OpenCost GitOps Ingestion**: Deployed OpenCost in ArgoCD Sync Wave 3 connected to Prometheus for real-time cost breakdown ([PR #30](https://github.com/NItishSh/realestate-trust/pull/30)).
+  - **VPA Helm Templates**: Added `VerticalPodAutoscaler` recommendation templates (`updateMode: "Off"`) to microservice Helm charts ([PR #30](https://github.com/NItishSh/realestate-trust/pull/30)).
+  - **Surgical AST YAML Manipulation**: Upgraded right-sizing engine to use `yaml.Node` AST manipulation, preserving exact key ordering, comments, and whitespace formatting ([PR #31](https://github.com/NItishSh/realestate-trust/pull/31)).
+  - **Weekly Automated Feedback Loop**: Added `.github/workflows/finops-rightsize.yaml` running weekly to open automated right-sizing PRs.
+  - **Comprehensive Documentation Sync**: Synchronized README, System Manual, and Microservices Catalog with the 7-service architecture ([PR #32](https://github.com/NItishSh/realestate-trust/pull/32), [PR #33](https://github.com/NItishSh/realestate-trust/pull/33)).
+
+---
+
 ## 📊 Supported Feature & Capability Matrix
 
 | Feature | Owning Service | Port | Primary Endpoints | Storage Table | Security & Access Policy |
@@ -159,10 +231,11 @@ timeline
 | **Fractional Asset Tokenization** | `tokenization-engine` | `8083` | `POST /api/v1/pools`<br>`GET /api/v1/pools`<br>`POST /api/v1/pools/:id/buy` | `fractional_pools`, `fractional_holdings` | `SELECT FOR UPDATE` row locks, RBAC Seller/Buyer |
 | **Cryptographic Immutable Ledger** | `ledger-service` | `8084` | `POST /api/v1/entries`<br>`GET /api/v1/entries` | `ledger_entries` | SHA-256 Merkle chain, Unique compound idempotency key |
 | **Broker Reputation & Feedback** | `feedback-service` | `8086` | `POST /api/v1/reviews`<br>`GET /api/v1/brokers/:id/rating` | `broker_feedback` | 1–5 rating validation, CORS origin restriction |
+| **FinOps Right-Sizing** | `re-cli` | N/A | `re-cli finops rightsize` | `infra/kind/values/*.yaml` | VPA p95 telemetry, +20% safety headroom, 1.5x limit multiplier |
 
 ---
 
-## 📦 Pull Request (PR) Index (PRs #1 – #23)
+## 📦 Pull Request (PR) Index (PRs #1 – #33)
 
 | PR # | Type | Title | Key Files Changed | Impact |
 | :---: | :---: | :--- | :--- | :--- |
@@ -194,8 +267,11 @@ timeline
 | **[#26](https://github.com/NItishSh/realestate-trust/pull/26)** | `release` | Release 1.5.0 | Monorepo root | Minor version release |
 | **[#27](https://github.com/NItishSh/realestate-trust/pull/27)** | `feat` | implement centralized service config and deep Kubernetes readiness probes | `internal/core/config.go`, `internal/db/health.go`, `infra/helm/` | Dynamic Liveness/Readiness probes (`/health/live`, `/health/ready`) |
 | **[#28](https://github.com/NItishSh/realestate-trust/pull/28)** | `fix` | update tokenization-engine smoke test user role to SELLER for RBAC compliance | `infra/gitops/service-apps.yaml` | Resolves smoke test 403 authorization error |
+| **[#29](https://github.com/NItishSh/realestate-trust/pull/29)** | `release` | Release 1.6.0 | Monorepo root | Minor version release |
 | **[#30](https://github.com/NItishSh/realestate-trust/pull/30)** | `feat` | implement FinOps right-sizing pipeline, OpenCost GitOps, and VPA templates | `cmd/re-cli/finops.go`, `infra/`, `.github/` | Automated VPA tuning (+20% safety buffer) & OpenCost UI |
 | **[#31](https://github.com/NItishSh/realestate-trust/pull/31)** | `fix` | use AST yaml.Node manipulation to preserve exact key ordering and whitespace | `cmd/re-cli/finops.go`, `infra/kind/values/` | Surgical YAML diffs preserving comments and structure |
+| **[#32](https://github.com/NItishSh/realestate-trust/pull/32)** | `docs` | index PR #30 and PR #31 in feature journey guide | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#33](https://github.com/NItishSh/realestate-trust/pull/33)** | `docs` | sync README, microservices catalog, and feature journey with 7-service architecture | `README.md`, `docs/` | Unified 7-service and FinOps documentation |
 
 ---
 
@@ -236,7 +312,10 @@ go test -v ./...
 make compose-test-e2e
 
 # 4. Terraform Kind Cluster Provisioning & GitOps Bootstrap
-make terraform-apply
+make cluster-up
+
+# 5. FinOps Workload Right-Sizing Dry-Run Preview
+make finops-rightsize-dryrun
 ```
 
 ### **GitHub Actions Automation**
@@ -245,3 +324,4 @@ Every Pull Request triggers:
 2. **`Verify Docker Compose Stack`**: Boots all 7 migrations, 7 microservices, RabbitMQ, PostgreSQL, and executes the complete E2E deal lifecycle test suite in clean isolated containers.
 3. **`Lint Pull Request Title`**: Semantic Conventional Commits enforcement.
 4. **`Release Please`**: Automated SemVer tagging, changelog generation, and GitHub Release drafting.
+5. **`FinOps Automated Workload Right-Sizing`**: Scheduled weekly workflow generating right-sizing PRs from VPA metrics.
