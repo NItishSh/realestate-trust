@@ -4,7 +4,12 @@ service:
   type: ClusterIP
   port: 80
   targetPort: 8081
-resources: {}
+resources:
+  requests:
+    cpu: 54m
+    memory: 76Mi
+  limits:
+    memory: 114Mi
 smokeTest:
   enabled: true
   script: |
@@ -23,7 +28,6 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
-
 env:
   - name: DATABASE_URL
     valueFrom:
@@ -69,7 +73,6 @@ db:
         );
         CREATE INDEX idx_users_email ON users(email);
         CREATE INDEX idx_kyc_verifications_user ON kyc_verifications(user_id);
-
 keda:
   enabled: true
   minReplicas: 1

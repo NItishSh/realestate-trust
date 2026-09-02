@@ -38,7 +38,6 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
-
 env:
   - name: DATABASE_URL
     valueFrom:
@@ -78,7 +77,6 @@ db:
         );
         CREATE INDEX idx_loans_transaction ON loans(transaction_id);
         CREATE INDEX idx_disbursements_loan ON disbursements(loan_id);
-
 keda:
   enabled: true
   minReplicas: 1
@@ -88,3 +86,9 @@ keda:
       metricType: Utilization
       metadata:
         value: "75"
+resources:
+  requests:
+    cpu: 48m
+    memory: 76Mi
+  limits:
+    memory: 114Mi

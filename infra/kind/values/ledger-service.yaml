@@ -37,7 +37,6 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
-
 env:
   - name: RABBITMQ_URL
     value: "amqp://guest:guest@rabbitmq.realestate-trust.svc.cluster.local:5672/"
@@ -61,7 +60,6 @@ db:
             hash VARCHAR(255) NOT NULL,
             event_id VARCHAR(255) UNIQUE
         );
-
 keda:
   enabled: true
   minReplicas: 1
@@ -73,3 +71,9 @@ keda:
         mode: QueueLength
         value: "5"
         hostFromEnv: RABBITMQ_URL
+resources:
+  requests:
+    cpu: 60m
+    memory: 86Mi
+  limits:
+    memory: 129Mi
