@@ -1,6 +1,8 @@
 package db
 
 import (
+	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -52,7 +54,11 @@ func (h *FinancingHandler) GetLoan(c *echo.Context) error {
 
 	loan, err := h.Repo.GetLoan(loanID)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Loan not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "GetLoan error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve loan"})
 	}
 
 	return c.JSON(http.StatusOK, loan)
@@ -67,7 +73,11 @@ func (h *FinancingHandler) DisburseLoan(c *echo.Context) error {
 
 	loan, err := h.Repo.GetLoan(loanID)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Loan not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "DisburseLoan error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve loan"})
 	}
 
 	if loan.Status != "APPROVED" {

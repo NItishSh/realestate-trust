@@ -1,9 +1,10 @@
 package db
 
 import (
-	"errors"
 	"sync"
 	"time"
+
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 type Loan struct {
@@ -72,7 +73,7 @@ func (r *InMemoryFinancingRepository) GetLoan(id string) (*Loan, error) {
 
 	loan, ok := r.loans[id]
 	if !ok {
-		return nil, errors.New("loan not found")
+		return nil, core.ErrNotFound
 	}
 	return loan, nil
 }
@@ -83,7 +84,7 @@ func (r *InMemoryFinancingRepository) ApproveLoan(id string, appAmount float64) 
 
 	loan, ok := r.loans[id]
 	if !ok {
-		return errors.New("loan not found")
+		return core.ErrNotFound
 	}
 
 	loan.ApprovedAmount = &appAmount

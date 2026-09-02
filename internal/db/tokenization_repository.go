@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/realestate-trust/monorepo/internal/core"
@@ -51,7 +50,7 @@ func (r *InMemoryTokenizationRepository) GetPool(id string) (*core.FractionalPoo
 
 	pool, ok := r.pools[id]
 	if !ok {
-		return nil, errors.New("fractional pool not found")
+		return nil, core.ErrNotFound
 	}
 	return pool, nil
 }
@@ -62,7 +61,7 @@ func (r *InMemoryTokenizationRepository) BuyTokens(poolID, investorID string, co
 
 	pool, ok := r.pools[poolID]
 	if !ok {
-		return nil, errors.New("fractional pool not found")
+		return nil, core.ErrNotFound
 	}
 
 	if err := pool.ValidateTokenPurchase(count); err != nil {

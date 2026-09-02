@@ -1,11 +1,11 @@
 package db
 
 import (
-	"errors"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 type Property struct {
@@ -65,7 +65,7 @@ func (r *InMemoryPropertyRepository) GetProperty(id string) (*Property, error) {
 
 	p, exists := r.properties[id]
 	if !exists {
-		return nil, errors.New("property not found")
+		return nil, core.ErrNotFound
 	}
 	return p, nil
 }
@@ -132,7 +132,7 @@ func (r *InMemoryPropertyRepository) UpdateTitleInsurance(id, status, company, p
 
 	p, exists := r.properties[id]
 	if !exists {
-		return nil, errors.New("property not found")
+		return nil, core.ErrNotFound
 	}
 
 	p.TitleInsuranceStatus = status
@@ -149,7 +149,7 @@ func (r *InMemoryPropertyRepository) UpdatePropertyDetails(id string, sqft, bedr
 
 	p, exists := r.properties[id]
 	if !exists {
-		return nil, errors.New("property not found")
+		return nil, core.ErrNotFound
 	}
 
 	p.SqFt = sqft

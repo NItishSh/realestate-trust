@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 type SQLPropertyRepository struct {
@@ -95,7 +96,7 @@ func (r *SQLPropertyRepository) GetProperty(id string) (*Property, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("property not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -197,7 +198,7 @@ func (r *SQLPropertyRepository) UpdateTitleInsurance(id, status, company, policy
 		return nil, err
 	}
 	if rows == 0 {
-		return nil, errors.New("property not found")
+		return nil, core.ErrNotFound
 	}
 	return r.GetProperty(id)
 }
@@ -217,7 +218,7 @@ func (r *SQLPropertyRepository) UpdatePropertyDetails(id string, sqft, bedrooms,
 		return nil, err
 	}
 	if rows == 0 {
-		return nil, errors.New("property not found")
+		return nil, core.ErrNotFound
 	}
 	return r.GetProperty(id)
 }

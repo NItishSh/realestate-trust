@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -66,8 +67,11 @@ func (h *TransactionHandler) GetTransaction(c *echo.Context) error {
 
 	tx, err := h.Repo.GetTransaction(txID)
 	if err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "GetTransaction error", "err", err)
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction not found"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve transaction"})
 	}
 
 	return c.JSON(http.StatusOK, tx)
@@ -82,8 +86,11 @@ func (h *TransactionHandler) GetEscrow(c *echo.Context) error {
 
 	acc, err := h.Repo.GetEscrow(txID)
 	if err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Escrow account not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "GetEscrow error", "err", err)
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "Escrow account not found"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve escrow account"})
 	}
 
 	return c.JSON(http.StatusOK, acc)
@@ -104,6 +111,9 @@ func (h *TransactionHandler) UpdateStatus(c *echo.Context) error {
 	}
 
 	if err := h.Repo.UpdateTransactionStatus(txID, req.NewState); err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "UpdateTransactionStatus error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to update transaction status"})
 	}
@@ -139,6 +149,9 @@ func (h *TransactionHandler) FundEscrow(c *echo.Context) error {
 	}
 
 	if err := h.Repo.FundEscrow(txID, req.Amount); err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Transaction or escrow account not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "FundEscrow error", "err", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fund escrow"})
 	}

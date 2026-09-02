@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
 	echo "github.com/labstack/echo/v5"
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 type TokenizationHandler struct {
@@ -59,6 +61,9 @@ func (h *TokenizationHandler) BuyShares(c *echo.Context) error {
 
 	holding, err := h.Repo.BuyTokens(poolID, req.InvestorID, req.TokenCount)
 	if err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Fractional pool not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "BuyTokens error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to buy shares"})
 	}

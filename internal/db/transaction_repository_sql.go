@@ -128,7 +128,7 @@ func (r *SQLTransactionRepository) GetTransaction(id string) (*Transaction, erro
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("transaction not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (r *SQLTransactionRepository) GetEscrow(txID string) (*EscrowAccount, error
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("escrow account not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (r *SQLTransactionRepository) UpdateTransactionStatus(id string, status cor
 		return err
 	}
 	if rows == 0 {
-		return errors.New("transaction not found")
+		return core.ErrNotFound
 	}
 
 	cloudEvent := events.CloudEvent[events.TransactionStatusUpdatedPayload]{
@@ -201,9 +201,9 @@ func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// Update Escrow balance
-	accQuery := `UPDATE escrow_accounts SET balance = balance + $1, updated_at = NOW() WHERE transaction_id = $2`
-	res, err := tx.Exec(accQuery, amount, id)
+	// Update Escrow Balance
+	escrowQuery := `UPDATE escrow_accounts SET balance = balance + $1, updated_at = NOW() WHERE transaction_id = $2`
+	res, err := tx.Exec(escrowQuery, amount, id)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
 		return err
 	}
 	if rows == 0 {
-		return errors.New("escrow account not found")
+		return core.ErrNotFound
 	}
 
 	// Update Transaction status to FUNDED
@@ -226,7 +226,7 @@ func (r *SQLTransactionRepository) FundEscrow(id string, amount float64) error {
 		return err
 	}
 	if rows == 0 {
-		return errors.New("transaction not found")
+		return core.ErrNotFound
 	}
 
 	cloudEvent := events.CloudEvent[events.EscrowFundedPayload]{

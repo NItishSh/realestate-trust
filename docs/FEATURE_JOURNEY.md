@@ -189,6 +189,8 @@ timeline
 | **[#21](https://github.com/NItishSh/realestate-trust/pull/21)** | `feat` | add auth rate limiting and dynamic CORS configuration | `internal/db/middleware.go`, `cmd/*/` | Sensitive endpoint rate limits (10 rps) & dynamic CORS |
 | **[#22](https://github.com/NItishSh/realestate-trust/pull/22)** | `feat` | enforce Kubernetes Restricted Pod Security Standards across Helm microservice charts | `infra/helm/charts/microservice/` | `seccompProfile: RuntimeDefault`, `runAsUser: 65532`, `drop: [ALL]` |
 | **[#23](https://github.com/NItishSh/realestate-trust/pull/23)** | `feat` | enforce RBAC/ABAC role gates, attribute ownership, and input sanitization | `cmd/*/main.go`, `internal/db/`, `internal/core/` | Zero-trust RBAC route middleware, ABAC ownership, XSS escaping |
+| **[#24](https://github.com/NItishSh/realestate-trust/pull/24)** | `docs` | create comprehensive feature evolution and architectural journey guide | `docs/FEATURE_JOURNEY.md` | Authoritative engineering history and capability catalog |
+| **[#25](https://github.com/NItishSh/realestate-trust/pull/25)** | `feat` | implement typed sentinel domain errors, enterprise HSTS/CSP security headers | `internal/core/errors.go`, `internal/db/`, `cmd/*/` | Idiomatic `errors.Is` error checking, HSTS/CSP middleware |
 
 ---
 

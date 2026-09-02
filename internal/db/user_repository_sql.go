@@ -54,7 +54,7 @@ func (r *SQLUserRepository) GetUser(id string) (*User, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (r *SQLUserRepository) GetUserByEmail(email string) (*User, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (r *SQLUserRepository) DeleteUser(id string) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		return errors.New("user not found")
+		return core.ErrNotFound
 	}
 	return nil
 }
