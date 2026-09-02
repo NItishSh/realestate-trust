@@ -194,7 +194,8 @@ timeline
 | **[#26](https://github.com/NItishSh/realestate-trust/pull/26)** | `release` | Release 1.5.0 | Monorepo root | Minor version release |
 | **[#27](https://github.com/NItishSh/realestate-trust/pull/27)** | `feat` | implement centralized service config and deep Kubernetes readiness probes | `internal/core/config.go`, `internal/db/health.go`, `infra/helm/` | Dynamic Liveness/Readiness probes (`/health/live`, `/health/ready`) |
 | **[#28](https://github.com/NItishSh/realestate-trust/pull/28)** | `fix` | update tokenization-engine smoke test user role to SELLER for RBAC compliance | `infra/gitops/service-apps.yaml` | Resolves smoke test 403 authorization error |
-| **[#29](https://github.com/NItishSh/realestate-trust/pull/29)** | `feat` | implement FinOps right-sizing pipeline, OpenCost GitOps, and VPA templates | `scripts/finops-rightsize.py`, `infra/`, `.github/` | Automated VPA tuning (+20% safety buffer) & OpenCost UI |
+| **[#30](https://github.com/NItishSh/realestate-trust/pull/30)** | `feat` | implement FinOps right-sizing pipeline, OpenCost GitOps, and VPA templates | `cmd/re-cli/finops.go`, `infra/`, `.github/` | Automated VPA tuning (+20% safety buffer) & OpenCost UI |
+| **[#31](https://github.com/NItishSh/realestate-trust/pull/31)** | `fix` | use AST yaml.Node manipulation to preserve exact key ordering and whitespace | `cmd/re-cli/finops.go`, `infra/kind/values/` | Surgical YAML diffs preserving comments and structure |
 
 ---
 
