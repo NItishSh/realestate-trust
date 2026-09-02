@@ -17,16 +17,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          python-version: '3.11'
+          go-version: '1.24'
+          cache: true
 
-      - name: Install Python Dependencies
-        run: pip install pyyaml
-
-      - name: Run FinOps Policy Engine
-        run: python3 scripts/finops-rightsize.py
+      - name: Run Go FinOps Policy Engine
+        run: go run ./cmd/re-cli finops rightsize
 
       - name: Check for Drift
         id: git-diff

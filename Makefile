@@ -289,12 +289,12 @@ port-forward-opencost: ## Port-forward OpenCost FinOps UI to localhost:9003
 .PHONY: finops-rightsize
 finops-rightsize: ## Execute automated FinOps right-sizing policy engine against cluster
 	@echo -e "$(COLOR_INFO)Running FinOps Workload Right-Sizing Engine...$(COLOR_RESET)"
-	python3 scripts/finops-rightsize.py
+	go run ./cmd/re-cli finops rightsize
 
 .PHONY: finops-rightsize-dryrun
 finops-rightsize-dryrun: ## Preview FinOps right-sizing recommendations without modifying files
 	@echo -e "$(COLOR_INFO)Previewing FinOps Workload Right-Sizing Recommendations...$(COLOR_RESET)"
-	python3 scripts/finops-rightsize.py --dry-run
+	go run ./cmd/re-cli finops rightsize --dry-run
 
 # ==============================================================================
 # Clean & Housekeeping
