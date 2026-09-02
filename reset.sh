@@ -19,3 +19,5 @@ terraform apply -auto-approve
 
 echo -e "\n\033[0;32m[✓]\033[0m Infrastructure provisioned successfully! ArgoCD will now sync all GitOps apps."
 echo -e "You can monitor the ArgoCD sync status in the realestate-trust namespace."
+
+make -C "$SCRIPT_DIR" cluster-endpoints
