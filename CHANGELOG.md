@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/NItishSh/realestate-trust/compare/v1.5.0...v1.6.0) (2026-09-02)
+
+
+### Features
+
+* **finops:** implement FinOps right-sizing pipeline, OpenCost GitOps, and VPA templates ([#30](https://github.com/NItishSh/realestate-trust/issues/30)) ([9dffb98](https://github.com/NItishSh/realestate-trust/commit/9dffb9814429dd715676aacaf3f56258d8fff864))
+
+
+### Bug Fixes
+
+* **finops:** use AST yaml.Node manipulation to preserve exact key ordering and whitespace ([#31](https://github.com/NItishSh/realestate-trust/issues/31)) ([ea9d653](https://github.com/NItishSh/realestate-trust/commit/ea9d6538ec79845320dd1d6551277d29290f060c))
+* **gitops:** update tokenization-engine smoke test user role to SELLER for RBAC compliance ([#28](https://github.com/NItishSh/realestate-trust/issues/28)) ([59e6263](https://github.com/NItishSh/realestate-trust/commit/59e62631984fcb69ce9dbb262388c5f9d36aa4c7))
+
 ## [1.5.0](https://github.com/NItishSh/realestate-trust/compare/v1.4.0...v1.5.0) (2026-09-02)
 
 
