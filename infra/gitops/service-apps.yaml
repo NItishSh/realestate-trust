@@ -397,3 +397,72 @@ spec:
     automated:
       prune: true
       selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/NItishSh/realestate-trust.git'
+    targetRevision: main
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/frontend
+        service:
+          port: 3000
+          targetPort: 3000
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
+        healthCheck:
+          path: /
+          readinessPath: /
+          livenessPath: /
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        smokeTest:
+          enabled: true
+          script: |
+            echo "Verifying frontend UI responsiveness on port 3000..."
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://frontend:3000/ | grep -i "<html\|<!DOCTYPE"; then
+                echo "Frontend is healthy and responding with HTML!"
+                exit 0
+              fi
+              echo "frontend not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
