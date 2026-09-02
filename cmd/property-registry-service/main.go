@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -22,17 +23,22 @@ func main() {
 		Handler: slog.NewJSONHandler(os.Stdout, nil),
 	}))
 
-	slog.Info("Starting Property Registry Service API on :8085...")
+	cfg, err := core.LoadServiceConfig("property-registry-service", ":8085")
+	if err != nil {
+		slog.Error("Failed to load configuration", "err", err)
+		os.Exit(1)
+	}
 
 	var repo db.PropertyRepository
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL != "" {
-		slog.Info("Connecting to database...", "url", dbURL)
-		dbPool, err := db.Connect()
+	var dbPool *db.DB
+	if cfg.DatabaseURL != "" {
+		slog.Info("Connecting to database...", "url", cfg.DatabaseURL)
+		pool, err := db.Connect()
 		if err != nil {
 			slog.Error("Database connection failed", "err", err)
 			os.Exit(1)
 		}
+		dbPool = pool
 		defer func() { _ = dbPool.Close() }()
 		repo = db.NewSQLPropertyRepository(dbPool.SQL)
 	} else {
@@ -53,7 +59,7 @@ func main() {
 	e.Use(db.RequestLoggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: db.GetCORSOrigins(),
+		AllowOrigins: cfg.CorsAllowedOrigins,
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
@@ -67,9 +73,12 @@ func main() {
 	}))
 	e.Use(middleware.BodyLimit(1 << 20))
 
-	e.GET("/api/v1/health", func(c *echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
-	})
+	// Register Kubernetes Liveness, Readiness, and Health endpoints
+	var sqlDB = (*sql.DB)(nil)
+	if dbPool != nil {
+		sqlDB = dbPool.SQL
+	}
+	db.RegisterHealthEndpoints(e, sqlDB, nil)
 
 	api := e.Group("/api/v1")
 	api.Use(echojwt.WithConfig(echojwt.Config{
@@ -85,11 +94,11 @@ func main() {
 	api.PUT("/properties/:id/details", handler.UpdatePropertyDetails, db.RBACMiddleware(core.Seller, core.Broker, core.Admin))
 
 	srv := &http.Server{
-		Addr:         ":8085",
+		Addr:         cfg.Port,
 		Handler:      e,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
 	}
 	slog.Info("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

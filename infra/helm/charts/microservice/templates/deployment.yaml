@@ -40,14 +40,14 @@ spec:
         {{- end }}
         readinessProbe:
           httpGet:
-            path: {{ .Values.healthCheck.path }}
+            path: {{ default .Values.healthCheck.path .Values.healthCheck.readinessPath }}
             port: {{ .Values.service.targetPort }}
           initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
           periodSeconds: {{ .Values.healthCheck.periodSeconds }}
           timeoutSeconds: 5
         livenessProbe:
           httpGet:
-            path: {{ .Values.healthCheck.path }}
+            path: {{ default .Values.healthCheck.path .Values.healthCheck.livenessPath }}
             port: {{ .Values.service.targetPort }}
           initialDelaySeconds: {{ mul .Values.healthCheck.initialDelaySeconds 3 }}
           periodSeconds: {{ mul .Values.healthCheck.periodSeconds 2 }}
