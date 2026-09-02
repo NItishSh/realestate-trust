@@ -40,7 +40,7 @@ healthCheck:
   periodSeconds: 10
 
 vpa:
-  enabled: true
+  enabled: false
   updateMode: "Off"
 
 hpa:
