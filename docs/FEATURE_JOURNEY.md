@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #42)](#-pull-request-pr-index-prs-1--42)
+6. [Pull Request (PR) Index (PRs #1 – #44)](#-pull-request-pr-index-prs-1--44)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -235,7 +235,7 @@ timeline
 
 ---
 
-## 📦 Pull Request (PR) Index (PRs #1 – #42)
+## 📦 Pull Request (PR) Index (PRs #1 – #44)
 
 | PR # | Type | Title | Key Files Changed | Impact |
 | :---: | :---: | :--- | :--- | :--- |
@@ -280,6 +280,8 @@ timeline
 | **[#40](https://github.com/NItishSh/realestate-trust/pull/40)** | `fix` | clarify Unified Istio Gateway paths and port-forward commands in make endpoints | `Makefile` | Explicit endpoint paths & port-forward guides |
 | **[#41](https://github.com/NItishSh/realestate-trust/pull/41)** | `docs` | index PRs #34 through #40 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#42](https://github.com/NItishSh/realestate-trust/pull/42)** | `feat` | add make grafana-password helper and update endpoints dashboard | `Makefile` | Dynamic extraction of Grafana secret password |
+| **[#43](https://github.com/NItishSh/realestate-trust/pull/43)** | `docs` | index PR #41 and #42 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#44](https://github.com/NItishSh/realestate-trust/pull/44)** | `fix` | align port-forward targets with k8s service ports and unify istio observability routes | `Makefile`, `infra/kind/manifests/` | Fixes port forwarding targets & unifies Istio routes |
 
 ---
 
