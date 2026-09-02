@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.0](https://github.com/NItishSh/realestate-trust/compare/v1.6.0...v1.7.0) (2026-09-02)
+
+
+### Features
+
+* **infra:** add cluster-endpoints dashboard and monitoring links to Makefile and reset.sh ([#36](https://github.com/NItishSh/realestate-trust/issues/36)) ([7888552](https://github.com/NItishSh/realestate-trust/commit/78885528541564bcdf16942c4df95d8385665488))
+* **makefile:** add make grafana-password helper and update endpoints dashboard ([#42](https://github.com/NItishSh/realestate-trust/issues/42)) ([b8ee120](https://github.com/NItishSh/realestate-trust/commit/b8ee1203ee977e1ee7663e6074fbee4307f82797))
+
+
+### Bug Fixes
+
+* align port-forward targets with k8s service ports and unify istio observability routes ([#44](https://github.com/NItishSh/realestate-trust/issues/44)) ([e7e7358](https://github.com/NItishSh/realestate-trust/commit/e7e7358b113f6a6a7b854512cab1faf2e1eb13b5))
+* **gitops:** update Istio gateway routes to use ClusterIP service port 80 ([#39](https://github.com/NItishSh/realestate-trust/issues/39)) ([aba024c](https://github.com/NItishSh/realestate-trust/commit/aba024cc03365ccd8da3f33ecb9805eef54e81d9))
+* **helm:** default vpa.enabled to false so microservices sync without VPA CRD requirement ([#38](https://github.com/NItishSh/realestate-trust/issues/38)) ([eeb7a3b](https://github.com/NItishSh/realestate-trust/commit/eeb7a3bb3463c5c31f3a1bbfec78a17813589c5d))
+* **makefile:** clarify Unified Istio Gateway paths and port-forward commands in make endpoints ([#40](https://github.com/NItishSh/realestate-trust/issues/40)) ([8193f88](https://github.com/NItishSh/realestate-trust/commit/8193f886db0fdc8f63b740e5520d89b8a7a1b216))
+
 ## [1.6.0](https://github.com/NItishSh/realestate-trust/compare/v1.5.0...v1.6.0) (2026-09-02)
 
 
