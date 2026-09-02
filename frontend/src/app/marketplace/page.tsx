@@ -40,6 +40,7 @@ export default function MarketplacePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property) => (
           <div key={property.id} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={property.thumbnail}
               alt={property.address}

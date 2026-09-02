@@ -5,11 +5,7 @@ import { useStore } from '../../lib/store';
 import {
   Plus,
   Coins,
-  ArrowRight,
-  CircleDollarSign,
   ChevronRight,
-  ShieldAlert,
-  Search,
   CheckCircle2,
   XCircle,
   HelpCircle
@@ -17,7 +13,7 @@ import {
 import { api } from '../../lib/api';
 
 export default function Transactions() {
-  const { transactions, createTransaction, fundEscrow, ledger } = useStore();
+  const { transactions, createTransaction, fundEscrow } = useStore();
   const [selectedTxId, setSelectedTxId] = useState<string | null>(transactions[0]?.id || null);
 
   // Form states

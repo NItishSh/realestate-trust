@@ -2,11 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Building,
   CreditCard,
   CheckCircle,
-  Clock,
-  ArrowRight,
   ShieldCheck,
   AlertCircle,
   Download,
@@ -54,13 +51,13 @@ export default function BuyerDashboard() {
             try {
               const prop = await api.getProperty(tx.propertyId);
               propMap[tx.propertyId] = prop;
-            } catch (e) {
+            } catch {
               console.error("Failed to load property", tx.propertyId);
             }
             try {
               const escrow = await api.getEscrow(tx.id);
               escrowMap[tx.id] = escrow;
-            } catch (e) {
+            } catch {
               console.error("Failed to load escrow", tx.id);
             }
           }

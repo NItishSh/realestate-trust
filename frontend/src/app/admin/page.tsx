@@ -3,13 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   Building,
-  CreditCard,
   CheckCircle,
   AlertTriangle,
-  ArrowRight,
   ShieldCheck,
   Search,
-  Users,
   Filter,
   RefreshCw,
   MoreVertical,
@@ -46,13 +43,13 @@ export default function AdminDashboard() {
               const prop = await api.getProperty(tx.propertyId);
               propMap[tx.propertyId] = prop;
             }
-          } catch (e) {
+          } catch {
             console.error("Failed to load property", tx.propertyId);
           }
           try {
             const escrow = await api.getEscrow(tx.id);
             escrowMap[tx.id] = escrow;
-          } catch (e) {
+          } catch {
             console.error("Failed to load escrow", tx.id);
           }
         }
@@ -104,7 +101,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-on-surface">Escrow Manager Dashboard</h1>
-          <p className="text-on-surface-variant mt-1">Centralized oversight for all active real estate transactions.</p>
+          <p className="text-on-surface-variant mt-1">Centralized oversight for all active transactions • Admin: {user?.fullName || 'Superadmin'}</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 bg-white border border-outline-variant text-on-surface font-medium px-4 py-2 rounded-lg hover:bg-surface-variant transition-colors shadow-sm">

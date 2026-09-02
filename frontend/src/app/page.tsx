@@ -6,9 +6,7 @@ import {
   ShieldAlert,
   Coins,
   CircleDollarSign,
-  Activity,
   FileCheck2,
-  TrendingUp,
   Cpu,
   ArrowRight,
   BookOpen
@@ -26,7 +24,6 @@ export default function Dashboard() {
 
   const activeDeals = transactions.filter(tx => tx.status !== 'CLOSED' && tx.status !== 'CANCELLED').length;
   const approvedLoans = loans.filter(l => l.status === 'APPROVED' || l.status === 'DISBURSED').length;
-  const totalPoolsSize = pools.length;
 
   const cardData = [
     { name: 'Escrow Volume Locked', val: `₹${totalEscrowLocked.toLocaleString('en-IN')}`, unit: 'INR', icon: Coins, color: 'text-primary', bg: 'bg-accent-cyan/10' },

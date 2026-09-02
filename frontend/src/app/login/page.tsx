@@ -20,7 +20,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       window.location.href = '/buyer';
-    } catch (err) {
+    } catch {
       setError('Login failed. Please check your credentials and try again.');
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center text-sm text-on-surface-variant">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-primary hover:underline font-semibold">
               Create an account
             </Link>
