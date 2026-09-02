@@ -254,6 +254,7 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 	@echo -e "$(COLOR_TITLE) 🏢 RealEstate-Trust — Cluster Endpoints & Monitoring Dashboard           $(COLOR_RESET)"
 	@echo -e "$(COLOR_TITLE)=========================================================================$(COLOR_RESET)"
 	@echo -e "\n$(COLOR_INFO)🚪 Unified Istio Ingress Gateway (http://localhost:8080):$(COLOR_RESET)"
+	@echo -e "  • Frontend Web UI       : $(COLOR_SUCCESS)http://localhost:8080/$(COLOR_RESET) (Marketplace & Portals)"
 	@echo -e "  • Grafana Dashboard     : $(COLOR_SUCCESS)http://localhost:8080/grafana/$(COLOR_RESET) (admin / make grafana-password)"
 	@echo -e "  • Kiali Service Mesh    : $(COLOR_SUCCESS)http://localhost:8080/kiali/$(COLOR_RESET)"
 	@echo -e "  • Keycloak OIDC Realm   : $(COLOR_SUCCESS)http://localhost:8080/realms/realestate-trust$(COLOR_RESET)"
@@ -265,6 +266,7 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 	@echo -e "  • Property Registry API : $(COLOR_SUCCESS)http://localhost:8080/api/v1/properties$(COLOR_RESET)"
 	@echo -e "  • Feedback Reviews API  : $(COLOR_SUCCESS)http://localhost:8080/api/v1/feedback$(COLOR_RESET)"
 	@echo -e "\n$(COLOR_INFO)🔌 Dedicated Port-Forward Helpers (Run in terminal to open browser):$(COLOR_RESET)"
+	@echo -e "  • make port-forward-frontend  -> $(COLOR_SUCCESS)http://localhost:3000$(COLOR_RESET) (Next.js Web UI)"
 	@echo -e "  • make port-forward-grafana   -> $(COLOR_SUCCESS)http://localhost:3001$(COLOR_RESET) (admin / make grafana-password)"
 	@echo -e "  • make port-forward-opencost  -> $(COLOR_SUCCESS)http://localhost:9003$(COLOR_RESET) (FinOps UI)"
 	@echo -e "  • make port-forward-keycloak  -> $(COLOR_SUCCESS)http://localhost:8088$(COLOR_RESET) (admin / admin)"
@@ -317,6 +319,11 @@ port-forward-kiali: ## Port-forward Kiali Istio console to localhost:20001
 port-forward-vault: ## Port-forward HashiCorp Vault to localhost:8200
 	@echo -e "$(COLOR_INFO)Port-forwarding Vault on http://localhost:8200...$(COLOR_RESET)"
 	kubectl port-forward svc/vault -n vault 8200:8200
+
+.PHONY: port-forward-frontend
+port-forward-frontend: ## Port-forward Next.js Frontend UI to localhost:3000
+	@echo -e "$(COLOR_INFO)Port-forwarding Frontend UI on http://localhost:3000...$(COLOR_RESET)"
+	kubectl port-forward svc/frontend -n realestate-trust 3000:3000
 
 .PHONY: port-forward-opencost
 port-forward-opencost: ## Port-forward OpenCost FinOps UI to localhost:9003
