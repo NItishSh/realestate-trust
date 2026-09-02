@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #49)](#-pull-request-pr-index-prs-1--49)
+6. [Pull Request (PR) Index (PRs #1 – #50)](#-pull-request-pr-index-prs-1--50)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -235,7 +235,7 @@ timeline
 
 ---
 
-## 📦 Pull Request (PR) Index (PRs #1 – #49)
+## 📦 Pull Request (PR) Index (PRs #1 – #50)
 
 | PR # | Type | Title | Key Files Changed | Impact |
 | :---: | :---: | :--- | :--- | :--- |
@@ -285,7 +285,9 @@ timeline
 | **[#45](https://github.com/NItishSh/realestate-trust/pull/45)** | `docs` | index PR #43 and #44 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#46](https://github.com/NItishSh/realestate-trust/pull/46)** | `fix` | set explicit proxy image for istio-ingress gateway | `infra/gitops/core-infra-apps.yaml` | Fixes gateway ErrImagePull defaulting to auto |
 | **[#47](https://github.com/NItishSh/realestate-trust/pull/47)** | `docs` | index PR #45 and #46 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#48](https://github.com/NItishSh/realestate-trust/pull/48)** | `docs` | index PR #45 and #46 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#49](https://github.com/NItishSh/realestate-trust/pull/49)** | `feat` | add frontend application to service-apps | `infra/gitops/service-apps.yaml` | Declarative ArgoCD Next.js web deployment |
+| **[#50](https://github.com/NItishSh/realestate-trust/pull/50)** | `feat` | add port-forward-frontend and update endpoints dashboard | `Makefile`, `docs/FEATURE_JOURNEY.md` | Adds make port-forward-frontend & endpoint docs |
 
 ---
 
