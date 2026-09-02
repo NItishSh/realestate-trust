@@ -45,6 +45,7 @@ graph TD
 | **IAM & Auth** | Local Keycloak dev realm in [`keycloak-realm.yaml`](../infra/kind/manifests/keycloak-realm.yaml) with `localhost` redirects | Keycloak cluster with HA caching (Infinispan), PostgreSQL backend, and production HTTPS domain redirects |
 | **Ingress & Networking** | Istio Gateway with static HostPorts on `localhost` | Cloud Load Balancers (AWS NLB/ALB, GCP Cloud LB, Azure LB) with automated TLS certificates (**Cert-Manager** / Let's Encrypt) |
 | **GitOps Manifests** | Single-environment manifests in [`infra/gitops/`](../infra/gitops/) | Multi-environment overlays (`infra/environments/staging/`, `infra/environments/prod/`) with Kustomize / Helm values |
+| **DNS & In-Node Caching** | Central CoreDNS deployment in `kube-system` | **NodeLocal DNSCache** DaemonSet (`169.254.20.10`) to eliminate 5s `conntrack` race conditions, cache queries in memory, and query upstream CoreDNS over TCP |
 | **Observability** | Single-replica Prometheus, Loki, Tempo with local storage | Prometheus Agent / Grafana Mimir, Loki with S3/GCS object storage, Tempo tracing backend |
 
 ---
@@ -68,6 +69,7 @@ graph TD
 - [ ] Install and configure **Cert-Manager** with ACME Let's Encrypt ClusterIssuers for automated TLS.
 - [ ] Deploy Cloud Ingress Controller / Istio Gateway configured with `type: LoadBalancer`.
 - [ ] Configure ExternalDNS or Route53 / Cloud DNS / Azure DNS records for microservices and Keycloak.
+- [ ] Deploy **NodeLocal DNSCache** DaemonSet (or enable managed cloud DNS cache add-on) to eliminate 5-second `conntrack` UDP race conditions, mitigate `ndots:5` latency, and provide in-node sub-millisecond DNS lookups.
 - [ ] Configure NetworkPolicies and Istio Mutual TLS (mTLS) in `STRICT` mode.
 
 ### Phase 4: Secrets Management (External Secrets Operator)
@@ -111,18 +113,22 @@ graph TD
 - **IAM**: Use IAM Roles for Service Accounts (IRSA) with EKS Pod Identity.
 - **Storage**: Deploy AWS EBS CSI driver and configure `gp3` storage class.
 - **Ingress**: Deploy AWS Load Balancer Controller for automatic ALB/NLB provisioning.
+- **DNS**: Enable the EKS CoreDNS / NodeLocal DNS add-on or apply the `k8s-dns-node-cache` DaemonSet.
 
 ### GCP GKE
 - **IAM**: Enable GKE Workload Identity Federation.
 - **Storage**: Use Compute Engine persistent disk CSI driver (`standard-rwo` / `premium-rwo`).
 - **Ingress**: GKE Ingress with Google-managed SSL certificates or Istio with Cloud Armor.
+- **DNS**: Enable in-node DNS cache directly via Terraform: `dns_cache_config { enabled = true }`.
 
 ### Azure AKS
 - **IAM**: Enable Microsoft Entra Workload ID.
 - **Storage**: Use Azure Disk CSI driver (`managed-csi` / `managed-csi-premium`).
 - **Ingress**: Azure Application Gateway Ingress Controller (AGIC) or Azure Load Balancer.
+- **DNS**: Deploy NodeLocal DNSCache DaemonSet with AKS custom Corefile upstream routing.
 
 ### Red Hat OpenShift
 - **Security**: Comply with OpenShift `restricted-v2` Security Context Constraints (SCC) (do not run as root / UID 0).
 - **Ingress**: Use OpenShift `Route` resources with edge/re-encrypt TLS termination.
 - **Storage**: Configure OpenShift Data Foundation (ODF) / Ceph CSI.
+- **DNS**: Configure OpenShift In-Cluster DNS Operator with node caching.
