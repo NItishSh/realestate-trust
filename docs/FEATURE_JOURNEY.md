@@ -216,6 +216,9 @@ Supports both RS256/ES256 asymmetric cryptographic verification via Keycloak's d
 ### 5. **Kubernetes Restricted Pod Security Standard (PSS)**
 Workload pods run under Google Distroless with zero Linux capabilities (`drop: ["ALL"]`), read-only root filesystems (`readOnlyRootFilesystem: true`), non-root UID `65532`, and kernel syscall filtering (`seccompProfile: { type: RuntimeDefault }`).
 
+### 6. **Automated FinOps Workload Right-Sizing & OpenCost Observability**
+Continuously ingests empirical p95/p99 consumption metrics from in-cluster Vertical Pod Autoscalers (VPA in recommendation mode) and OpenCost. Applies a **+20% safety headroom**, sets memory limits at 1.5x to prevent `OOMKilled` crashes, and enforces minimum floor bounds (`25m CPU / 32Mi RAM`). Automated weekly through GitHub Actions with surgical AST-based YAML preservation.
+
 ---
 
 ## 🧪 Verification, CI/CD & Testing Infrastructure

@@ -73,3 +73,31 @@ This document details the microservice layout, functional scopes, and tech stack
 * Appending ledger entries capturing details of the state transition, actor ID, and transaction metadata.
 * Generating a cryptographic SHA256 hash for each row, chaining it to the hash of the preceding ledger entry (hash chaining).
 * Running automated cron schedules to verify ledger chain integrity, reporting database tampering if a hash mismatch is detected.
+
+---
+
+## 6. Property Registry Service (`property-registry-service`)
+
+* **Scope**: Land title verification, municipal deed records, and cadastral boundary validation.
+* **Backend Stack**: Go, Echo v5 REST, PostgreSQL database.
+* **Database Tables Managed**: `properties`, `property_title_verifications`.
+* **Port**: `:8085`
+
+### Key Responsibilities:
+* Validating land parcel identifiers, survey numbers, and municipal boundaries against state registrar schemas.
+* Tracking legal title verification status (`PENDING`, `VERIFIED`, `DISPUTED`).
+* Enforcing role gates so only authenticated `SELLER`, `BROKER`, or `ADMIN` users can register properties.
+
+---
+
+## 7. Feedback & Reputation Service (`feedback-service`)
+
+* **Scope**: Post-transaction satisfaction, counterparty rating boundaries, and platform reviews.
+* **Backend Stack**: Go, Echo v5 REST, PostgreSQL database.
+* **Database Tables Managed**: `feedback`.
+* **Port**: `:8086`
+
+### Key Responsibilities:
+* Collecting stakeholder reviews after deal settlement (rating scale 1–5).
+* Validating rating boundaries (1 to 5 integer) and sanitizing review comments against XSS injection.
+* Providing aggregated seller and broker trust scores across the platform.

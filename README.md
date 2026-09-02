@@ -1,22 +1,27 @@
 # Real Estate Trust & Escrow Platform (Go Monorepo)
 
-A production-grade, highly secure, and containerized microservices platform designed to orchestrate high-value capital movements, compliance gatechecks (KYC/AML), mortgage lending pipelines, and property fractionalization.
+A production-grade, highly secure, and containerized microservices platform designed to orchestrate high-value capital movements, compliance gatechecks (KYC/AML), mortgage lending pipelines, property fractionalization, and immutable cryptographic ledgers.
 
-Built in Go (**v1.26.5**) and designed to deploy natively to Kubernetes via Helm and ArgoCD GitOps pipelines.
+Built in Go (**v1.26.5**) and Next.js, and designed to deploy natively to Kubernetes via Helm and ArgoCD GitOps pipelines.
 
 ---
 
-## 1. System Architecture
+## 1. System Architecture & Microservices
 
-The platform is structured as a single monorepo comprising five isolated Go microservices:
+The platform is structured as a single monorepo comprising **7 isolated Go microservices**, a **Next.js frontend**, and an administrative **support CLI**:
 
-1. **Transaction & Escrow Manager** (`cmd/transaction-manager`): Orchestrates deal lifecycles (Draft -> Escrow -> Funded -> Closed) and manages virtual account integrations.
-2. **User & Identity Service** (`cmd/identity-service`): Manages user registration, profiles, role configurations, and document-backed KYC/AML compliance checks.
-3. **Embedded Financing Engine** (`cmd/financing-engine`): Interfaces with lenders to underwrite mortgages, checks LTV limits, and triggers automatic funding disbursements.
-4. **Fractional Tokenization Engine** (`cmd/tokenization-engine`): Handles fractional pool creation, token purchases, and property digital share bounds.
-5. **Immutable Audit Ledger** (`cmd/ledger-service`): Implements a SHA256 cryptographic logging ledger, guaranteeing tamperproof trails for all platform transactions.
+1. **Transaction & Escrow Manager** (`cmd/transaction-manager` | `:8080`): Orchestrates deal lifecycles (`DRAFT` $\rightarrow$ `ESCROW` $\rightarrow$ `FUNDED` $\rightarrow$ `CLOSED`), manages virtual escrow accounts, and dispatches events via the Transactional Outbox pattern.
+2. **User & Identity Service** (`cmd/identity-service` | `:8081`): Manages user authentication, JWT JWKS issuer/verifier, role configurations (`BUYER`, `SELLER`, `BROKER`, `OFFICER`, `ADMIN`), and Vault Transit KMS AES-256-GCM encrypted KYC/AML compliance.
+3. **Embedded Financing Engine** (`cmd/financing-engine` | `:8082`): Interfaces with lenders/NBFCs to underwrite mortgages, verifies LTV limits ($\le 80\%$), validates HMAC bank webhooks, and triggers automated loan disbursements.
+4. **Fractional Tokenization Engine** (`cmd/tokenization-engine` | `:8083`): Handles property fractionalization pool creation, equity digital share bounds, and RBAC-restricted investment holdings.
+5. **Immutable Audit Ledger** (`cmd/ledger-service` | `:8084`): Implements an immutable SHA-256 cryptographic hash-chained ledger, providing tamper-evident audit trails with compound idempotency.
+6. **Property Registry Service** (`cmd/property-registry-service` | `:8085`): Manages verified land registry titles, municipal boundary validation, and deed ownership transfers.
+7. **Feedback & Reputation Service** (`cmd/feedback-service` | `:8086`): Collects and moderates post-transaction stakeholder reviews with strict 1–5 rating validation.
 
-> 📖 **Read the Definitive Guide:** For an in-depth deep dive into the architecture, state machines, deployment patterns, and security models, read the comprehensive [System Manual](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/system_manual.md).
+> 📖 **Read the Definitive Architecture Guides:**
+> - [Feature Evolution & Engineering Journey](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/FEATURE_JOURNEY.md) (All PRs, capabilities, and design patterns)
+> - [System Manual](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/system_manual.md) (Deep dive into state machines, deployment patterns, and security models)
+> - [Microservices Catalog](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/docs/microservices.md) (Detailed API contracts, tables, and schemas)
 
 ---
 
@@ -27,133 +32,123 @@ realestate-trust/
 ├── .github/                      # CI/CD Workflows (GitHub Actions)
 │   └── workflows/
 │       ├── ci.yml                # Parallel matrix test, build, scan, sign pipeline
+│       ├── finops-rightsize.yaml # Automated weekly VPA FinOps right-sizing pipeline
 │       └── release.yml           # Automated SemVer Release Please pipeline
 ├── cmd/                          # Service entrypoints (main.go)
-│   ├── financing-engine/
-│   ├── identity-service/
-│   ├── ledger-service/
-│   ├── tokenization-engine/
-│   └── transaction-manager/
+│   ├── feedback-service/         # Port :8086
+│   ├── financing-engine/         # Port :8082
+│   ├── identity-service/         # Port :8081
+│   ├── ledger-service/           # Port :8084
+│   ├── property-registry-service/# Port :8085
+│   ├── re-cli/                   # Support, RCA, and FinOps CLI tool
+│   ├── tokenization-engine/      # Port :8083
+│   └── transaction-manager/      # Port :8080
 ├── docs/                         # Architecture, research, and analysis documentation
-│   ├── system_manual.md          # Definitive System Manual and architectural guide
-│   └── research/                 # Observability, database HA, and network security specs
-├── infra/                        # Infrastructure configurations
+│   ├── FEATURE_JOURNEY.md        # Definitive engineering and capability roadmap
+│   ├── microservices.md          # Detailed microservice catalog
+│   └── system_manual.md          # Definitive System Manual and architectural guide
+├── frontend/                     # Next.js 14 React Web Application (Port :3000)
+├── infra/                        # Infrastructure & GitOps configurations
 │   ├── gitops/                   # Declarative ArgoCD App-of-Apps manifests
-│   └── helm/                     # Reusable microservice configurations chart templates
+│   ├── helm/                     # Reusable microservice chart with VPA, KEDA, and NetworkPolicies
+│   ├── kind/                     # Local Kubernetes (Kind) values and bootstrap scripts
+│   └── terraform/                # Infrastructure as Code (Terraform)
 ├── internal/                     # Private shared Go modules
-│   ├── core/                     # Logic, validation boundaries, and state machines
-│   └── db/                       # Decoupled repository queries and REST handlers
-├── Dockerfile                    # Multi-stage, multi-target image builder
+│   ├── core/                     # Domain entities, validation boundaries, typed errors, config
+│   ├── db/                       # Decoupled repository queries, REST handlers, middleware
+│   └── events/                   # CloudEvents 1.0 schemas and RabbitMQ broker clients
+├── test/                         # Integration, Contract, and E2E Test Suites
+│   ├── contract/                 # OpenAPI 3.0 contract compliance tests
+│   └── e2e/                      # Full deal lifecycle end-to-end test suite
+├── Dockerfile                    # Multi-stage, multi-target distroless image builder
 ├── go.mod                        # Go dependency manifest (Go 1.26.5)
-└── README.md
+└── Makefile                      # Developer workflow orchestration
 ```
 
 ---
 
-## 3. Engineering Best Practices
+## 3. Core Architectural Patterns
 
-* **Zero-Dependency HTTP Routing**: Uses Go's native `http.ServeMux` (introduced in Go 1.22+) which handles REST wildcards (e.g. `/users/{id}`) without needing heavy external routers (like Gin or Chi).
-* **Spec-First Strategy**: OpenAPI 3.0 specs inside `.loki/specs/` establish API contracts prior to writing server route implementations.
-* **Underwriting Validation Bounds**: Validates mortgage criteria automatically at the domain logic level (e.g., enforcing an 80% maximum Loan-to-Value limit).
-* **Decoupled Database Repositories**: Repository interfaces in `internal/db` separate SQL controllers from HTTP handlers, falling back to thread-safe memory stores for swift local testing.
+* **Transactional Outbox Pattern**: Atomic dual-write prevention between PostgreSQL and RabbitMQ CloudEvents relay.
+* **Dual-Mode Cryptographic KMS**: Envelope encryption with HashiCorp Vault Transit KMS in production (`AES-256-GCM`), with safe local fallback.
+* **Role-Based & Attribute-Based Access Control (RBAC/ABAC)**: Zero-trust route middleware enforcing role gates (`BUYER`, `SELLER`, `BROKER`, `OFFICER`, `ADMIN`) and resource ownership.
+* **Enterprise Security Headers**: Strict HSTS (`max-age=31536000`), CSP (`default-src 'self'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`.
+* **Deep Kubernetes Health Probes**: Decoupled `/api/v1/health/live` (process liveness) and `/api/v1/health/ready` (active DB pool ping and RabbitMQ connection checks).
+* **Automated FinOps Right-Sizing**: Ingests historical VPA telemetry to auto-tune Helm resource requests with a +20% safety margin and memory limit safeguards.
 
 ---
 
 ## 4. Getting Started
 
 ### Prerequisites
-* Go compiler installed (**v1.26.5** or newer)
-* Docker
-* Helm
-* [pre-commit](https://pre-commit.com/) (run `pre-commit install && pre-commit install --hook-type commit-msg` to install hooks locally)
+* Go compiler (**v1.26.5** or newer)
+* Docker & Docker Compose
+* Helm & Kubectl
+* [pre-commit](https://pre-commit.com/) (`pre-commit install && pre-commit install --hook-type commit-msg`)
 
 ### Running Tests
-To run the full unit and integration test suite across the workspace:
 ```bash
-go test -v -race -cover ./...
+# Run all unit and contract tests monorepo-wide
+go test -v -race ./...
+
+# Run linters (golangci-lint, helm lint, hadolint, terraform validate)
+make lint
+
+# Run end-to-end deal lifecycle test suite in Docker Compose
+make compose-test-e2e
 ```
 
-### Compiling and Running Locally
-To launch a microservice locally (e.g. Transaction Manager on `:8080`):
+### Local Development (Docker Compose)
+The fastest way to spin up the entire application stack:
 ```bash
-go run cmd/transaction-manager/main.go
+make compose-up
 ```
-
-### 1. Docker Compose (Quick Local Dev)
-The fastest way to spin up the entire application stack including the Next.js frontend, all 5 Go microservices, the PostgreSQL database, and run all SQL migrations:
-```bash
-docker-compose up --build
-```
-This environment is perfect for rapid development and automatically seeds non-production demo data on startup. It exposes:
+Exposes:
 * **Frontend UI**: `http://localhost:3000`
 * **Transaction Manager**: `:8080`
 * **Identity Service**: `:8081`
 * **Financing Engine**: `:8082`
 * **Tokenization Engine**: `:8083`
 * **Ledger Service**: `:8084`
-* **Database**: `:5432`
+* **Property Registry**: `:8085`
+* **Feedback Service**: `:8086`
+* **PostgreSQL Database**: `:5432`
+* **RabbitMQ Management**: `:15672` (guest / guest)
 
-### 2. Kind Cluster (Local Kubernetes, GitOps, and Secrets Integration)
-If you need to validate Kubernetes manifests, Helm charts, or the ArgoCD pipeline locally, we provide a complete bootstrap script for [Kind (Kubernetes in Docker)](https://kind.sigs.k8s.io/).
+---
 
-The bootstrap sequence provisions **Istio Service Mesh**, **HashiCorp Vault**, and the **External Secrets Operator (ESO)** to manage and sync credentials dynamically.
+## 5. Kubernetes, GitOps & FinOps
 
-To provision the local cluster, configure Vault, seed database secrets from your `.env`, and deploy all services exactly as they run in production:
-```,StartLine:96,TargetContent:
+### Kind Cluster Bootstrap
 ```bash
-./infra/kind/kind-up.sh
+make cluster-up
+```
+Provisions **Istio Service Mesh**, **HashiCorp Vault**, **External Secrets Operator (ESO)**, **Keycloak IAM**, **Prometheus**, **Grafana**, **Loki**, **Tempo**, **OpenCost**, and bootstraps **ArgoCD**.
+
+### Port-Forwarding & UIs
+```bash
+make port-forward-argocd   # ArgoCD UI on https://localhost:8080
+make port-forward-grafana  # Grafana Dashboards on http://localhost:3001
+make port-forward-opencost # OpenCost FinOps UI on http://localhost:9003
+make port-forward-keycloak # Keycloak IAM on http://localhost:8088
+make port-forward-kiali    # Kiali Service Mesh on http://localhost:20001
+make port-forward-vault    # HashiCorp Vault on http://localhost:8200
 ```
 
-**Commands for Kind:**
-* `./infra/kind/kind-up.sh` — Bootstraps the full cluster and deploys via ArgoCD.
-* `./infra/kind/kind-up.sh --down` — Tears down and deletes the cluster.
-* `./infra/kind/kind-up.sh --reset` — Destroys and recreates the cluster from scratch.
-
-> **Note:** The Kind setup maps the same host ports (`3000`, `8080-8084`) to the cluster's ingress/node ports, meaning the application can be accessed exactly identically regardless of whether you use Docker Compose or Kind.
-
----
-
-## 5. Containerization
-
-We maintain a single, cache-efficient, multi-stage [Dockerfile](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/Dockerfile) containing separate target stages for compilation.
-
-To build a specific microservice target (e.g., `transaction-manager`):
+### FinOps Workload Right-Sizing
 ```bash
-docker build --target transaction-manager -t realestate-trust/transaction-manager:latest .
+# Preview right-sizing suggestions natively in Go:
+make finops-rightsize-dryrun
+
+# Apply right-sized allocations with +20% safety buffer to Helm values:
+make finops-rightsize
 ```
 
 ---
 
-## 6. Continuous Integration & Deployment (GitOps)
+## 6. Support CLI (`re-cli`)
 
-### CI Pipeline (`ci.yml`)
-Runs on pushes and pull requests.
-1. **Lints & Tests**: Runs format checks (`gofmt`), static analysis (`go vet`), execution checks (`go test`), and `golangci-lint`.
-2. **Parallel Matrix Builds**: Compiles all 5 targets concurrently using Docker Buildx GHA layer caching.
-3. **Trivy Vulnerability Scan**: Scans Docker images for High/Critical security vulnerabilities.
-4. **GHCR Publishing**: Publishes secure images to the GitHub Container Registry (`ghcr.io`).
-5. **Cosign Signatures**: Cryptographically signs the pushed images to prevent image-hijacking attacks.
-
-### Release Automation (`release.yml`)
-Uses **Release Please** to automate versioning based on [Conventional Commits](https://www.conventionalcommits.org/).
-* Commits starting with `feat: ` trigger a minor version bump (e.g. `v1.0.0` -> `v1.1.0`).
-* Commits starting with `fix: ` trigger a patch version bump (e.g. `v1.0.0` -> `v1.0.1`).
-* On merges to `main`, a Release PR is generated. Merging this PR automatically tags the release and fires the CI Docker push pipeline.
-
-### GitOps Sync (ArgoCD & Helm)
-Deployments are handled automatically using a pull-based CD model:
-1. Custom shared templates live in `infra/helm/charts/microservice`.
-2. Declarative definitions live in [infra/gitops/service-apps.yaml](file:///Users/nitishshanchinagoudra/workspace/me/realestate-trust/infra/gitops/service-apps.yaml), overwriting ports, replicas, limits, and IP whitelist ingress rules.
-3. **ArgoCD** reconciles the Git status with your Kubernetes cluster, providing automated drift detection and self-healing.
-
----
-
-## 7. Troubleshooting & RCA Utilities
-
-To ease the support phase and accelerate Root Cause Analysis (RCA), the platform includes a dedicated support CLI and an automated observability stack.
-
-### Support CLI (`re-cli`)
-The `re-cli` utility is located in `cmd/re-cli` and provides L2/L3 engineers direct access to system state and the immutable ledger without needing to write SQL queries.
+The platform includes a native Go CLI utility in `cmd/re-cli` for SRE/support operations and FinOps automation:
 
 ```bash
 # Build the CLI
@@ -167,8 +162,7 @@ go build -o re-cli ./cmd/re-cli
 
 # Verify cryptographic ledger integrity
 ./re-cli ledger verify
-```
 
-### LGTM Observability Stack
-The platform automates the deployment of the Grafana LGTM stack (Loki, Promtail, Tempo, Grafana) via the `infra/gitops/observability-apps.yaml` ArgoCD manifest.
-Pre-built Grafana dashboards for Escrow Operations, Banking Integrations, and Postgres Health are automatically loaded on cluster initialization.
+# Run FinOps right-sizing
+./re-cli finops rightsize --dry-run
+```
