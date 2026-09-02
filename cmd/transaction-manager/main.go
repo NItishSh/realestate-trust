@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -24,16 +25,21 @@ func main() {
 		Handler: slog.NewJSONHandler(os.Stdout, nil),
 	}))
 
+	cfg, err := core.LoadServiceConfig("transaction-manager", ":8080")
+	if err != nil {
+		slog.Error("Failed to load configuration", "err", err)
+		os.Exit(1)
+	}
+
 	slog.Info("Starting Transaction & Escrow Manager API on :8080...")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	var rabbitConn *amqp.Connection
-	rabbitURL := os.Getenv("RABBITMQ_URL")
-	if rabbitURL != "" {
-		slog.Info("Connecting to RabbitMQ...", "url", rabbitURL)
-		conn, err := events.Connect(rabbitURL)
+	if cfg.RabbitMQURL != "" {
+		slog.Info("Connecting to RabbitMQ...", "url", cfg.RabbitMQURL)
+		conn, err := events.Connect(cfg.RabbitMQURL)
 		if err != nil {
 			slog.Error("Failed to connect to RabbitMQ, running without event publishing", "err", err)
 		} else {
@@ -47,9 +53,8 @@ func main() {
 
 	var repo db.TransactionRepository
 	var dbPool *db.DB
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL != "" {
-		slog.Info("Connecting to database...", "url", dbURL)
+	if cfg.DatabaseURL != "" {
+		slog.Info("Connecting to database...", "url", cfg.DatabaseURL)
 		pool, err := db.Connect()
 		if err != nil {
 			slog.Error("Database connection failed", "err", err)
@@ -89,7 +94,7 @@ func main() {
 	e.Use(db.RequestLoggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: db.GetCORSOrigins(),
+		AllowOrigins: cfg.CorsAllowedOrigins,
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
@@ -103,9 +108,12 @@ func main() {
 	}))
 	e.Use(middleware.BodyLimit(1 << 20))
 
-	e.GET("/api/v1/health", func(c *echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "UP"})
-	})
+	// Register Kubernetes Liveness, Readiness, and Health endpoints
+	var sqlDB = (*sql.DB)(nil)
+	if dbPool != nil {
+		sqlDB = dbPool.SQL
+	}
+	db.RegisterHealthEndpoints(e, sqlDB, rabbitConn)
 
 	api := e.Group("/api/v1")
 	api.Use(echojwt.WithConfig(echojwt.Config{
@@ -121,11 +129,11 @@ func main() {
 	api.POST("/transactions/:id/escrow/fund", handler.FundEscrow, db.RBACMiddleware(core.Buyer, core.Admin))
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         cfg.Port,
 		Handler:      e,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
 	}
 	slog.Info("🔒 Security hardening: timeouts, headers, 1MB body limit enabled")
 

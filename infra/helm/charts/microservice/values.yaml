@@ -33,6 +33,8 @@ securityContext:
       - ALL
 
 healthCheck:
+  livenessPath: /api/v1/health/live
+  readinessPath: /api/v1/health/ready
   path: /api/v1/health
   initialDelaySeconds: 5
   periodSeconds: 10
