@@ -39,6 +39,10 @@ healthCheck:
   initialDelaySeconds: 5
   periodSeconds: 10
 
+vpa:
+  enabled: true
+  updateMode: "Off"
+
 hpa:
   enabled: false
   minReplicas: 2

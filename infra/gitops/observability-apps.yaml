@@ -262,3 +262,36 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opencost
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: default
+  source:
+    repoURL: 'https://opencost.github.io/opencost-helm-chart'
+    targetRevision: 1.40.0
+    chart: opencost
+    helm:
+      values: |
+        opencost:
+          prometheus:
+            internal:
+              serviceName: prometheus-server
+              namespaceName: observability
+              port: 80
+          ui:
+            enabled: true
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
