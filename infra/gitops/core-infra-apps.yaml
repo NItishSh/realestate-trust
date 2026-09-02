@@ -57,6 +57,7 @@ spec:
     chart: gateway
     helm:
       values: |
+        image: docker.io/istio/proxyv2:1.22.1
         service:
           type: NodePort
           ports:
