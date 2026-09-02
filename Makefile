@@ -247,6 +247,38 @@ cluster-apps: ## List all ArgoCD application statuses
 	@echo -e "$(COLOR_INFO)ArgoCD Applications:$(COLOR_RESET)"
 	kubectl get applications.argoproj.io -n argocd
 
+.PHONY: cluster-endpoints endpoints
+endpoints: cluster-endpoints
+cluster-endpoints: ## Display all application, API health, IAM, and observability endpoints
+	@echo -e "\n$(COLOR_TITLE)=========================================================================$(COLOR_RESET)"
+	@echo -e "$(COLOR_TITLE) 🏢 RealEstate-Trust — Cluster Endpoints & Monitoring Dashboard           $(COLOR_RESET)"
+	@echo -e "$(COLOR_TITLE)=========================================================================$(COLOR_RESET)"
+	@echo -e "\n$(COLOR_INFO)🌐 Web Applications & Frontend:$(COLOR_RESET)"
+	@echo -e "  • Frontend UI (Marketplace & Portals) : $(COLOR_SUCCESS)http://localhost:3000$(COLOR_RESET)"
+	@echo -e "\n$(COLOR_INFO)⚙️  Microservice APIs & Health Checks:$(COLOR_RESET)"
+	@echo -e "  • Transaction Manager   : $(COLOR_SUCCESS)http://localhost:8080$(COLOR_RESET) (Ready: http://localhost:8080/api/v1/health/ready)"
+	@echo -e "  • Identity Service      : $(COLOR_SUCCESS)http://localhost:8081$(COLOR_RESET) (Ready: http://localhost:8081/api/v1/health/ready)"
+	@echo -e "  • Financing Engine      : $(COLOR_SUCCESS)http://localhost:8082$(COLOR_RESET) (Ready: http://localhost:8082/api/v1/health/ready)"
+	@echo -e "  • Tokenization Engine   : $(COLOR_SUCCESS)http://localhost:8083$(COLOR_RESET) (Ready: http://localhost:8083/api/v1/health/ready)"
+	@echo -e "  • Ledger Service        : $(COLOR_SUCCESS)http://localhost:8084$(COLOR_RESET) (Ready: http://localhost:8084/api/v1/health/ready)"
+	@echo -e "  • Property Registry     : $(COLOR_SUCCESS)http://localhost:8085$(COLOR_RESET) (Ready: http://localhost:8085/api/v1/health/ready)"
+	@echo -e "  • Feedback Service      : $(COLOR_SUCCESS)http://localhost:8086$(COLOR_RESET) (Ready: http://localhost:8086/api/v1/health/ready)"
+	@echo -e "\n$(COLOR_INFO)🛡️  GitOps, IAM & Infrastructure Consoles:$(COLOR_RESET)"
+	@echo -e "  • ArgoCD UI             : $(COLOR_SUCCESS)https://localhost:8080$(COLOR_RESET) (or 'make port-forward-argocd' | User: admin / make argocd-password)"
+	@echo -e "  • Keycloak IAM          : $(COLOR_SUCCESS)http://localhost:8088$(COLOR_RESET) (via 'make port-forward-keycloak' | User: admin / admin)"
+	@echo -e "  • HashiCorp Vault       : $(COLOR_SUCCESS)http://localhost:8200$(COLOR_RESET) (via 'make port-forward-vault' | Token: root)"
+	@echo -e "  • RabbitMQ Management   : $(COLOR_SUCCESS)http://localhost:15672$(COLOR_RESET) (via 'make port-forward-rabbitmq' | User: guest / guest)"
+	@echo -e "\n$(COLOR_INFO)📊 Observability & FinOps Monitoring Stack:$(COLOR_RESET)"
+	@echo -e "  • Grafana Dashboards    : $(COLOR_SUCCESS)http://localhost:3001$(COLOR_RESET) (via 'make port-forward-grafana' | User: admin / admin)"
+	@echo -e "  • OpenCost FinOps UI    : $(COLOR_SUCCESS)http://localhost:9003$(COLOR_RESET) (via 'make port-forward-opencost')"
+	@echo -e "  • Kiali Service Mesh    : $(COLOR_SUCCESS)http://localhost:20001$(COLOR_RESET) (via 'make port-forward-kiali')"
+	@echo -e "  • Prometheus Server     : $(COLOR_SUCCESS)http://localhost:9090$(COLOR_RESET) (via 'make port-forward-prometheus')"
+	@echo -e "\n$(COLOR_INFO)🔍 Verification & Health Commands:$(COLOR_RESET)"
+	@echo -e "  • make cluster-status        : View pod status across all namespaces"
+	@echo -e "  • make cluster-apps          : View ArgoCD GitOps application sync state"
+	@echo -e "  • make finops-rightsize-dryrun: Preview FinOps VPA resource allocations"
+	@echo -e "$(COLOR_TITLE)=========================================================================$(COLOR_RESET)\n"
+
 # ==============================================================================
 # Cluster Access, Credentials & Port-Forwarding
 # ==============================================================================
@@ -285,6 +317,16 @@ port-forward-vault: ## Port-forward HashiCorp Vault to localhost:8200
 port-forward-opencost: ## Port-forward OpenCost FinOps UI to localhost:9003
 	@echo -e "$(COLOR_INFO)Port-forwarding OpenCost UI on http://localhost:9003...$(COLOR_RESET)"
 	kubectl port-forward svc/opencost -n observability 9003:9003
+
+.PHONY: port-forward-prometheus
+port-forward-prometheus: ## Port-forward Prometheus server to localhost:9090
+	@echo -e "$(COLOR_INFO)Port-forwarding Prometheus UI on http://localhost:9090...$(COLOR_RESET)"
+	kubectl port-forward svc/prometheus-k8s -n observability 9090:9090
+
+.PHONY: port-forward-rabbitmq
+port-forward-rabbitmq: ## Port-forward RabbitMQ Management Console to localhost:15672
+	@echo -e "$(COLOR_INFO)Port-forwarding RabbitMQ UI on http://localhost:15672 (guest / guest)...$(COLOR_RESET)"
+	kubectl port-forward svc/rabbitmq -n realestate-trust 15672:15672
 
 .PHONY: finops-rightsize
 finops-rightsize: ## Execute automated FinOps right-sizing policy engine against cluster
