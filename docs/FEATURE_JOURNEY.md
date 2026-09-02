@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #33)](#-pull-request-pr-index-prs-1--33)
+6. [Pull Request (PR) Index (PRs #1 – #40)](#-pull-request-pr-index-prs-1--40)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -235,7 +235,7 @@ timeline
 
 ---
 
-## 📦 Pull Request (PR) Index (PRs #1 – #33)
+## 📦 Pull Request (PR) Index (PRs #1 – #40)
 
 | PR # | Type | Title | Key Files Changed | Impact |
 | :---: | :---: | :--- | :--- | :--- |
@@ -272,6 +272,12 @@ timeline
 | **[#31](https://github.com/NItishSh/realestate-trust/pull/31)** | `fix` | use AST yaml.Node manipulation to preserve exact key ordering and whitespace | `cmd/re-cli/finops.go`, `infra/kind/values/` | Surgical YAML diffs preserving comments and structure |
 | **[#32](https://github.com/NItishSh/realestate-trust/pull/32)** | `docs` | index PR #30 and PR #31 in feature journey guide | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#33](https://github.com/NItishSh/realestate-trust/pull/33)** | `docs` | sync README, microservices catalog, and feature journey with 7-service architecture | `README.md`, `docs/` | Unified 7-service and FinOps documentation |
+| **[#34](https://github.com/NItishSh/realestate-trust/pull/34)** | `docs` | document foundational pre-PR genesis commits in feature journey | `docs/FEATURE_JOURNEY.md` | Catalog of initial 6 genesis milestones |
+| **[#35](https://github.com/NItishSh/realestate-trust/pull/35)** | `docs` | add NodeLocal DNSCache requirement to production porting checklist | `docs/production_porting_guide.md` | In-node DNS caching roadmap for EKS/GKE/AKS |
+| **[#36](https://github.com/NItishSh/realestate-trust/pull/36)** | `feat` | add cluster-endpoints dashboard and monitoring links to Makefile and reset.sh | `Makefile`, `reset.sh` | Terminal endpoint dashboard + port-forwarding |
+| **[#38](https://github.com/NItishSh/realestate-trust/pull/38)** | `fix` | default vpa.enabled to false so microservices sync without VPA CRD requirement | `infra/helm/charts/microservice/` | Resolves ArgoCD sync dependency on VPA CRD |
+| **[#39](https://github.com/NItishSh/realestate-trust/pull/39)** | `fix` | update Istio gateway routes to use ClusterIP service port 80 | `infra/kind/manifests/istio-gateway.yaml` | Fixes 503 Service Unavailable on Unified Gateway |
+| **[#40](https://github.com/NItishSh/realestate-trust/pull/40)** | `fix` | clarify Unified Istio Gateway paths and port-forward commands in make endpoints | `Makefile` | Explicit endpoint paths & port-forward guides |
 
 ---
 
