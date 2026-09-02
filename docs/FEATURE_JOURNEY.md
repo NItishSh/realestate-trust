@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #40)](#-pull-request-pr-index-prs-1--40)
+6. [Pull Request (PR) Index (PRs #1 – #42)](#-pull-request-pr-index-prs-1--42)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -235,7 +235,7 @@ timeline
 
 ---
 
-## 📦 Pull Request (PR) Index (PRs #1 – #40)
+## 📦 Pull Request (PR) Index (PRs #1 – #42)
 
 | PR # | Type | Title | Key Files Changed | Impact |
 | :---: | :---: | :--- | :--- | :--- |
@@ -278,6 +278,8 @@ timeline
 | **[#38](https://github.com/NItishSh/realestate-trust/pull/38)** | `fix` | default vpa.enabled to false so microservices sync without VPA CRD requirement | `infra/helm/charts/microservice/` | Resolves ArgoCD sync dependency on VPA CRD |
 | **[#39](https://github.com/NItishSh/realestate-trust/pull/39)** | `fix` | update Istio gateway routes to use ClusterIP service port 80 | `infra/kind/manifests/istio-gateway.yaml` | Fixes 503 Service Unavailable on Unified Gateway |
 | **[#40](https://github.com/NItishSh/realestate-trust/pull/40)** | `fix` | clarify Unified Istio Gateway paths and port-forward commands in make endpoints | `Makefile` | Explicit endpoint paths & port-forward guides |
+| **[#41](https://github.com/NItishSh/realestate-trust/pull/41)** | `docs` | index PRs #34 through #40 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#42](https://github.com/NItishSh/realestate-trust/pull/42)** | `feat` | add make grafana-password helper and update endpoints dashboard | `Makefile` | Dynamic extraction of Grafana secret password |
 
 ---
 
