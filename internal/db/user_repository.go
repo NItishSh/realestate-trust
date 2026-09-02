@@ -88,7 +88,7 @@ func (r *InMemoryUserRepository) GetUser(id string) (*User, error) {
 
 	user, ok := r.users[id]
 	if !ok {
-		return nil, errors.New("user not found")
+		return nil, core.ErrNotFound
 	}
 	return user, nil
 }
@@ -102,7 +102,7 @@ func (r *InMemoryUserRepository) GetUserByEmail(email string) (*User, error) {
 			return user, nil
 		}
 	}
-	return nil, errors.New("user not found")
+	return nil, core.ErrNotFound
 }
 
 func (r *InMemoryUserRepository) SubmitKYC(userID, docType, docRef string) (*KYCVerification, error) {
@@ -187,7 +187,7 @@ func (r *InMemoryUserRepository) DeleteUser(id string) error {
 	defer r.mu.Unlock()
 
 	if _, ok := r.users[id]; !ok {
-		return errors.New("user not found")
+		return core.ErrNotFound
 	}
 
 	delete(r.users, id)

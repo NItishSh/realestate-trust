@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -89,7 +88,7 @@ func (r *InMemoryTransactionRepository) GetTransaction(id string) (*Transaction,
 
 	tx, ok := r.transactions[id]
 	if !ok {
-		return nil, errors.New("transaction not found")
+		return nil, core.ErrNotFound
 	}
 	return tx, nil
 }
@@ -100,7 +99,7 @@ func (r *InMemoryTransactionRepository) GetEscrow(txID string) (*EscrowAccount, 
 
 	acc, ok := r.accounts[txID]
 	if !ok {
-		return nil, errors.New("escrow account not found")
+		return nil, core.ErrNotFound
 	}
 	return acc, nil
 }
@@ -111,7 +110,7 @@ func (r *InMemoryTransactionRepository) UpdateTransactionStatus(id string, statu
 
 	tx, ok := r.transactions[id]
 	if !ok {
-		return errors.New("transaction not found")
+		return core.ErrNotFound
 	}
 
 	next, err := core.Transition(tx.Status, status)
@@ -129,12 +128,12 @@ func (r *InMemoryTransactionRepository) FundEscrow(id string, amount float64) er
 
 	tx, ok := r.transactions[id]
 	if !ok {
-		return errors.New("transaction not found")
+		return core.ErrNotFound
 	}
 
 	acc, ok := r.accounts[id]
 	if !ok {
-		return errors.New("escrow account not found")
+		return core.ErrNotFound
 	}
 
 	acc.Balance += amount

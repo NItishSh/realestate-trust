@@ -47,7 +47,7 @@ func (r *SQLTokenizationRepository) GetPool(id string) (*core.FractionalPool, er
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("fractional pool not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (r *SQLTokenizationRepository) BuyTokens(poolID, investorID string, count i
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("fractional pool not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}

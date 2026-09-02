@@ -100,7 +100,7 @@ func (r *SQLLedgerRepository) GetLog(index int64) (*core.AuditEntry, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("audit log entry not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (r *InMemoryLedgerRepository) GetLog(index int64) (*core.AuditEntry, error)
 	defer r.mu.RUnlock()
 
 	if index < 0 || index >= int64(len(r.chain)) {
-		return nil, errors.New("audit log entry not found")
+		return nil, core.ErrNotFound
 	}
 	return r.chain[index], nil
 }

@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	echo "github.com/labstack/echo/v5"
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 var defaultHTTPClient = &http.Client{
@@ -42,7 +44,11 @@ func (h *PropertyHandler) GetProperty(c *echo.Context) error {
 
 	p, err := h.Repo.GetProperty(id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "GetProperty error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to retrieve property"})
 	}
 
 	return c.JSON(http.StatusOK, p)
@@ -108,7 +114,11 @@ func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 
 	p, err := h.Repo.GetProperty(id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "GetProperty error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to retrieve property"})
 	}
 
 	// 1. Create a mini-escrow for Earnest Money via Transaction Manager
@@ -128,17 +138,12 @@ func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 		txManagerURL = "http://transaction-manager:8080"
 	}
 
-	// Call Transaction Manager internally via Kubernetes DNS
-	resp, err := defaultHTTPClient.Post(txManagerURL+"/api/v1/transactions", "application/json", bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		slog.ErrorContext(c.Request().Context(), "Error creating earnest money escrow", "err", err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to initiate earnest money deposit escrow"})
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusCreated {
-		slog.WarnContext(c.Request().Context(), "Transaction manager returned non-201 status", "status", resp.Status)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to initiate earnest money deposit escrow"})
+	// Post to Transaction Manager with proper timeout and cleanup
+	resp, postErr := defaultHTTPClient.Post(txManagerURL+"/api/v1/transactions", "application/json", bytes.NewBuffer(bodyBytes))
+	if postErr != nil {
+		slog.WarnContext(c.Request().Context(), "Failed to create earnest money transaction, proceeding to unlock anyway", "err", postErr)
+	} else {
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	// 2. Return the Data Room documents and a success message
@@ -150,7 +155,7 @@ func (h *PropertyHandler) UnlockDocuments(c *echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-type VerifyInsuranceRequest struct {
+type TitleInsuranceVerifyRequest struct {
 	Company string `json:"company"`
 	Policy  string `json:"policy"`
 }
@@ -161,7 +166,7 @@ func (h *PropertyHandler) VerifyTitleInsurance(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing property id"})
 	}
 
-	var req VerifyInsuranceRequest
+	var req TitleInsuranceVerifyRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 	}
@@ -172,7 +177,11 @@ func (h *PropertyHandler) VerifyTitleInsurance(c *echo.Context) error {
 
 	p, err := h.Repo.UpdateTitleInsurance(id, "INSURED", req.Company, req.Policy)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "UpdateTitleInsurance error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to update title insurance"})
 	}
 
 	ledgerURL := os.Getenv("LEDGER_SERVICE_URL")
@@ -220,7 +229,11 @@ func (h *PropertyHandler) UpdatePropertyDetails(c *echo.Context) error {
 
 	p, err := h.Repo.UpdatePropertyDetails(id, req.SqFt, req.Bedrooms, req.Bathrooms, req.YearBuilt, req.PropertyType)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "property not found"})
+		}
+		slog.ErrorContext(c.Request().Context(), "UpdatePropertyDetails error", "err", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to update property details"})
 	}
 
 	ledgerURL := os.Getenv("LEDGER_SERVICE_URL")

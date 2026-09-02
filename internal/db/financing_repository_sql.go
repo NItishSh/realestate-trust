@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/realestate-trust/monorepo/internal/core"
 )
 
 type SQLFinancingRepository struct {
@@ -52,7 +53,7 @@ func (r *SQLFinancingRepository) GetLoan(id string) (*Loan, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("loan not found")
+			return nil, core.ErrNotFound
 		}
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func (r *SQLFinancingRepository) ApproveLoan(id string, appAmount float64) error
 		return err
 	}
 	if rows == 0 {
-		return errors.New("loan not found")
+		return core.ErrNotFound
 	}
 	return nil
 }

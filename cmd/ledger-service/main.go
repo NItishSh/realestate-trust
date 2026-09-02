@@ -101,9 +101,12 @@ func main() {
 		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization, "X-Correlation-ID"},
 	}))
 	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
-		XSSProtection:      "1; mode=block",
-		ContentTypeNosniff: "nosniff",
-		XFrameOptions:      "DENY",
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "DENY",
+		HSTSMaxAge:            31536000,
+		HSTSExcludeSubdomains: false,
+		ContentSecurityPolicy: "default-src 'self'",
 	}))
 	e.Use(middleware.BodyLimit(1 << 20))
 

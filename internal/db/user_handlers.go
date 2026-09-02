@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -179,8 +180,11 @@ func (h *UserHandler) GetUser(c *echo.Context) error {
 
 	user, err := h.Repo.GetUser(userID)
 	if err != nil {
+		if errors.Is(err, core.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		}
 		slog.ErrorContext(c.Request().Context(), "GetUser error", "err", err)
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to retrieve user"})
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -270,7 +274,7 @@ func (h *UserHandler) DeleteUser(c *echo.Context) error {
 
 	err := h.Repo.DeleteUser(userID)
 	if err != nil {
-		if err.Error() == "user not found" {
+		if errors.Is(err, core.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 		}
 		slog.ErrorContext(c.Request().Context(), "DeleteUser error", "err", err)
