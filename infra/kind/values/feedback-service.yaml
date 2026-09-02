@@ -4,7 +4,12 @@ service:
   type: ClusterIP
   port: 8086
   targetPort: 8086
-resources: {}
+resources:
+  requests:
+    cpu: 30m
+    memory: 38Mi
+  limits:
+    memory: 57Mi
 smokeTest:
   enabled: true
   script: |
@@ -21,7 +26,6 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
-
 env:
   - name: DATABASE_URL
     valueFrom:

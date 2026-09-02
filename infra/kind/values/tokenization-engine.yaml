@@ -4,7 +4,12 @@ service:
   type: ClusterIP
   port: 8083
   targetPort: 8083
-resources: {}
+resources:
+  requests:
+    cpu: 54m
+    memory: 76Mi
+  limits:
+    memory: 114Mi
 smokeTest:
   enabled: true
   script: |
@@ -67,7 +72,6 @@ db:
             token_count BIGINT NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
-
 keda:
   enabled: true
   minReplicas: 1

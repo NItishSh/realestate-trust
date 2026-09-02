@@ -169,6 +169,51 @@ func getVPARecommendation(service, namespace string) (string, string) {
 	return "50m", "64Mi"
 }
 
+func updateResourcesInNode(root *yaml.Node, targetCPUMillis, targetMemMi, targetLimitMemMi int) {
+	if root.Kind == yaml.DocumentNode && len(root.Content) > 0 {
+		root = root.Content[0]
+	}
+	if root.Kind != yaml.MappingNode {
+		return
+	}
+
+	newResourcesVal := &yaml.Node{
+		Kind: yaml.MappingNode,
+		Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: "requests"},
+			{
+				Kind: yaml.MappingNode,
+				Content: []*yaml.Node{
+					{Kind: yaml.ScalarNode, Value: "cpu"},
+					{Kind: yaml.ScalarNode, Value: fmt.Sprintf("%dm", targetCPUMillis)},
+					{Kind: yaml.ScalarNode, Value: "memory"},
+					{Kind: yaml.ScalarNode, Value: fmt.Sprintf("%dMi", targetMemMi)},
+				},
+			},
+			{Kind: yaml.ScalarNode, Value: "limits"},
+			{
+				Kind: yaml.MappingNode,
+				Content: []*yaml.Node{
+					{Kind: yaml.ScalarNode, Value: "memory"},
+					{Kind: yaml.ScalarNode, Value: fmt.Sprintf("%dMi", targetLimitMemMi)},
+				},
+			},
+		},
+	}
+
+	for i := 0; i < len(root.Content); i += 2 {
+		if root.Content[i].Value == "resources" {
+			root.Content[i+1] = newResourcesVal
+			return
+		}
+	}
+
+	root.Content = append(root.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Value: "resources"},
+		newResourcesVal,
+	)
+}
+
 func runRightSize(valuesDir, namespace string, dryRun bool) error {
 	var results []RightSizeResult
 
@@ -200,7 +245,7 @@ func runRightSize(valuesDir, namespace string, dryRun bool) error {
 
 		targetLimitMemMi := int(float64(targetMemMi) * limitMemoryMultiplier)
 
-		// Parse existing values to read previous settings
+		// Parse existing values to read previous settings for table display
 		var docMap map[string]interface{}
 		_ = yaml.Unmarshal(content, &docMap)
 
@@ -215,25 +260,17 @@ func runRightSize(valuesDir, namespace string, dryRun bool) error {
 					oldMem = m
 				}
 			}
-		} else {
-			docMap["resources"] = make(map[string]interface{})
 		}
 
-		// Update docMap
-		docMap["resources"] = map[string]interface{}{
-			"requests": map[string]interface{}{
-				"cpu":    fmt.Sprintf("%dm", targetCPUMillis),
-				"memory": fmt.Sprintf("%dMi", targetMemMi),
-			},
-			"limits": map[string]interface{}{
-				"memory": fmt.Sprintf("%dMi", targetLimitMemMi),
-			},
-		}
+		updateResourcesInNode(&node, targetCPUMillis, targetMemMi, targetLimitMemMi)
 
 		if !dryRun {
-			updatedYAML, err := yaml.Marshal(docMap)
-			if err == nil {
-				_ = os.WriteFile(targetFile, updatedYAML, 0644)
+			var buf strings.Builder
+			enc := yaml.NewEncoder(&buf)
+			enc.SetIndent(2)
+			if err := enc.Encode(&node); err == nil {
+				_ = enc.Close()
+				_ = os.WriteFile(targetFile, []byte(buf.String()), 0644)
 			}
 		}
 

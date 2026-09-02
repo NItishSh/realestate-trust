@@ -4,7 +4,12 @@ service:
   type: ClusterIP
   port: 8080
   targetPort: 8080
-resources: {}
+resources:
+  requests:
+    cpu: 72m
+    memory: 96Mi
+  limits:
+    memory: 144Mi
 ingress:
   enabled: true
   whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"
@@ -43,7 +48,6 @@ smokeTest:
     done
     echo "Failed to connect after 60s"
     exit 1
-
 env:
   - name: DATABASE_URL
     valueFrom:
@@ -81,7 +85,6 @@ db:
         );
         CREATE INDEX idx_transactions_status ON transactions(status);
         CREATE INDEX idx_escrow_accounts_va ON escrow_accounts(virtual_account_number);
-
 keda:
   enabled: true
   minReplicas: 1
