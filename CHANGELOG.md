@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/NItishSh/realestate-trust/compare/v1.4.0...v1.5.0) (2026-09-02)
+
+
+### Features
+
+* **core:** implement centralized service config and deep Kubernetes readiness probes ([#27](https://github.com/NItishSh/realestate-trust/issues/27)) ([f2ddd50](https://github.com/NItishSh/realestate-trust/commit/f2ddd503bbb535ba78e07f227569b133435f0687))
+* **core:** implement typed sentinel domain errors and enterprise HSTS/CSP security headers ([#25](https://github.com/NItishSh/realestate-trust/issues/25)) ([b7e4d02](https://github.com/NItishSh/realestate-trust/commit/b7e4d026c5c06689f0a8a307437e9f5f7428d15e))
+
 ## [1.4.0](https://github.com/NItishSh/realestate-trust/compare/v1.3.0...v1.4.0) (2026-09-01)
 
 
