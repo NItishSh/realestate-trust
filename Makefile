@@ -254,7 +254,7 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 	@echo -e "$(COLOR_TITLE) 🏢 RealEstate-Trust — Cluster Endpoints & Monitoring Dashboard           $(COLOR_RESET)"
 	@echo -e "$(COLOR_TITLE)=========================================================================$(COLOR_RESET)"
 	@echo -e "\n$(COLOR_INFO)🚪 Unified Istio Ingress Gateway (http://localhost:8080):$(COLOR_RESET)"
-	@echo -e "  • Grafana Dashboard     : $(COLOR_SUCCESS)http://localhost:8080/grafana/$(COLOR_RESET) (admin / admin)"
+	@echo -e "  • Grafana Dashboard     : $(COLOR_SUCCESS)http://localhost:8080/grafana/$(COLOR_RESET) (admin / make grafana-password)"
 	@echo -e "  • Kiali Service Mesh    : $(COLOR_SUCCESS)http://localhost:8080/kiali/$(COLOR_RESET)"
 	@echo -e "  • Keycloak OIDC Realm   : $(COLOR_SUCCESS)http://localhost:8080/realms/realestate-trust$(COLOR_RESET)"
 	@echo -e "  • Identity Service API  : $(COLOR_SUCCESS)http://localhost:8080/api/v1/users$(COLOR_RESET)"
@@ -265,7 +265,7 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 	@echo -e "  • Property Registry API : $(COLOR_SUCCESS)http://localhost:8080/api/v1/properties$(COLOR_RESET)"
 	@echo -e "  • Feedback Reviews API  : $(COLOR_SUCCESS)http://localhost:8080/api/v1/feedback$(COLOR_RESET)"
 	@echo -e "\n$(COLOR_INFO)🔌 Dedicated Port-Forward Helpers (Run in terminal to open browser):$(COLOR_RESET)"
-	@echo -e "  • make port-forward-grafana   -> $(COLOR_SUCCESS)http://localhost:3001$(COLOR_RESET) (admin / admin)"
+	@echo -e "  • make port-forward-grafana   -> $(COLOR_SUCCESS)http://localhost:3001$(COLOR_RESET) (admin / make grafana-password)"
 	@echo -e "  • make port-forward-opencost  -> $(COLOR_SUCCESS)http://localhost:9003$(COLOR_RESET) (FinOps UI)"
 	@echo -e "  • make port-forward-keycloak  -> $(COLOR_SUCCESS)http://localhost:8088$(COLOR_RESET) (admin / admin)"
 	@echo -e "  • make port-forward-kiali     -> $(COLOR_SUCCESS)http://localhost:20001$(COLOR_RESET) (Mesh topology)"
@@ -285,6 +285,11 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 argocd-password: ## Fetch ArgoCD admin password from Kubernetes secret
 	@echo -e "$(COLOR_INFO)ArgoCD Admin Password:$(COLOR_RESET)"
 	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+
+.PHONY: grafana-password
+grafana-password: ## Fetch Grafana admin password from Kubernetes secret
+	@echo -e "$(COLOR_INFO)Grafana Admin Password:$(COLOR_RESET)"
+	@kubectl -n observability get secret grafana-admin-secret -o jsonpath="{.data.admin-password}" | base64 -d 2>/dev/null || echo "admin"
 
 .PHONY: port-forward-argocd
 port-forward-argocd: ## Port-forward ArgoCD server to localhost:8080
