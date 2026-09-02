@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #50)](#-pull-request-pr-index-prs-1--50)
+6. [Pull Request (PR) Index (PRs #1 – #52)](#-pull-request-pr-index-prs-1--52)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -288,6 +288,8 @@ timeline
 | **[#48](https://github.com/NItishSh/realestate-trust/pull/48)** | `docs` | index PR #45 and #46 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#49](https://github.com/NItishSh/realestate-trust/pull/49)** | `feat` | add frontend application to service-apps | `infra/gitops/service-apps.yaml` | Declarative ArgoCD Next.js web deployment |
 | **[#50](https://github.com/NItishSh/realestate-trust/pull/50)** | `feat` | add port-forward-frontend and update endpoints dashboard | `Makefile`, `docs/FEATURE_JOURNEY.md` | Adds make port-forward-frontend & endpoint docs |
+| **[#51](https://github.com/NItishSh/realestate-trust/pull/51)** | `docs` | index PRs #47 through #50 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#52](https://github.com/NItishSh/realestate-trust/pull/52)** | `feat` | implement shift-left safeguards, pre-commit gates, and vitest test suite | `.pre-commit-config.yaml`, `.github/workflows/ci.yml`, `frontend/`, `Makefile` | Shift-left quality gates & CI pipelines for Next.js frontend |
 
 ---
 
