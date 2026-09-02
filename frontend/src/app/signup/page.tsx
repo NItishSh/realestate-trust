@@ -33,7 +33,7 @@ export default function SignupPage() {
       }
 
       router.push('/login?registered=true');
-    } catch (err) {
+    } catch {
       setError('Registration failed. Please try again.');
       setIsLoading(false);
     }

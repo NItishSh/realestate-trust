@@ -69,13 +69,28 @@ precommit: ## Run all pre-commit hooks on all files
 	pre-commit run --all-files
 
 .PHONY: lint
-lint: lint-go lint-helm lint-docker lint-tf lint-compose ## Run all static linters across the repo
+lint: lint-go lint-frontend typecheck-frontend lint-helm lint-docker lint-tf lint-compose ## Run all static linters across the repo
 	@echo -e "$(COLOR_SUCCESS)✓ All linters passed successfully.$(COLOR_RESET)"
 
 .PHONY: lint-go
 lint-go: ## Run golangci-lint on Go packages
 	@echo -e "$(COLOR_INFO)Running golangci-lint...$(COLOR_RESET)"
 	golangci-lint run ./cmd/... ./internal/... ./test/...
+
+.PHONY: lint-frontend
+lint-frontend: ## Run ESLint on Next.js frontend
+	@echo -e "$(COLOR_INFO)Running ESLint on frontend...$(COLOR_RESET)"
+	npm --prefix frontend run lint
+
+.PHONY: typecheck-frontend
+typecheck-frontend: ## Run TypeScript type-checking on frontend
+	@echo -e "$(COLOR_INFO)Running TypeScript type-check on frontend...$(COLOR_RESET)"
+	npm --prefix frontend run type-check
+
+.PHONY: test-frontend
+test-frontend: ## Run Vitest unit tests on frontend
+	@echo -e "$(COLOR_INFO)Running Vitest frontend unit tests...$(COLOR_RESET)"
+	npm --prefix frontend run test
 
 .PHONY: lint-helm
 lint-helm: ## Run helm lint on charts

@@ -3,12 +3,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../lib/store';
 import {
-  FileCheck2,
   UserPlus,
   Upload,
   CheckCircle2,
   Clock,
-  XCircle,
   Fingerprint,
   UserCheck
 } from 'lucide-react';
@@ -108,7 +106,7 @@ export default function KYCPage() {
                 <label className="text-[10px] text-slate-500 font-mono block mb-1">ACCOUNT ROLE</label>
                 <select
                   value={role}
-                  onChange={e => setRole(e.target.value as any)}
+                  onChange={e => setRole(e.target.value as 'BUYER' | 'SELLER' | 'BROKER')}
                   className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                 >
                   <option value="BUYER">BUYER (Investor / Homeowner)</option>
@@ -143,7 +141,7 @@ export default function KYCPage() {
                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-accent-cyan focus-visible:border-accent-cyan cursor-pointer"
                   >
                     <option value="PASSPORT">PASSPORT</option>
-                    <option value="DRIVERS_LICENSE">DRIVER'S LICENSE</option>
+                    <option value="DRIVERS_LICENSE">DRIVER&apos;S LICENSE</option>
                     <option value="PAN_CARD">PAN CARD</option>
                   </select>
                 </div>

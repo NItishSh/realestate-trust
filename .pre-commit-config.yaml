@@ -66,3 +66,15 @@ repos:
         language: system
         files: ^docker-compose.*\.ya?ml$
         pass_filenames: false
+      - id: frontend-lint
+        name: frontend-lint
+        entry: bash -c "cd frontend && npm run lint"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|mjs)$
+        pass_filenames: false
+      - id: frontend-typecheck
+        name: frontend-typecheck
+        entry: bash -c "cd frontend && npm run type-check"
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false

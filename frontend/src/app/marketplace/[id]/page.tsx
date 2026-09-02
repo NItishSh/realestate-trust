@@ -53,8 +53,9 @@ export default function PropertyDetailsPage() {
       });
       setProperty(updatedProp);
       setShowEditModal(false);
-    } catch (err: any) {
-      alert("Failed to update specifications: " + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      alert("Failed to update specifications: " + msg);
     } finally {
       setIsEditingSpecs(false);
     }
@@ -123,8 +124,9 @@ export default function PropertyDetailsPage() {
 
       setUnlockMessage(data.message);
       setDocuments(data.documents || []);
-    } catch (err: any) {
-      setUnlockMessage(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to unlock documents';
+      setUnlockMessage(msg);
     } finally {
       setUnlocking(false);
     }
@@ -140,8 +142,9 @@ export default function PropertyDetailsPage() {
         tokenPrice: parseFloat(tokenPrice)
       });
       router.push('/portfolio');
-    } catch (err: any) {
-      alert("Failed to tokenize property: " + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      alert("Failed to tokenize property: " + msg);
     } finally {
       setIsTokenizing(false);
     }
@@ -154,6 +157,7 @@ export default function PropertyDetailsPage() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={property.thumbnail}
           alt={property.address}

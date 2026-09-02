@@ -3,13 +3,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../lib/store';
 import {
-  PieChart,
   Coins,
   TrendingUp,
   Plus,
   Building2,
-  Search,
-  CircleDollarSign,
   Briefcase,
   AlertCircle
 } from 'lucide-react';

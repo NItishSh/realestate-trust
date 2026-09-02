@@ -14,8 +14,6 @@ import {
   Plus,
   X,
   RefreshCw,
-  TrendingUp,
-  MapPin,
   Home
 } from 'lucide-react';
 import { api, Transaction, Property, User } from '@/lib/api';

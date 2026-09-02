@@ -57,7 +57,7 @@ export const useStore = create<State>((set, get) => ({
         currentUser,
         isLoading: false
       });
-    } catch (e) {
+    } catch {
       set({ isLoading: false });
     }
   },

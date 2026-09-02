@@ -201,7 +201,7 @@ async function safeFetch<T>(url: string, options: RequestInit, fallback: T): Pro
           } else {
             throw new Error("Refresh failed");
           }
-        } catch (err) {
+        } catch {
           isRefreshing = false;
           localStorage.removeItem('jwt_token');
           localStorage.removeItem('refresh_token');

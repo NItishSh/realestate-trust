@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../lib/store';
 import {
-  Database,
   Search,
   Plus,
   Cpu,
@@ -88,10 +87,10 @@ export default function LedgerPage() {
               Each log block carries a unique sequential Index, UTC Timestamp, and String Payload.
             </p>
             <p>
-              The block Hash is calculated by hashing the index, timestamp, payload, and the previous block's SHA256 Hash.
+              The block Hash is calculated by hashing the index, timestamp, payload, and the previous block&apos;s SHA256 Hash.
             </p>
             <p className="border-t border-slate-200 pt-2 text-[10px] text-slate-500">
-              Any attempt to modify a block's payload invalidates its hash, breaking the entire downstream log validation chain.
+              Any attempt to modify a block&apos;s payload invalidates its hash, breaking the entire downstream log validation chain.
             </p>
           </div>
         </div>

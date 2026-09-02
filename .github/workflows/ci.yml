@@ -88,9 +88,48 @@ jobs:
     - name: Run Docker Compose E2E Test Suite
       run: make compose-test-e2e
 
+  frontend-sanity:
+    name: Frontend Sanity & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Frontend ESLint
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Frontend TypeScript Type Check
+      run: |
+        cd frontend
+        npm run type-check
+
+    - name: Frontend Component & Store Tests
+      run: |
+        cd frontend
+        npm test
+
+    - name: Next.js Production Build
+      run: |
+        cd frontend
+        npm run build
+
   build-and-push:
-    name: Build & Push to GHCR
-    needs: [lint-and-test, verify-compose-stack]
+    name: Build & Push Microservices to GHCR
+    needs: [lint-and-test, verify-compose-stack, frontend-sanity]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
@@ -101,6 +140,8 @@ jobs:
           - financing-engine
           - tokenization-engine
           - ledger-service
+          - property-registry-service
+          - feedback-service
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
@@ -165,6 +206,85 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Sign the Pushed Image with Cosign
+      env:
+        TAGS: ${{ steps.meta.outputs.tags }}
+        DIGEST: ${{ steps.push-step.outputs.digest }}
+      run: |
+        images=""
+        for tag in ${TAGS}; do
+          images="${images} ${tag}@${DIGEST}"
+        done
+        cosign sign --yes ${images}
+
+  build-and-push-frontend:
+    name: Build & Push Frontend to GHCR
+    needs: [frontend-sanity]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v7
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v4.1.0
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate Image Metadata
+      id: meta
+      uses: docker/metadata-action@v6
+      with:
+        images: ghcr.io/${{ github.repository }}/frontend
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=sha,format=long
+
+    - name: Build Frontend Image (Trivy Scan Phase)
+      uses: docker/build-push-action@v7
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: false
+        load: true
+        tags: frontend:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: frontend:test
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'HIGH,CRITICAL'
+
+    - name: Build & Push Frontend Image to GHCR
+      id: push-step
+      uses: docker/build-push-action@v7
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Sign the Pushed Frontend Image with Cosign
       env:
         TAGS: ${{ steps.meta.outputs.tags }}
         DIGEST: ${{ steps.push-step.outputs.digest }}
