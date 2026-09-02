@@ -270,7 +270,9 @@ cluster-endpoints: ## Display all application, API health, IAM, and observabilit
 	@echo -e "  • make port-forward-keycloak  -> $(COLOR_SUCCESS)http://localhost:8088$(COLOR_RESET) (admin / admin)"
 	@echo -e "  • make port-forward-kiali     -> $(COLOR_SUCCESS)http://localhost:20001$(COLOR_RESET) (Mesh topology)"
 	@echo -e "  • make port-forward-vault     -> $(COLOR_SUCCESS)http://localhost:8200$(COLOR_RESET) (token: root)"
-	@echo -e "  • make port-forward-argocd    -> $(COLOR_SUCCESS)https://localhost:8080$(COLOR_RESET) (admin / make argocd-password)"
+	@echo -e "  • make port-forward-argocd    -> $(COLOR_SUCCESS)http://localhost:8087$(COLOR_RESET) (admin / make argocd-password)"
+	@echo -e "  • make port-forward-prometheus-> $(COLOR_SUCCESS)http://localhost:9090$(COLOR_RESET) (Prometheus Graph)"
+	@echo -e "  • make port-forward-rabbitmq  -> $(COLOR_SUCCESS)http://localhost:15672$(COLOR_RESET) (guest / guest)"
 	@echo -e "\n$(COLOR_INFO)🔍 Verification & Diagnostic Commands:$(COLOR_RESET)"
 	@echo -e "  • make cluster-status         : View pod status across all namespaces"
 	@echo -e "  • make cluster-apps           : View ArgoCD GitOps application sync state"
@@ -292,9 +294,9 @@ grafana-password: ## Fetch Grafana admin password from Kubernetes secret
 	@kubectl -n observability get secret grafana-admin-secret -o jsonpath="{.data.admin-password}" | base64 -d 2>/dev/null || echo "admin"
 
 .PHONY: port-forward-argocd
-port-forward-argocd: ## Port-forward ArgoCD server to localhost:8080
-	@echo -e "$(COLOR_INFO)Port-forwarding ArgoCD UI on https://localhost:8080 (admin / run 'make argocd-password')...$(COLOR_RESET)"
-	kubectl port-forward svc/argocd-server -n argocd 8080:443
+port-forward-argocd: ## Port-forward ArgoCD server to localhost:8087
+	@echo -e "$(COLOR_INFO)Port-forwarding ArgoCD UI on http://localhost:8087 (admin / run 'make argocd-password')...$(COLOR_RESET)"
+	kubectl port-forward svc/argocd-server -n argocd 8087:80
 
 .PHONY: port-forward-grafana
 port-forward-grafana: ## Port-forward Grafana dashboard to localhost:3001
@@ -304,7 +306,7 @@ port-forward-grafana: ## Port-forward Grafana dashboard to localhost:3001
 .PHONY: port-forward-keycloak
 port-forward-keycloak: ## Port-forward Keycloak UI to localhost:8088
 	@echo -e "$(COLOR_INFO)Port-forwarding Keycloak UI on http://localhost:8088 (admin / admin)...$(COLOR_RESET)"
-	kubectl port-forward svc/keycloakx-http -n realestate-trust 8088:80
+	kubectl port-forward svc/keycloak -n realestate-trust 8088:8080
 
 .PHONY: port-forward-kiali
 port-forward-kiali: ## Port-forward Kiali Istio console to localhost:20001
@@ -319,12 +321,12 @@ port-forward-vault: ## Port-forward HashiCorp Vault to localhost:8200
 .PHONY: port-forward-opencost
 port-forward-opencost: ## Port-forward OpenCost FinOps UI to localhost:9003
 	@echo -e "$(COLOR_INFO)Port-forwarding OpenCost UI on http://localhost:9003...$(COLOR_RESET)"
-	kubectl port-forward svc/opencost -n observability 9003:9003
+	kubectl port-forward svc/opencost -n observability 9003:9090
 
 .PHONY: port-forward-prometheus
 port-forward-prometheus: ## Port-forward Prometheus server to localhost:9090
 	@echo -e "$(COLOR_INFO)Port-forwarding Prometheus UI on http://localhost:9090...$(COLOR_RESET)"
-	kubectl port-forward svc/prometheus-k8s -n observability 9090:9090
+	kubectl port-forward svc/prometheus-server -n istio-system 9090:80
 
 .PHONY: port-forward-rabbitmq
 port-forward-rabbitmq: ## Port-forward RabbitMQ Management Console to localhost:15672

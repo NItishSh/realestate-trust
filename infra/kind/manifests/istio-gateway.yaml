@@ -101,6 +101,30 @@ spec:
               number: 80
     - match:
         - uri:
+            prefix: /grafana
+      route:
+        - destination:
+            host: grafana.observability.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /kiali
+      route:
+        - destination:
+            host: kiali.istio-system.svc.cluster.local
+            port:
+              number: 20001
+    - match:
+        - uri:
+            prefix: /prometheus
+      route:
+        - destination:
+            host: prometheus-server.istio-system.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
             prefix: /
       route:
         - destination:
