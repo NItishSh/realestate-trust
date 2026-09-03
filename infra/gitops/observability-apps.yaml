@@ -178,7 +178,7 @@ spec:
     helm:
       values: |
         server:
-          baseURL: "http://localhost:8080/prometheus/"
+          baseURL: ""
         alertmanager:
           enabled: false
         pushgateway:
