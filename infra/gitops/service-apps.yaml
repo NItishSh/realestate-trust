@@ -487,12 +487,6 @@ spec:
         service:
           port: 80
           targetPort: 8085
-        env:
-          - name: DATABASE_URL
-            valueFrom:
-              secretKeyRef:
-                name: property-registry-service-db-secret
-                key: DATABASE_URL
         resources:
           requests:
             cpu: 42m
@@ -571,12 +565,6 @@ spec:
         service:
           port: 80
           targetPort: 8086
-        env:
-          - name: DATABASE_URL
-            valueFrom:
-              secretKeyRef:
-                name: feedback-service-db-secret
-                key: DATABASE_URL
         resources:
           requests:
             cpu: 30m
