@@ -466,3 +466,160 @@ spec:
     automated:
       prune: true
       selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: property-registry-service
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/NItishSh/realestate-trust.git'
+    targetRevision: main
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/property-registry-service
+        service:
+          port: 80
+          targetPort: 8085
+        env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: property-registry-service-db-secret
+                key: DATABASE_URL
+        resources:
+          requests:
+            cpu: 42m
+            memory: 57Mi
+          limits:
+            cpu: 250m
+            memory: 85Mi
+        smokeTest:
+          enabled: true
+          script: |
+            echo "Sleeping for pod startup..."
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://property-registry-service/api/v1/health; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "property-registry-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
+        db:
+          migrations:
+            enabled: true
+            databaseUrlEnv: "DATABASE_URL"
+            databaseUrl: "postgres://postgres:postgres@postgres:5432/properties_db?sslmode=disable"
+            scripts:
+              000001_init_property.up.sql: |
+                CREATE TABLE IF NOT EXISTS properties (
+                    id VARCHAR(255) PRIMARY KEY,
+                    address VARCHAR(255) NOT NULL,
+                    description TEXT NOT NULL,
+                    value DECIMAL(15, 2) NOT NULL,
+                    thumbnail TEXT NOT NULL,
+                    owner_id VARCHAR(255) NOT NULL,
+                    documents TEXT[] NOT NULL,
+                    title_insurance_status VARCHAR(50) NOT NULL,
+                    title_insurance_policy VARCHAR(100) NOT NULL,
+                    title_insurance_company VARCHAR(100) NOT NULL,
+                    title_insurance_verified_at VARCHAR(100) NOT NULL,
+                    sqft INTEGER NOT NULL,
+                    bedrooms INTEGER NOT NULL,
+                    bathrooms INTEGER NOT NULL,
+                    year_built INTEGER NOT NULL,
+                    property_type VARCHAR(100) NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: feedback-service
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/NItishSh/realestate-trust.git'
+    targetRevision: main
+    path: infra/helm/charts/microservice
+    helm:
+      values: |
+        image:
+          repository: ghcr.io/realestate-trust/monorepo/feedback-service
+        service:
+          port: 80
+          targetPort: 8086
+        env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: feedback-service-db-secret
+                key: DATABASE_URL
+        resources:
+          requests:
+            cpu: 30m
+            memory: 38Mi
+          limits:
+            cpu: 250m
+            memory: 57Mi
+        smokeTest:
+          enabled: true
+          script: |
+            echo "Sleeping for pod startup..."
+            attempt=1
+            while [ $attempt -le 12 ]; do
+              if curl -sf http://feedback-service/api/v1/health; then
+                echo "Success!"
+                exit 0
+              fi
+              echo "feedback-service not ready, retrying in 5s (attempt $attempt/12)..."
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            echo "Failed to connect after 60s"
+            exit 1
+        db:
+          migrations:
+            enabled: true
+            databaseUrlEnv: "DATABASE_URL"
+            databaseUrl: "postgres://postgres:postgres@postgres:5432/feedback_db?sslmode=disable"
+            scripts:
+              000001_create_feedback.up.sql: |
+                CREATE TABLE IF NOT EXISTS feedback (
+                    id VARCHAR(255) PRIMARY KEY,
+                    user_id VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    category VARCHAR(100) NOT NULL,
+                    rating INTEGER NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON feedback(user_id);
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: realestate-trust
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
