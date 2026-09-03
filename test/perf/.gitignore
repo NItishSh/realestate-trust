@@ -1,0 +1,4 @@
+# Ignore transient run snapshots, keep history.csv
+reports/report-*.html
+reports/latest.json
+reports/latest.html

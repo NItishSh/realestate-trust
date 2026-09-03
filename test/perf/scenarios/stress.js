@@ -8,6 +8,7 @@ import { check, sleep, group } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 import { getBaseUrl, defaultHeaders } from '../common/config.js';
 import { getAuthToken } from '../common/auth.js';
+import { createSummaryHandler } from '../common/summary.js';
 import {
   createTransactionPayload,
   createPropertyPayload,
@@ -99,3 +100,5 @@ export default function (data) {
   latencyTrend.add(Date.now() - start);
   sleep(0.5); // Tight sleep for stress testing
 }
+
+export const handleSummary = createSummaryHandler('Stress & Saturation Test');

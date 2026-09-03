@@ -138,3 +138,39 @@ make finops-rightsize
 
 ### 3. GitOps Deployment
 Commit the updated values. ArgoCD automatically syncs the newly tuned CPU and memory allocations to the cluster.
+
+---
+
+## 📜 Historical Benchmark Tracking & Trend Comparison
+
+Performance results are automatically preserved across all runs to track regressions over time:
+
+### 1. Version-Controlled Benchmark History (`test/perf/reports/history.csv`)
+Every performance run automatically appends key benchmark metrics (timestamp, commit hash, scenario, VUs, total requests, RPS, $p95$, $p99$, error rate, and status) to `test/perf/reports/history.csv`.
+
+To view the historical comparison table directly in your terminal:
+```bash
+make perf-history
+```
+
+Example output:
+```
+timestamp             commit   scenario       vus  total_requests  rps    p95_ms  p99_ms  error_rate  status
+2026-09-03T07:37:36Z  46394da  smoke          3    227             10.37  366.35  512.10  0.00%       PASSED
+2026-09-03T08:15:00Z  da550a3  Standard Load  20   36000           50.00  240.12  410.50  0.02%       PASSED
+```
+
+### 2. Standalone Interactive HTML Reports
+Every run generates a self-contained, interactive HTML dashboard (`test/perf/reports/latest.html`) and timestamped snapshot (`test/perf/reports/report-<timestamp>.html`).
+
+To view the latest visual report:
+```bash
+make perf-report
+```
+
+### 3. Streaming to In-Cluster Prometheus (Remote Write)
+For live real-time graph streaming into Prometheus and Grafana during tests, enable `K6_PROMETHEUS_OUTPUT`:
+```bash
+K6_PROMETHEUS_OUTPUT=true make perf-load
+```
+k6 will stream metrics directly into `prometheus-server` via Prometheus Remote Write.
