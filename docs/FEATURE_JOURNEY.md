@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #65)](#-pull-request-pr-index-prs-1--65)
+6. [Pull Request (PR) Index (PRs #1 – #67)](#-pull-request-pr-index-prs-1--67)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -301,6 +301,8 @@ timeline
 | **[#62](https://github.com/NItishSh/realestate-trust/pull/62)** | `docs` | index PRs #60 and #61 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#63](https://github.com/NItishSh/realestate-trust/pull/63)** | `feat` | deploy property-registry-service and feedback-service via ArgoCD | `infra/gitops/service-apps.yaml` | Complete declarative deployment for all 7 microservices |
 | **[#64](https://github.com/NItishSh/realestate-trust/pull/64)** | `fix` | align ports and remove direct database_url env in service-apps | `infra/gitops/service-apps.yaml` | Fixes port mappings and startup env configurations |
+| **[#65](https://github.com/NItishSh/realestate-trust/pull/65)** | `docs` | index PRs #62 through #64 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#66](https://github.com/NItishSh/realestate-trust/pull/66)** | `feat` | implement end-to-end user journeys scenario covering 100% of endpoints | `test/perf/`, `Makefile`, `docs/PERFORMANCE_TESTING.md` | 100% endpoint coverage across 4 personas |
 
 ---
 
