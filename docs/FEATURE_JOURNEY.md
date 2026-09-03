@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #55)](#-pull-request-pr-index-prs-1--55)
+6. [Pull Request (PR) Index (PRs #1 – #57)](#-pull-request-pr-index-prs-1--57)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -292,6 +292,8 @@ timeline
 | **[#52](https://github.com/NItishSh/realestate-trust/pull/52)** | `feat` | implement shift-left safeguards, pre-commit gates, and vitest test suite | `.pre-commit-config.yaml`, `.github/workflows/ci.yml`, `frontend/`, `Makefile` | Shift-left quality gates & CI pipelines for Next.js frontend |
 | **[#53](https://github.com/NItishSh/realestate-trust/pull/53)** | `docs` | index PRs #51 and #52 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#54](https://github.com/NItishSh/realestate-trust/pull/54)** | `chore` | remove obsolete legacy resume.sh recovery script | `resume.sh` | Cleaned up obsolete imperative setup script |
+| **[#55](https://github.com/NItishSh/realestate-trust/pull/55)** | `docs` | index PRs #53 and #54 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#56](https://github.com/NItishSh/realestate-trust/pull/56)** | `feat` | implement k6 performance, load, stress, and 24h soak testing suite | `test/perf/`, `docs/PERFORMANCE_TESTING.md`, `Makefile` | Institutional-grade k6 performance test suite |
 
 ---
 
@@ -336,6 +338,10 @@ make cluster-up
 
 # 5. FinOps Workload Right-Sizing Dry-Run Preview
 make finops-rightsize-dryrun
+
+# 6. Performance, Capacity & 24-Hour Sustained Soak Test
+make perf-smoke
+make perf-soak
 ```
 
 ### **GitHub Actions Automation**
