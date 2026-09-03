@@ -84,11 +84,15 @@ spec:
               command: ["pg_isready", "-U", "postgres"]
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres"]
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             requests:
               cpu: 250m

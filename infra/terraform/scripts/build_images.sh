@@ -13,7 +13,7 @@ log()  { echo -e "${GREEN}[✓]${NC} $1"; }
 step() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
 step "Building Docker images"
-targets=("transaction-manager" "identity-service" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service")
+targets=("transaction-manager" "identity-service" "financing-engine" "tokenization-engine" "ledger-service" "property-registry-service" "feedback-service")
 for target in "${targets[@]}"; do
     image_name="ghcr.io/realestate-trust/monorepo/${target}:latest"
     log "Building ${image_name}..."
@@ -41,6 +41,7 @@ images=(
     "ghcr.io/realestate-trust/monorepo/tokenization-engine:latest"
     "ghcr.io/realestate-trust/monorepo/ledger-service:latest"
     "ghcr.io/realestate-trust/monorepo/property-registry-service:latest"
+    "ghcr.io/realestate-trust/monorepo/feedback-service:latest"
     "ghcr.io/realestate-trust/monorepo/frontend:latest"
 )
 
