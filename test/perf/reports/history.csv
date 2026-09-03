@@ -1,0 +1,2 @@
+timestamp,commit,scenario,vus,total_requests,rps,p95_ms,p99_ms,error_rate,status
+2026-09-03T02:20:51Z,da550a3,Smoke Test,3,242,11.20,280.43,0.00,39.67%,PASSED

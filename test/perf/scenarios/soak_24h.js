@@ -14,6 +14,7 @@ import { check, sleep, group } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 import { getBaseUrl, defaultHeaders } from '../common/config.js';
 import { getAuthToken } from '../common/auth.js';
+import { createSummaryHandler } from '../common/summary.js';
 import {
   createTransactionPayload,
   createPropertyPayload,
@@ -160,3 +161,5 @@ export default function (data) {
 export function teardown(data) {
   console.log('[Soak Test] Completed soak test run. Inspect VPA and OpenCost metrics for right-sizing.');
 }
+
+export const handleSummary = createSummaryHandler('24-Hour Sustained Soak Test');

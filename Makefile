@@ -389,6 +389,24 @@ perf-soak: ## Run 24-hour k6 soak test to detect memory leaks and connection deg
 	@echo -e "$(COLOR_INFO)Executing k6 24-Hour Sustained Soak Test...$(COLOR_RESET)"
 	bash ./test/perf/run-k6.sh ./scenarios/soak_24h.js
 
+.PHONY: perf-history
+perf-history: ## Display historical performance benchmark trend comparison table
+	@echo -e "$(COLOR_INFO)Performance Benchmark History (test/perf/reports/history.csv):$(COLOR_RESET)\n"
+	@if [ -f test/perf/reports/history.csv ]; then \
+		column -s, -t < test/perf/reports/history.csv; \
+	else \
+		echo -e "$(COLOR_WARN)No benchmark history found. Run a test like 'make perf-smoke' first.$(COLOR_RESET)"; \
+	fi
+
+.PHONY: perf-report
+perf-report: ## Open the latest generated HTML performance report in default browser
+	@if [ -f test/perf/reports/latest.html ]; then \
+		echo -e "$(COLOR_INFO)Opening latest performance report...$(COLOR_RESET)"; \
+		open test/perf/reports/latest.html 2>/dev/null || xdg-open test/perf/reports/latest.html 2>/dev/null || echo "Report available at: test/perf/reports/latest.html"; \
+	else \
+		echo -e "$(COLOR_WARN)No HTML report found. Run 'make perf-smoke' first.$(COLOR_RESET)"; \
+	fi
+
 # ==============================================================================
 # Clean & Housekeeping
 # ==============================================================================

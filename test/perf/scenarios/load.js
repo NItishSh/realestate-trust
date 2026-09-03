@@ -8,6 +8,7 @@ import { check, sleep, group } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 import { getBaseUrl, defaultHeaders, standardThresholds } from '../common/config.js';
 import { getAuthToken } from '../common/auth.js';
+import { createSummaryHandler } from '../common/summary.js';
 import {
   createTransactionPayload,
   createPropertyPayload,
@@ -111,3 +112,5 @@ export default function (data) {
 
   sleep(1);
 }
+
+export const handleSummary = createSummaryHandler('Standard Load Test');

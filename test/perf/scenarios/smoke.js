@@ -7,6 +7,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { getBaseUrl, defaultHeaders } from '../common/config.js';
 import { getAuthToken } from '../common/auth.js';
+import { createSummaryHandler } from '../common/summary.js';
 import {
   createTransactionPayload,
   createPropertyPayload,
@@ -79,3 +80,5 @@ export default function (data) {
 
   sleep(1);
 }
+
+export const handleSummary = createSummaryHandler('Smoke Test');
