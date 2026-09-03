@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #62)](#-pull-request-pr-index-prs-1--62)
+6. [Pull Request (PR) Index (PRs #1 – #65)](#-pull-request-pr-index-prs-1--65)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -298,6 +298,9 @@ timeline
 | **[#59](https://github.com/NItishSh/realestate-trust/pull/59)** | `fix` | normalize working directory and script arguments in k6 runner | `test/perf/run-k6.sh`, `test/perf/scenarios/smoke.js` | Fixes relative path resolution from root via Makefile |
 | **[#60](https://github.com/NItishSh/realestate-trust/pull/60)** | `docs` | index PRs #58 and #59 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#61](https://github.com/NItishSh/realestate-trust/pull/61)** | `feat` | implement historical benchmark tracking, HTML dashboard, and make perf-history | `test/perf/`, `Makefile`, `docs/PERFORMANCE_TESTING.md` | Hybrid benchmark history & reporting system |
+| **[#62](https://github.com/NItishSh/realestate-trust/pull/62)** | `docs` | index PRs #60 and #61 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#63](https://github.com/NItishSh/realestate-trust/pull/63)** | `feat` | deploy property-registry-service and feedback-service via ArgoCD | `infra/gitops/service-apps.yaml` | Complete declarative deployment for all 7 microservices |
+| **[#64](https://github.com/NItishSh/realestate-trust/pull/64)** | `fix` | align ports and remove direct database_url env in service-apps | `infra/gitops/service-apps.yaml` | Fixes port mappings and startup env configurations |
 
 ---
 
