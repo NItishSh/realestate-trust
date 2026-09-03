@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.0](https://github.com/NItishSh/realestate-trust/compare/v1.7.0...v1.8.0) (2026-09-02)
+
+
+### Features
+
+* **frontend:** implement shift-left safeguards, pre-commit gates, and vitest test suite ([#52](https://github.com/NItishSh/realestate-trust/issues/52)) ([37c125e](https://github.com/NItishSh/realestate-trust/commit/37c125ee7533e99ab79cc7e8ffadf695ef5423e9))
+* **gitops:** add frontend application to service-apps ([#49](https://github.com/NItishSh/realestate-trust/issues/49)) ([e815a56](https://github.com/NItishSh/realestate-trust/commit/e815a5629b47aac77eeebfb059e9b6c863d8b49f))
+* **makefile:** add port-forward-frontend and update endpoints dashboard ([#50](https://github.com/NItishSh/realestate-trust/issues/50)) ([8ffeeb1](https://github.com/NItishSh/realestate-trust/commit/8ffeeb11148606f1009cb9376843e5f538da0153))
+
+
+### Bug Fixes
+
+* **gitops:** set explicit proxy image for istio-ingress gateway ([#46](https://github.com/NItishSh/realestate-trust/issues/46)) ([aae29b1](https://github.com/NItishSh/realestate-trust/commit/aae29b140942d2669b1469b21b493de3b39481e4))
+
 ## [1.7.0](https://github.com/NItishSh/realestate-trust/compare/v1.6.0...v1.7.0) (2026-09-02)
 
 
