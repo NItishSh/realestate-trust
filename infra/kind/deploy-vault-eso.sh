@@ -61,12 +61,11 @@ kubectl exec -i vault-0 -n vault -- vault write auth/kubernetes/role/realestate-
 
 # 7. Wait for PostgreSQL (deployed by ArgoCD)
 log "Waiting for PostgreSQL to be deployed by ArgoCD..."
-while ! kubectl get statefulset postgres -n realestate-trust > /dev/null 2>&1; do
+while ! kubectl get pod postgres-0 -n realestate-trust > /dev/null 2>&1; do
   sleep 2
 done
-log "Waiting for PostgreSQL to be ready..."
-sleep 5
-kubectl wait --for=condition=Ready pods -l app=postgres -n realestate-trust --timeout=900s
+log "Waiting for postgres-0 pod to be ready..."
+kubectl wait --for=condition=Ready pod/postgres-0 -n realestate-trust --timeout=900s
 log "Postgres pod is Ready. Waiting 15s for database initialization to complete..."
 sleep 15
 
@@ -115,7 +114,10 @@ kubectl create namespace observability --dry-run=client -o yaml | kubectl apply 
 kubectl create namespace realestate-trust --dry-run=client -o yaml | kubectl apply -f -
 
 log "Waiting for External Secrets Operator webhook to be ready..."
-kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=external-secrets-webhook -n external-secrets --timeout=180s
+while [ $(kubectl get pods -l app.kubernetes.io/name=external-secrets-webhook -n external-secrets --no-headers 2>/dev/null | wc -l) -eq 0 ]; do
+  sleep 2
+done
+kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=external-secrets-webhook -n external-secrets --timeout=420s
 sleep 5
 
 log "Applying vault-eso-resources.yaml (with retry for webhook warm-up)..."
@@ -134,7 +136,7 @@ if [ "$applied" = false ]; then
 fi
 
 log "Waiting for external secret database syncs..."
-kubectl wait --for=condition=Ready externalsecret --all -n realestate-trust --timeout=180s
-kubectl wait --for=condition=Ready externalsecret --all -n observability --timeout=180s
+kubectl wait --for=condition=Ready externalsecret --all -n realestate-trust --timeout=300s
+kubectl wait --for=condition=Ready externalsecret --all -n observability --timeout=300s
 
 log "Vault and External Secrets Operator successfully configured!"
