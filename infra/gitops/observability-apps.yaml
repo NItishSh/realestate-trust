@@ -282,7 +282,7 @@ spec:
           prometheus:
             internal:
               serviceName: prometheus-server
-              namespaceName: observability
+              namespaceName: istio-system
               port: 80
           ui:
             enabled: true
