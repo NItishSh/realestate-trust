@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.9.0](https://github.com/NItishSh/realestate-trust/compare/v1.8.0...v1.9.0) (2026-09-03)
+
+
+### Features
+
+* **gitops:** deploy property-registry-service and feedback-service via ArgoCD ([#63](https://github.com/NItishSh/realestate-trust/issues/63)) ([400aa51](https://github.com/NItishSh/realestate-trust/commit/400aa515a432a34fb3f0801d4ac2fba9902cb534))
+* **perf:** implement 5-tier capacity planning bands and OpenCost right-sizing analyzer ([#70](https://github.com/NItishSh/realestate-trust/issues/70)) ([0a7630a](https://github.com/NItishSh/realestate-trust/commit/0a7630add824aa8472839ca614dfea122875816f))
+* **perf:** implement end-to-end user journeys scenario covering 100% of endpoints ([#66](https://github.com/NItishSh/realestate-trust/issues/66)) ([122dcac](https://github.com/NItishSh/realestate-trust/commit/122dcacaf0339c12483edca3d683bcb16254962f))
+* **perf:** implement historical benchmark tracking, HTML dashboard, and make perf-history ([#61](https://github.com/NItishSh/realestate-trust/issues/61)) ([021a489](https://github.com/NItishSh/realestate-trust/commit/021a4894bd90232ed236f290306c4e2e9c02b836))
+* **perf:** implement k6 performance, load, stress, and 24h soak testing suite ([#56](https://github.com/NItishSh/realestate-trust/issues/56)) ([2343503](https://github.com/NItishSh/realestate-trust/commit/2343503688bc8c7e7ee631e1744669826330c04c))
+
+
+### Bug Fixes
+
+* **gitops:** align ports and remove direct database_url env in service-apps ([#64](https://github.com/NItishSh/realestate-trust/issues/64)) ([3a2b21f](https://github.com/NItishSh/realestate-trust/commit/3a2b21f26cfe4582df093fb23885d882ede625b5))
+* **gitops:** point OpenCost to Prometheus in istio-system namespace ([#68](https://github.com/NItishSh/realestate-trust/issues/68)) ([fa8c194](https://github.com/NItishSh/realestate-trust/commit/fa8c194482b83f0ad5bda98c0e6a75d32b905f57))
+* **gitops:** set empty baseURL for Prometheus to eliminate route prefix conflict ([#71](https://github.com/NItishSh/realestate-trust/issues/71)) ([693c15f](https://github.com/NItishSh/realestate-trust/commit/693c15f5a91171a5d0b56cc2ff3294031e59d044))
+* **gitops:** set OpenCost external prometheus url with /prometheus prefix ([#69](https://github.com/NItishSh/realestate-trust/issues/69)) ([dbf9fe2](https://github.com/NItishSh/realestate-trust/commit/dbf9fe24dd280ac76756d7e7fa71c1b765529e7f))
+* **infra:** eliminate race conditions and extend timeouts in deploy-vault-eso.sh ([#74](https://github.com/NItishSh/realestate-trust/issues/74)) ([7d5be67](https://github.com/NItishSh/realestate-trust/commit/7d5be67428e176fbcc53109fd5e4a76816e20af0))
+* **perf:** integrate direct OpenCost FinOps compute allocation into capacity analyzer ([#72](https://github.com/NItishSh/realestate-trust/issues/72)) ([8c0ac26](https://github.com/NItishSh/realestate-trust/commit/8c0ac269bc62c1a41b2548a7b4853d8d7936888b))
+* **perf:** normalize working directory and script arguments in k6 runner ([#59](https://github.com/NItishSh/realestate-trust/issues/59)) ([46394da](https://github.com/NItishSh/realestate-trust/commit/46394da49f9489705575dd6a55dbd25f134c04f3))
+
+
+### Performance Improvements
+
+* **finops:** right-size microservices, enable KEDA autoscaling, and calibrate Band 3 ([#73](https://github.com/NItishSh/realestate-trust/issues/73)) ([1d181fe](https://github.com/NItishSh/realestate-trust/commit/1d181feea24c4fed114d195138170d64525acd0d))
+
 ## [1.8.0](https://github.com/NItishSh/realestate-trust/compare/v1.7.0...v1.8.0) (2026-09-02)
 
 
