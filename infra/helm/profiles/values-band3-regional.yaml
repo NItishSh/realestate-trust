@@ -1,0 +1,28 @@
+# =============================================================================
+# Band 3: High-Volume Regional Tier (200 - 500 RPS / 1,000 - 2,500 Users)
+# =============================================================================
+# Recommended for standard multi-tenant production and high-volume operations.
+# Autoscaling enabled (min 3, max 6 replicas) with right-sized headroom.
+# =============================================================================
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 600m
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+vpa:
+  enabled: false
+
+keda:
+  enabled: false

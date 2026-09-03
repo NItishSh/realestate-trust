@@ -1,0 +1,30 @@
+# =============================================================================
+# Band 4: Enterprise Institutional Tier (1,000 - 3,000 RPS / 5,000 - 15,000 Users)
+# =============================================================================
+# Recommended for large-scale financial institutions, global marketplaces.
+# High-density replicas (min 8, max 20) with KEDA/HPA dynamic scaling.
+# =============================================================================
+
+replicaCount: 8
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1200m
+    memory: 1024Mi
+
+hpa:
+  enabled: true
+  minReplicas: 8
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 65
+
+vpa:
+  enabled: false
+
+keda:
+  enabled: true
+  minReplicas: 8
+  maxReplicas: 20

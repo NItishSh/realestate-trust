@@ -1,0 +1,30 @@
+# =============================================================================
+# Band 5: Hyper-Scale Global Tier (10,000 - 40,000+ RPS / 50,000+ Users)
+# =============================================================================
+# Multi-cluster distributed topology across cloud availability zones.
+# Incorporates distributed database read replicas, Redis L2 caching, and Kafka.
+# =============================================================================
+
+replicaCount: 25
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 1024Mi
+  limits:
+    cpu: 2500m
+    memory: 2048Mi
+
+hpa:
+  enabled: true
+  minReplicas: 25
+  maxReplicas: 80
+  targetCPUUtilizationPercentage: 60
+
+vpa:
+  enabled: false
+
+keda:
+  enabled: true
+  minReplicas: 25
+  maxReplicas: 80

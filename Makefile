@@ -379,6 +379,26 @@ perf-journeys: ## Run end-to-end user journeys test covering 100% of microservic
 	@echo -e "$(COLOR_INFO)Executing k6 End-to-End User Journeys Test (100% Endpoint Coverage)...$(COLOR_RESET)"
 	bash ./test/perf/run-k6.sh ./scenarios/journeys.js
 
+.PHONY: perf-band-1
+perf-band-1: ## Calibrate Performance Band 1 (Starter / Dev: 10-30 RPS, 50-150 Users)
+	@echo -e "$(COLOR_INFO)Executing Band 1 (Starter) Calibration Benchmark...$(COLOR_RESET)"
+	JOURNEY_DURATION=1m VUS=5 bash ./test/perf/run-k6.sh ./scenarios/journeys.js
+
+.PHONY: perf-band-2
+perf-band-2: ## Calibrate Performance Band 2 (Growth: 50-150 RPS, 250-750 Users)
+	@echo -e "$(COLOR_INFO)Executing Band 2 (Growth) Calibration Benchmark...$(COLOR_RESET)"
+	JOURNEY_DURATION=2m VUS=15 bash ./test/perf/run-k6.sh ./scenarios/journeys.js
+
+.PHONY: perf-band-3
+perf-band-3: ## Calibrate Performance Band 3 (Regional: 200-500 RPS, 1,000-2,500 Users)
+	@echo -e "$(COLOR_INFO)Executing Band 3 (Regional) Calibration Benchmark...$(COLOR_RESET)"
+	JOURNEY_DURATION=3m VUS=35 bash ./test/perf/run-k6.sh ./scenarios/journeys.js
+
+.PHONY: perf-capacity-report
+perf-capacity-report: ## Run OpenCost & Prometheus capacity analyzer to calculate pod right-sizing
+	@echo -e "$(COLOR_INFO)Analyzing pod resource utilization and FinOps right-sizing...$(COLOR_RESET)"
+	bash ./scripts/analyze-capacity.sh realestate-trust
+
 .PHONY: perf-load
 perf-load: ## Run 12-minute k6 load test simulating standard production traffic
 	@echo -e "$(COLOR_INFO)Executing k6 Standard Load Test...$(COLOR_RESET)"

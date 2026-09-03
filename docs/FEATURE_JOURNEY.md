@@ -10,7 +10,7 @@ An authoritative reference detailing the complete evolutionary history, architec
 3. [Evolutionary Timeline](#-evolutionary-timeline)
 4. [Chronological Engineering Phases](#-chronological-engineering-phases)
 5. [Supported Feature & Capability Matrix](#-supported-feature--capability-matrix)
-6. [Pull Request (PR) Index (PRs #1 – #67)](#-pull-request-pr-index-prs-1--67)
+6. [Pull Request (PR) Index (PRs #1 – #70)](#-pull-request-pr-index-prs-1--70)
 7. [Core Architectural Patterns Implemented](#-core-architectural-patterns-implemented)
 8. [Verification, CI/CD & Testing Infrastructure](#-verification-cicd--testing-infrastructure)
 
@@ -303,6 +303,10 @@ timeline
 | **[#64](https://github.com/NItishSh/realestate-trust/pull/64)** | `fix` | align ports and remove direct database_url env in service-apps | `infra/gitops/service-apps.yaml` | Fixes port mappings and startup env configurations |
 | **[#65](https://github.com/NItishSh/realestate-trust/pull/65)** | `docs` | index PRs #62 through #64 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
 | **[#66](https://github.com/NItishSh/realestate-trust/pull/66)** | `feat` | implement end-to-end user journeys scenario covering 100% of endpoints | `test/perf/`, `Makefile`, `docs/PERFORMANCE_TESTING.md` | 100% endpoint coverage across 4 personas |
+| **[#67](https://github.com/NItishSh/realestate-trust/pull/67)** | `docs` | index PRs #65 and #66 in feature journey | `docs/FEATURE_JOURNEY.md` | PR catalog update |
+| **[#68](https://github.com/NItishSh/realestate-trust/pull/68)** | `fix` | point OpenCost to Prometheus in istio-system namespace | `infra/gitops/observability-apps.yaml` | Fixes OpenCost Prometheus server endpoint namespace |
+| **[#69](https://github.com/NItishSh/realestate-trust/pull/69)** | `fix` | set OpenCost external prometheus url with /prometheus prefix | `infra/gitops/observability-apps.yaml` | Aligns OpenCost Prometheus query route prefix |
+| **[#70](https://github.com/NItishSh/realestate-trust/pull/70)** | `feat` | implement 5-tier capacity planning bands and OpenCost right-sizing analyzer | `infra/helm/profiles/`, `scripts/`, `docs/CAPACITY_PLANNING.md`, `Makefile` | Multi-tier performance bands and FinOps sizing |
 
 ---
 

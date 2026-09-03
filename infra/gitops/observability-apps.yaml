@@ -179,7 +179,6 @@ spec:
       values: |
         server:
           baseURL: "http://localhost:8080/prometheus/"
-          prefixURL: "/prometheus"
         alertmanager:
           enabled: false
         pushgateway:
@@ -215,7 +214,7 @@ spec:
           web_root: /kiali
         external_services:
           prometheus:
-            url: "http://prometheus-server.istio-system.svc.cluster.local:80/prometheus"
+            url: "http://prometheus-server.istio-system.svc.cluster.local:80"
           grafana:
             enabled: true
             in_cluster_url: "http://grafana.observability.svc.cluster.local:80/grafana"
@@ -280,8 +279,10 @@ spec:
       values: |
         opencost:
           prometheus:
-            external:
-              url: "http://prometheus-server.istio-system.svc.cluster.local:80/prometheus"
+            internal:
+              serviceName: prometheus-server
+              namespaceName: istio-system
+              port: 80
           ui:
             enabled: true
   destination:
