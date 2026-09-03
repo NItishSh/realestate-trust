@@ -1,0 +1,25 @@
+# =============================================================================
+# Band 1: Starter / Development Tier (10 - 30 RPS / 50 - 150 Users)
+# =============================================================================
+# Recommended for local dev, PR staging environments, and sandbox deployments.
+# Single replica per microservice with minimal footprint to conserve resources.
+# =============================================================================
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 150m
+    memory: 128Mi
+
+hpa:
+  enabled: false
+
+vpa:
+  enabled: false
+
+keda:
+  enabled: false

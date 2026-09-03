@@ -1,0 +1,25 @@
+# =============================================================================
+# Band 2: Standard Growth Tier (50 - 150 RPS / 250 - 750 Users)
+# =============================================================================
+# Recommended for production pilot, regional tenants, and standard staging.
+# Dual replicas per microservice for high availability during rolling deployments.
+# =============================================================================
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+hpa:
+  enabled: false
+
+vpa:
+  enabled: false
+
+keda:
+  enabled: false
