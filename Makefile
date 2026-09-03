@@ -366,6 +366,30 @@ finops-rightsize-dryrun: ## Preview FinOps right-sizing recommendations without 
 	go run ./cmd/re-cli finops rightsize --dry-run
 
 # ==============================================================================
+# Performance, Load & Soak Testing Suite
+# ==============================================================================
+
+.PHONY: perf-smoke
+perf-smoke: ## Run quick 1-minute k6 smoke test to verify endpoints and SLAs
+	@echo -e "$(COLOR_INFO)Executing k6 Smoke Test...$(COLOR_RESET)"
+	bash ./test/perf/run-k6.sh ./scenarios/smoke.js
+
+.PHONY: perf-load
+perf-load: ## Run 12-minute k6 load test simulating standard production traffic
+	@echo -e "$(COLOR_INFO)Executing k6 Standard Load Test...$(COLOR_RESET)"
+	bash ./test/perf/run-k6.sh ./scenarios/load.js
+
+.PHONY: perf-stress
+perf-stress: ## Run 23-minute k6 stress test to discover breaking points and saturation limits
+	@echo -e "$(COLOR_INFO)Executing k6 Stress & Saturation Test...$(COLOR_RESET)"
+	bash ./test/perf/run-k6.sh ./scenarios/stress.js
+
+.PHONY: perf-soak
+perf-soak: ## Run 24-hour k6 soak test to detect memory leaks and connection degradation
+	@echo -e "$(COLOR_INFO)Executing k6 24-Hour Sustained Soak Test...$(COLOR_RESET)"
+	bash ./test/perf/run-k6.sh ./scenarios/soak_24h.js
+
+# ==============================================================================
 # Clean & Housekeeping
 # ==============================================================================
 
