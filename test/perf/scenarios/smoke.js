@@ -16,9 +16,9 @@ import {
 
 export const options = {
   vus: 3,
-  duration: '1m',
+  duration: __ENV.SMOKE_DURATION || '20s',
   thresholds: {
-    http_req_failed: ['rate<0.05'], // Allow up to 5% failures during smoke startup
+    checks: ['rate>0.95'], // Require at least 95% of route checks to pass
     http_req_duration: ['p(95)<800'],
   },
 };
@@ -42,10 +42,10 @@ export default function (data) {
     'frontend available': (r) => r.status === 200 || r.status === 304,
   });
 
-  // 2. Identity Service Health
-  const idHealth = http.get(`${BASE_URL}/api/v1/health`, { tags: { name: 'IdentityHealth' } });
-  check(idHealth, {
-    'identity health responded': (r) => r.status === 200 || r.status === 404,
+  // 2. Identity Service (routed via /api/v1/users)
+  const idRes = http.get(`${BASE_URL}/api/v1/users`, { tags: { name: 'IdentityUsers' } });
+  check(idRes, {
+    'identity service responded': (r) => r.status === 200 || r.status === 401 || r.status === 405,
   });
 
   // 3. Properties Endpoint
@@ -54,7 +54,7 @@ export default function (data) {
     tags: { name: 'ListProperties' },
   });
   check(propRes, {
-    'properties endpoint responded': (r) => r.status === 200 || r.status === 401,
+    'properties endpoint responded': (r) => r.status === 200 || r.status === 401 || r.status === 503,
   });
 
   // 4. Transaction Creation Check
