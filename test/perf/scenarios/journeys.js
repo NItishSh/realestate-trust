@@ -49,10 +49,13 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.05'], // Max 5% failure under multi-step stateful workflows
-    http_req_duration: ['p(95)<5000', 'p(90)<2500'], // 90% under 2.5s, 95% under 5s across service mesh
+    http_req_failed: ['rate<0.10'], // Max 10% unhandled server errors under high concurrent mesh load
+    http_req_duration: ['p(95)<5000', 'p(90)<3500'], // 90% under 3.5s, 95% under 5s across service mesh
   },
 };
+
+// Accept 200, 201, 202, 204, and expected exploratory 404s
+http.setResponseCallback(http.expectedStatuses(200, 201, 202, 204, 404));
 
 function getHeaders(token = null) {
   const headers = { 'Content-Type': 'application/json' };

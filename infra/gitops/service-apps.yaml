@@ -19,11 +19,20 @@ spec:
           targetPort: 8081
         resources:
           limits:
-            cpu: 500m
-            memory: 256Mi
-          requests:
             cpu: 250m
             memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
@@ -100,11 +109,20 @@ spec:
           targetPort: 8080
         resources:
           limits:
-            cpu: 1000m
-            memory: 512Mi
+            cpu: 300m
+            memory: 192Mi
           requests:
-            cpu: 500m
-            memory: 256Mi
+            cpu: 60m
+            memory: 96Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         ingress:
           enabled: true
           whitelistSourceRange: "125.16.0.0/16,202.54.30.0/24"
@@ -197,6 +215,22 @@ spec:
           repository: ghcr.io/realestate-trust/monorepo/financing-engine
         service:
           targetPort: 8082
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
@@ -291,11 +325,20 @@ spec:
           targetPort: 8083
         resources:
           limits:
-            cpu: 800m
-            memory: 384Mi
+            cpu: 250m
+            memory: 128Mi
           requests:
-            cpu: 400m
-            memory: 192Mi
+            cpu: 50m
+            memory: 64Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
@@ -357,6 +400,22 @@ spec:
           repository: ghcr.io/realestate-trust/monorepo/ledger-service
         service:
           targetPort: 8084
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
@@ -489,11 +548,20 @@ spec:
           targetPort: 8085
         resources:
           requests:
-            cpu: 42m
-            memory: 57Mi
+            cpu: 50m
+            memory: 64Mi
           limits:
             cpu: 250m
-            memory: 85Mi
+            memory: 128Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
@@ -567,11 +635,20 @@ spec:
           targetPort: 8086
         resources:
           requests:
-            cpu: 30m
-            memory: 38Mi
+            cpu: 50m
+            memory: 64Mi
           limits:
             cpu: 250m
-            memory: 57Mi
+            memory: 128Mi
+        keda:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          triggers:
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "50"
         smokeTest:
           enabled: true
           script: |
