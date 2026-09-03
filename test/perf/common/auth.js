@@ -2,51 +2,35 @@
 // Authentication Helper for RealEstate-Trust k6 Performance Tests
 // =============================================================================
 
-import http from 'k6/http';
-import { getBaseUrl, defaultHeaders } from './config.js';
+import crypto from 'k6/crypto';
+import encoding from 'k6/encoding';
 
-export function getAuthToken(role = 'BUYER', prefix = 'perf') {
-  const baseUrl = getBaseUrl();
-  const id = `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
-  const email = `${id}@test.local`;
-  const password = `PerfPass123!`;
+// Development JWT Secret matching monorepo internal/db/middleware.go
+const JWT_SECRET = __ENV.JWT_SECRET || 'super-secret-key-for-local-demo-only';
 
-  // 1. Register user with desired role
-  const regPayload = JSON.stringify({
-    email: email,
-    password: password,
-    fullName: `Perf User ${id}`,
+function base64Url(str) {
+  return encoding.b64encode(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+/**
+ * Generate a valid, cryptographically signed HS256 JWT locally in k6.
+ * Bypasses auth rate-limiting bottlenecks during high-throughput load tests.
+ *
+ * @param {string} role - BUYER, SELLER, BROKER, OFFICER, or ADMIN
+ * @param {string} userId - Unique identifier for the subject claim
+ * @returns {string} Signed JWT Bearer token
+ */
+export function getAuthToken(role = 'BUYER', userId = 'perf-user') {
+  const header = base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64Url(JSON.stringify({
+    sub: userId,
     role: role,
-  });
+    iat: now,
+    exp: now + 86400, // 24-hour validity for sustained load tests
+  }));
 
-  const regRes = http.post(`${baseUrl}/api/v1/users`, regPayload, {
-    headers: defaultHeaders,
-    tags: { name: 'RegisterUser' },
-  });
-
-  if (regRes.status !== 200 && regRes.status !== 201 && regRes.status !== 409) {
-    return null;
-  }
-
-  // 2. Login to obtain JWT Bearer token
-  const loginPayload = JSON.stringify({
-    email: email,
-    password: password,
-  });
-
-  const loginRes = http.post(`${baseUrl}/api/v1/login`, loginPayload, {
-    headers: defaultHeaders,
-    tags: { name: 'LoginUser' },
-  });
-
-  if (loginRes.status === 200) {
-    try {
-      const body = loginRes.json();
-      return body.token || null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  return null;
+  const sigB64 = crypto.hmac('sha256', JWT_SECRET, `${header}.${payload}`, 'base64');
+  const signature = sigB64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return `${header}.${payload}.${signature}`;
 }

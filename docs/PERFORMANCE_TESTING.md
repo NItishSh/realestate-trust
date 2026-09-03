@@ -47,6 +47,7 @@ flowchart LR
 | Target | Command | Duration | Concurrency (VUs) | Primary Goal |
 | :--- | :--- | :---: | :---: | :--- |
 | **Smoke Test** | `make perf-smoke` | 1 minute | 3 VUs | Verifies route connectivity, JWT auth flow, and basic endpoint availability. |
+| **User Journeys (100% Coverage)** | `make perf-journeys` | Configurable (default 1m) | 10 VUs | Stateful persona journeys covering 100% of all microservice REST endpoints. |
 | **Standard Load** | `make perf-load` | 12 minutes | 20 VUs (~50 RPS) | Establishes standard production baseline $p95$ and $p99$ latency SLAs. |
 | **Stress & Saturation** | `make perf-stress` | 23 minutes | Up to 200 VUs (300+ RPS) | Ramps past capacity to find breaking points, queue buildup, and bottleneck services. |
 | **24-Hour Sustained Soak** | `make perf-soak` | 24 hours | 50 VUs sustained | Sustained peak plateau to detect memory leaks, connection pool exhaustion, and long-term degradation. |
@@ -62,7 +63,21 @@ Tests can be executed with **zero host dependencies** (using the official `grafa
 make perf-smoke
 ```
 
-### 2. Standard Load Test
+### 2. End-to-End User Journeys Test (100% Endpoint Coverage)
+Exercises all 30 REST endpoints across all 7 microservices and the Next.js frontend across 4 distinct personas:
+* **Buyer Persona (60%)**: Register $\rightarrow$ Submit KYC $\rightarrow$ Search $\rightarrow$ Unlock Docs $\rightarrow$ Purchase $\rightarrow$ Fund Escrow $\rightarrow$ Apply Loan $\rightarrow$ Feedback.
+* **Seller / Broker Persona (20%)**: Create Property Listing $\rightarrow$ Edit Details $\rightarrow$ Fractional Pool Tokenization $\rightarrow$ Purchase Shares $\rightarrow$ Update Status.
+* **Compliance Officer Persona (10%)**: Inspect Users Registry $\rightarrow$ User Detail $\rightarrow$ Verify Title Insurance $\rightarrow$ Review Loan Portfolio.
+* **Auditor & Admin Persona (10%)**: Write Cryptographic Block $\rightarrow$ Fetch Chain $\rightarrow$ Block Verification $\rightarrow$ Review Feedback $\rightarrow$ List Transactions $\rightarrow$ Logout.
+
+```bash
+make perf-journeys
+
+# Custom concurrency & duration
+JOURNEY_DURATION=5m VUS=25 make perf-journeys
+```
+
+### 3. Standard Load Test
 ```bash
 make perf-load
 ```
