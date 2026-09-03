@@ -374,6 +374,11 @@ perf-smoke: ## Run quick 1-minute k6 smoke test to verify endpoints and SLAs
 	@echo -e "$(COLOR_INFO)Executing k6 Smoke Test...$(COLOR_RESET)"
 	bash ./test/perf/run-k6.sh ./scenarios/smoke.js
 
+.PHONY: perf-journeys
+perf-journeys: ## Run end-to-end user journeys test covering 100% of microservice endpoints
+	@echo -e "$(COLOR_INFO)Executing k6 End-to-End User Journeys Test (100% Endpoint Coverage)...$(COLOR_RESET)"
+	bash ./test/perf/run-k6.sh ./scenarios/journeys.js
+
 .PHONY: perf-load
 perf-load: ## Run 12-minute k6 load test simulating standard production traffic
 	@echo -e "$(COLOR_INFO)Executing k6 Standard Load Test...$(COLOR_RESET)"
