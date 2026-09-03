@@ -280,10 +280,8 @@ spec:
       values: |
         opencost:
           prometheus:
-            internal:
-              serviceName: prometheus-server
-              namespaceName: istio-system
-              port: 80
+            external:
+              url: "http://prometheus-server.istio-system.svc.cluster.local:80/prometheus"
           ui:
             enabled: true
   destination:
